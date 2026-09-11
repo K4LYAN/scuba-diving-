@@ -14,7 +14,172 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
-    <title>DeepBlue Scuba | Immersive Dive Experiences</title>
+    <title>DeepBlue Scuba | PADI Dive Centre, Courses &amp; Guided Reef Dives</title>
+
+    <!-- ============================================================
+         BUSINESS INFO - EDIT THESE FIVE VALUES BEFORE GOING LIVE
+         They are the only place your real details need to appear.
+
+           1. DOMAIN    - replace every https://deepbluescuba.com below
+                          (canonical, og:url, and the JSON-LD "url" fields)
+           2. PHONE     - "telephone" in the JSON-LD (currently the real
+                          WhatsApp number, +91 94943 32007)
+           3. EMAIL     - "email" in the JSON-LD
+           4. SOCIALS   - uncomment "sameAs" and add your Instagram /
+                          Facebook URLs (the footer icons are still href="#")
+           5. ADDRESS   - uncomment the "address" block once you have the
+                          real street address. It is deliberately left out:
+                          a placeholder postal address damages local search
+                          ranking rather than helping it.
+         ============================================================ -->
+
+    <meta name="description" content="PADI 5-star dive centre: Open Water and Advanced certification, guided reef and wreck dives, manta night dives and family snorkel safaris. Book on WhatsApp.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="DeepBlue Scuba Center">
+    <meta name="theme-color" content="#04121F" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F3FAFC" media="(prefers-color-scheme: light)">
+    <link rel="canonical" href="https://deepbluescuba.com/">
+
+    <!-- Open Graph / social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DeepBlue Scuba Center">
+    <meta property="og:locale" content="en">
+    <meta property="og:url" content="https://deepbluescuba.com/">
+    <meta property="og:title" content="DeepBlue Scuba | PADI Dive Centre, Courses &amp; Guided Reef Dives">
+    <meta property="og:description" content="PADI 5-star dive centre: Open Water and Advanced certification, guided reef and wreck dives, manta night dives and family snorkel safaris.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&amp;w=1200&amp;h=630&amp;fit=crop">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="A scuba diver beside a school of fish on a coral wall">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DeepBlue Scuba | PADI Dive Centre &amp; Guided Reef Dives">
+    <meta name="twitter:description" content="Open Water and Advanced certification, guided reef and wreck dives, manta night dives and family snorkel safaris.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&amp;w=1200&amp;h=630&amp;fit=crop">
+
+    <!-- Structured data. This is what search engines and AI assistants read to
+         understand and recommend the business, so it mirrors the page content
+         exactly - no invented prices, ratings or addresses. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://deepbluescuba.com/#organization",
+          "name": "DeepBlue Scuba Center",
+          "url": "https://deepbluescuba.com/",
+          "description": "PADI 5-star dive centre running certification courses, guided reef and wreck dives and snorkel safaris.",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=512&h=512&fit=crop",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": ["LocalBusiness", "SportsActivityLocation"],
+          "@id": "https://deepbluescuba.com/#divecentre",
+          "name": "DeepBlue Scuba Center",
+          "url": "https://deepbluescuba.com/",
+          "description": "Premium guided scuba diving, PADI certifications and bespoke boat charters. Over 30 mapped dive sites from shallow coral gardens to a 30m wreck.",
+          "telephone": "+919494332007",
+          "email": "hello@deepbluescuba.com",
+          "image": [
+            "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&fit=crop",
+            "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1200&fit=crop",
+            "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&fit=crop"
+          ],
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "amenityFeature": [
+            { "@type": "LocationFeatureSpecification", "name": "PADI 5-Star Dive Centre", "value": true },
+            { "@type": "LocationFeatureSpecification", "name": "Equipment rental", "value": true },
+            { "@type": "LocationFeatureSpecification", "name": "Daily boat charters", "value": true },
+            { "@type": "LocationFeatureSpecification", "name": "DAN affiliated", "value": true }
+          ],
+          "parentOrganization": { "@id": "https://deepbluescuba.com/#organization" },
+          "makesOffer": [
+            {
+              "@type": "Offer",
+              "name": "PADI Open Water Diver",
+              "description": "Get certified to dive anywhere in the world. Includes e-learning, pool sessions and 4 ocean dives.",
+              "price": "450",
+              "priceCurrency": "USD",
+              "category": "Beginner certification",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "PADI Open Water Diver course",
+                "serviceType": "Scuba certification course"
+              }
+            },
+            {
+              "@type": "Offer",
+              "name": "Advanced Open Water",
+              "description": "Deep dives and underwater navigation for already certified divers.",
+              "category": "Certified divers",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "PADI Advanced Open Water course",
+                "serviceType": "Scuba certification course"
+              }
+            },
+            {
+              "@type": "Offer",
+              "name": "Manta Night Dive",
+              "description": "A guided nocturnal specialty dive at the manta cleaning station.",
+              "category": "Specialty dive",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Manta night dive",
+                "serviceType": "Guided specialty dive"
+              }
+            },
+            {
+              "@type": "Offer",
+              "name": "Coral Reef Snorkel Safari",
+              "description": "Family friendly guided snorkelling over shallow reef systems with a marine biologist. No certification needed.",
+              "category": "No certification needed",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Coral reef snorkel safari",
+                "serviceType": "Guided snorkelling"
+              }
+            }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://deepbluescuba.com/#website",
+          "url": "https://deepbluescuba.com/",
+          "name": "DeepBlue Scuba Center",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://deepbluescuba.com/#organization" }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://deepbluescuba.com/#webpage",
+          "url": "https://deepbluescuba.com/",
+          "name": "DeepBlue Scuba | PADI Dive Centre, Courses & Guided Reef Dives",
+          "isPartOf": { "@id": "https://deepbluescuba.com/#website" },
+          "about": { "@id": "https://deepbluescuba.com/#divecentre" },
+          "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&fit=crop"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- The hero poster is the largest-contentful paint, so fetch it early -->
+    <link rel="preload" as="image" fetchpriority="high"
+          href="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&amp;w=1600&amp;auto=format&amp;fit=crop">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1411,6 +1576,14 @@
             --glass-hi: rgba(255, 255, 255, 0.95);
             color-scheme: light;
         }
+        /* The hero and the descent loader stay deep-water in both themes, so they
+           keep the dark token values - anything inside them that resolves
+           var(--ink) (the ghost button, for one) stays light-on-dark. */
+        html[data-theme="light"] header,
+        html[data-theme="light"] #diveGate {
+            --ink: #E8F6FF;
+            --ink-dim: #9FBCD0;
+        }
         html[data-theme="light"] body {
             color: #47677E;
             background:
@@ -1427,7 +1600,7 @@
         html[data-theme="light"] .particle {
             background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.95), rgba(34, 211, 238, 0.55) 52%, rgba(34, 211, 238, 0) 72%);
         }
-        html[data-theme="light"] .fish-art { filter: brightness(0.72) saturate(1.2); }
+        html[data-theme="light"] #fishField .fish-art { filter: brightness(0.72) saturate(1.2); }
         html[data-theme="light"] .fish.d-mid { opacity: 0.4; }
         html[data-theme="light"] .fish.d-near { opacity: 0.5; }
 
@@ -1485,16 +1658,51 @@
             border-color: rgba(255, 255, 255, 0.28);
             color: #FFFFFF;
         }
+        html[data-theme="light"] .theme-scope .chip-cyan {
+            background: rgba(10, 122, 145, 0.1);
+            border-color: rgba(10, 122, 145, 0.35);
+            color: #066277;
+            box-shadow: none;
+        }
+        html[data-theme="light"] .theme-scope .chip-violet {
+            background: rgba(99, 68, 200, 0.1);
+            border-color: rgba(99, 68, 200, 0.32);
+            color: #4D34A8;
+            box-shadow: none;
+        }
+        html[data-theme="light"] .theme-scope .chip-coral {
+            background: rgba(193, 85, 42, 0.1);
+            border-color: rgba(193, 85, 42, 0.32);
+            color: #A8471F;
+            box-shadow: none;
+        }
+        /* On photo tiles the chips keep their luminous treatment */
+        html[data-theme="light"] .theme-scope .on-media .chip-cyan {
+            background: rgba(34, 211, 238, 0.16);
+            border-color: rgba(103, 232, 249, 0.5);
+            color: #CFFAFE;
+        }
+        html[data-theme="light"] .theme-scope .on-media .chip-violet {
+            background: rgba(167, 139, 250, 0.18);
+            border-color: rgba(167, 139, 250, 0.5);
+            color: #EDE9FE;
+        }
+        html[data-theme="light"] .theme-scope .on-media .chip-coral {
+            background: rgba(255, 138, 91, 0.2);
+            border-color: rgba(255, 138, 91, 0.55);
+            color: #FFE4D6;
+        }
+
         html[data-theme="light"] .nav-link { color: #47677E; }
         html[data-theme="light"] .nav-link:hover { color: #06667C; }
         html[data-theme="light"] .link-glow { color: #0A7A91; }
         html[data-theme="light"] .link-glow:hover { color: #064E5E; text-shadow: none; }
-        html[data-theme="light"] .btn-ghost {
+        html[data-theme="light"] .theme-scope .btn-ghost {
             background: rgba(10, 34, 51, 0.04);
             border-color: rgba(10, 34, 51, 0.12);
             color: #0A2233;
         }
-        html[data-theme="light"] .btn-ghost:hover {
+        html[data-theme="light"] .theme-scope .btn-ghost:hover {
             border-color: rgba(10, 122, 145, 0.5);
             color: #064E5E;
             box-shadow: 0 0 30px -10px rgba(34, 211, 238, 0.45);
@@ -1592,6 +1800,76 @@
         html[data-theme="light"] ::-webkit-scrollbar-track { background: #E6F1F6; }
         html[data-theme="light"] ::-webkit-scrollbar-thumb { border-color: #E6F1F6; }
 
+
+        /* ============================================================
+           DEVICE TUNING
+           ============================================================ */
+
+        /* iOS Safari counts its toolbar in 100vh, which makes the hero taller
+           than the visible area and shifts as the bar hides. svh is the
+           small-viewport unit that matches what you can actually see.
+           Selectors carry the Tailwind class so they win the cascade. */
+        @supports (height: 100svh) {
+            header.h-screen { height: 100svh; }
+            body.min-h-screen { min-height: 100svh; }
+        }
+
+        /* Keep the floating controls clear of notches and home indicators */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            html .float-widget {
+                bottom: calc(1.5rem + env(safe-area-inset-bottom));
+                left: calc(1.5rem + env(safe-area-inset-left));
+            }
+            html #callRail { padding-right: env(safe-area-inset-right); }
+            html #chatbotWidget { margin-bottom: env(safe-area-inset-bottom); }
+        }
+
+        /* Scrolling the chat should not drag the page behind it */
+        #chatBody { overscroll-behavior: contain; }
+
+        @media (max-width: 767px) {
+            /* Animating a blur re-rasterises the whole section on every scroll
+               frame. Transform and opacity stay on the compositor. */
+            .reveal {
+                filter: none;
+                transition: opacity 0.9s var(--ease-buoy), transform 1s var(--ease-buoy);
+            }
+            .reveal.active { filter: none; }
+        }
+
+        @media (hover: none) {
+            /* No grey flash, no legacy 300ms tap delay */
+            a, button, [role="button"], label, input, select, textarea,
+            .gallery-tile, .bento-card, .team-card, .call-pill, .chat-option {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+
+            /* There is no hover to lean on, so a press has to answer back */
+            .liquid:active,
+            .btn-bio:active,
+            .btn-ghost:active,
+            .call-pill:active,
+            .chat-option:active,
+            .team-social a:active,
+            .theme-toggle:active {
+                transform: scale(0.97) !important;
+                transition-duration: 0.12s !important;
+            }
+            .gallery-tile:active,
+            .bento-card:active,
+            .team-card:active {
+                transform: scale(0.985) !important;
+                border-color: rgba(103, 232, 249, 0.45) !important;
+                box-shadow: 0 0 34px -10px rgba(34, 211, 238, 0.5) !important;
+                transition-duration: 0.12s !important;
+            }
+            .gallery-tile:active img { transform: scale(1.04); }
+
+            /* Transitioning filter is the expensive half of the media hover */
+            .gallery-tile img, .bento-image { transition: transform 0.6s var(--ease-liquid); }
+        }
+
         /* ============================================================
            PERFORMANCE / MOBILE TUNING
            ============================================================ */
@@ -1633,6 +1911,20 @@
             .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
         }
     </style>
+
+    <noscript>
+        <style>
+            /* Without JavaScript the descent loader would cover the page for ever
+               and the scroll lock would never lift - the site would be unreachable,
+               including for crawlers that do not execute JS. Fall back to content. */
+            html.gate-open, body.gate-open { overflow: auto !important; height: auto !important; }
+            #diveGate, #waterCursor, #bookNowModal { display: none !important; }
+            #siteRoot { opacity: 1 !important; transform: none !important; }
+            html .pre-dive { opacity: 1 !important; pointer-events: auto !important; }
+            html .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+            html body { cursor: auto !important; }
+        </style>
+    </noscript>
 </head>
 <body class="antialiased font-sans flex flex-col min-h-screen text-brand-dim selection:bg-brand-accent/30 selection:text-white overflow-x-hidden gate-open">
 
@@ -1882,13 +2174,19 @@
     </div>
 
     <!-- Floating WhatsApp Widget (Bottom Left) -->
-    <button onclick="openChat()" class="pre-dive post-dive-in float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md" aria-label="Chat on WhatsApp">
+    <!-- Opens the WhatsApp thread directly. Kept as a real href (not a JS
+         handler) so it still works with JavaScript disabled. If you change the
+         number, change it here and in WA_NUMBER in the script below. -->
+    <a href="https://wa.me/919494332007?text=Hi%21%20I%27d%20like%20to%20ask%20about%20diving%20with%20DeepBlue%20Scuba."
+       target="_blank" rel="noopener"
+       class="pre-dive post-dive-in float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
+       aria-label="Chat with us on WhatsApp">
         <span class="absolute inset-0 rounded-full bg-[#25D366]/30 blur-lg bio-pulse" style="--dur:5s" aria-hidden="true"></span>
         <svg class="relative w-7 h-7 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
         </svg>
-        <span class="absolute left-[68px] glass-deep text-brand-ink px-3 py-1.5 rounded-xl text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">Chat with us</span>
-    </button>
+        <span class="absolute left-[68px] glass-deep text-brand-ink px-3 py-1.5 rounded-xl text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">Chat on WhatsApp</span>
+    </a>
 
     <!-- Quick-call rail + booking tab, stacked on the right edge -->
     <div id="callRail" class="pre-dive post-dive-in theme-scope" aria-label="Quick contact">
@@ -1954,7 +2252,8 @@
                 </button>
 
                 <!-- Mobile Menu Toggle -->
-                <button id="mobileMenuBtn" class="lg:hidden text-brand-glow focus:outline-none p-1" aria-label="Toggle navigation">
+                <button id="mobileMenuBtn" class="lg:hidden text-brand-glow focus:outline-none p-1"
+                        aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobileMenu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -1985,8 +2284,8 @@
         <!-- Video Background -->
         <!-- poster = graceful fallback: the mixkit preview URL returns 403 to hotlinkers,
              so self-host the mp4 (or swap the source) to get motion back. -->
-        <video id="heroVideo" autoplay loop muted playsinline
-               poster="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=2070&auto=format&fit=crop"
+        <video id="heroVideo" autoplay loop muted playsinline preload="none"
+               poster="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1600&auto=format&fit=crop"
                class="absolute inset-0 w-full h-full object-cover z-0 opacity-60 saturate-[.85]">
             <source src="https://assets.mixkit.co/videos/preview/mixkit-scuba-diver-swimming-underwater-alongside-a-coral-reef-13008-large.mp4" type="video/mp4">
             Your browser does not support the video tag.
@@ -2053,7 +2352,7 @@
 
                 <!-- Feature Card 1 (Large) -->
                 <div class="group relative md:col-span-2 md:row-span-2 rounded-3xl overflow-hidden bento-card on-media liquid liquid-strong glow-hover bio-edge cursor-pointer isolate reveal" onclick="openModal()">
-                    <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070&auto=format&fit=crop" alt="PADI Open Water" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
+                    <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, 50vw" alt="PADI Open Water" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
                     <div class="absolute inset-0 duotone"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/55 to-transparent"></div>
                     <div class="absolute inset-0 p-8 flex flex-col justify-end transform transition-transform duration-700 group-hover:translate-y-[-8px] z-[4]">
@@ -2074,7 +2373,7 @@
 
                 <!-- Feature Card 2 -->
                 <div class="group relative rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge cursor-pointer isolate reveal delay-100" onclick="openModal()">
-                    <img src="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1974&auto=format&fit=crop" alt="Advanced Diver" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
+                    <img src="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, (max-width: 1279px) 33vw, 25vw" alt="Advanced Diver" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
                     <div class="absolute inset-0 duotone"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/45 to-transparent"></div>
                     <div class="absolute inset-0 p-6 flex flex-col justify-end transform transition-transform duration-700 group-hover:translate-y-[-6px] z-[4]">
@@ -2086,7 +2385,7 @@
 
                 <!-- Feature Card 3 -->
                 <div class="group relative rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge cursor-pointer isolate reveal delay-200" onclick="openModal()">
-                    <img src="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=2070&auto=format&fit=crop" alt="Manta Ray Night Dive" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
+                    <img src="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, (max-width: 1279px) 33vw, 25vw" alt="Manta Ray Night Dive" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
                     <div class="absolute inset-0 duotone"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/45 to-transparent"></div>
                     <div class="absolute inset-0 p-6 flex flex-col justify-end transform transition-transform duration-700 group-hover:translate-y-[-6px] z-[4]">
@@ -2098,7 +2397,7 @@
 
                 <!-- Feature Card 4 (Horizontal span) -->
                 <div class="group relative md:col-span-2 rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge cursor-pointer isolate reveal delay-300" onclick="openModal()">
-                    <img src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=2070&auto=format&fit=crop" alt="Snorkeling" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
+                    <img src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, 50vw" alt="Snorkeling" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover bento-image">
                     <div class="absolute inset-0 duotone"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/40 to-brand-abyss/10"></div>
                     <div class="absolute inset-0 p-6 flex flex-col justify-end transform transition-transform duration-700 group-hover:translate-y-[-6px] z-[4]">
@@ -2129,7 +2428,7 @@
 
             <div class="gallery-grid">
                 <figure class="gallery-tile on-media g-wide g-tall reveal">
-                    <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600&auto=format&fit=crop" alt="Open Water training dive" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, 50vw" alt="Open Water training dive" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Open Water training dive</p>
@@ -2137,7 +2436,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media g-tall reveal delay-100">
-                    <img src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=900&auto=format&fit=crop" alt="Anthias on the drop-off" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw" alt="Anthias on the drop-off" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Anthias on the drop-off</p>
@@ -2145,7 +2444,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media  reveal delay-200">
-                    <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=900&auto=format&fit=crop" alt="Hard coral garden" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw" alt="Hard coral garden" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Hard coral garden</p>
@@ -2153,7 +2452,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media  reveal delay-300">
-                    <img src="https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=900&auto=format&fit=crop" alt="Green turtle fly-by" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw" alt="Green turtle fly-by" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Green turtle fly-by</p>
@@ -2161,7 +2460,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media g-wide reveal">
-                    <img src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1400&auto=format&fit=crop" alt="Sunlit shallows" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, 50vw" alt="Sunlit shallows" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Sunlit shallows</p>
@@ -2169,7 +2468,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media  reveal delay-100">
-                    <img src="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=900&auto=format&fit=crop" alt="Reef shark on the sand" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw" alt="Reef shark on the sand" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Reef shark on the sand</p>
@@ -2177,7 +2476,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media  reveal delay-200">
-                    <img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=900&auto=format&fit=crop" alt="Ascent through the blue" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw" alt="Ascent through the blue" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">Ascent through the blue</p>
@@ -2185,7 +2484,7 @@
                     </figcaption>
                 </figure>
                 <figure class="gallery-tile on-media g-full reveal delay-300">
-                    <img src="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1800&auto=format&fit=crop" alt="The reef wall at golden hour" loading="lazy" decoding="async">
+                    <img src="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1600&auto=format&fit=crop 1600w" sizes="100vw" alt="The reef wall at golden hour" loading="lazy" decoding="async">
                     <span class="tile-scrim"></span>
                     <figcaption class="gallery-cap">
                         <p class="font-display font-bold text-white text-sm leading-tight">The reef wall at golden hour</p>
@@ -2414,14 +2713,14 @@
                                 <p class="field-error">Please tell us your name.</p>
                             </div>
                             <div class="field">
-                                <label class="field-label" for="inqEmail">Email</label>
-                                <input class="field-input" id="inqEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                                <label class="field-label" for="inqEmail">Email <span class="normal-case tracking-normal opacity-60">(optional)</span></label>
+                                <input class="field-input" id="inqEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com">
                                 <p class="field-error">That email does not look right.</p>
                             </div>
                             <div class="field">
-                                <label class="field-label" for="inqPhone">Phone <span class="normal-case tracking-normal opacity-60">(optional)</span></label>
-                                <input class="field-input" id="inqPhone" name="phone" type="tel" autocomplete="tel" placeholder="+91 90000 00000">
-                                <p class="field-error">Please check that number.</p>
+                                <label class="field-label" for="inqPhone">Phone</label>
+                                <input class="field-input" id="inqPhone" name="phone" type="tel" autocomplete="tel" placeholder="+91 90000 00000" required aria-required="true">
+                                <p class="field-error">Please add a phone number we can reach you on.</p>
                             </div>
                             <div class="field">
                                 <label class="field-label" for="inqLevel">Experience</label>
@@ -2643,6 +2942,11 @@
         const LOW_POWER = IS_MOBILE || (navigator.hardwareConcurrency || 4) <= 4;
 
         const rand = (min, max) => Math.random() * (max - min) + min;
+
+        // Single source of truth for the WhatsApp number used by the booking
+        // handoff and the enquiry fallback (the floating button carries it in
+        // its href so it keeps working without JavaScript).
+        const WA_NUMBER = '919494332007';
 
         /* ==========================================================
            1. AMBIENT PARTICLES (plankton / micro-bubbles)
@@ -3343,9 +3647,31 @@
         // Mobile Menu Toggle
         const btn = document.getElementById('mobileMenuBtn');
         const menu = document.getElementById('mobileMenu');
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-            menu.classList.toggle('flex');
+
+        function setMenu(open) {
+            menu.classList.toggle('hidden', !open);
+            menu.classList.toggle('flex', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setMenu(menu.classList.contains('hidden'));
+        });
+
+        // The menu used to stay open after tapping a link, covering the section
+        // it had just jumped to.
+        menu.addEventListener('click', (e) => {
+            if (e.target.closest('a, button')) setMenu(false);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') setMenu(false);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (menu.classList.contains('hidden')) return;
+            if (!menu.contains(e.target) && !btn.contains(e.target)) setMenu(false);
         });
 
         /* ==========================================================
@@ -3499,7 +3825,7 @@
 
                         setTimeout(() => {
                             // Construct WhatsApp redirect string with line breaks
-                            const waNumber = "919494332007";
+                            const waNumber = WA_NUMBER;
                             const waText = encodeURIComponent(`Hi! I'd like to confirm my booking setup through the website.\n\n*Name:* ${chatData.name}\n*Plan:* ${chatData.plan}\n*Date:* ${chatData.date}\n*Guests:* ${chatData.guests}`);
                             window.open(`https://wa.me/${waNumber}?text=${waText}`, '_blank');
 
@@ -3719,7 +4045,7 @@
                 let ok = true;
 
                 if (el.hasAttribute('required') && !v) ok = false;
-                if (ok && el.type === 'email' && !EMAIL.test(v)) ok = false;
+                if (ok && el.type === 'email' && v && !EMAIL.test(v)) ok = false;
                 if (ok && el.type === 'tel' && v && !PHONE.test(v)) ok = false;
                 if (ok && el.type === 'number') {
                     const n = Number(v);
@@ -3799,13 +4125,13 @@
                     const text = encodeURIComponent(
                         "Hi! I sent an enquiry through the website.\n\n" +
                         '*Name:* ' + d.name + '\n' +
-                        '*Email:* ' + d.email + '\n' +
-                        (d.phone ? '*Phone:* ' + d.phone + '\n' : '') +
+                        '*Phone:* ' + d.phone + '\n' +
+                        (d.email ? '*Email:* ' + d.email + '\n' : '') +
                         '*Experience:* ' + d.level + '\n' +
                         '*Preferred date:* ' + d.date + '\n' +
                         '*Guests:* ' + d.guests + '\n\n' + d.message
                     );
-                    window.open('https://wa.me/919494332007?text=' + text, '_blank');
+                    window.open('https://wa.me/' + WA_NUMBER + '?text=' + text, '_blank');
                 });
             }
 
@@ -3844,7 +4170,10 @@
                 modal.classList.add('open');
                 document.documentElement.classList.add('modal-open');
                 document.body.classList.add('modal-open');
+                // rAF is paused in a hidden tab; a timer is not. Without the second
+                // path the dialog can end up open (and blocking) but invisible.
                 requestAnimationFrame(() => modal.classList.add('in'));
+                setTimeout(() => modal.classList.add('in'), 60);
 
                 const go = document.getElementById('bookModalGo');
                 if (go) setTimeout(() => go.focus({ preventScroll: true }), 420);
