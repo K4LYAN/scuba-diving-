@@ -1,0 +1,113 @@
+    <!-- ============================================================
+         DESCENT LOADER — auto-playing dive-in sequence.
+         No sign-in, no gate: it descends to reef depth on its own and
+         then submerges to reveal the page. Any tap or key skips ahead.
+         ============================================================ -->
+    <div id="diveGate" role="status" aria-live="polite" aria-label="Entering the dive experience">
+        <div class="gate-sheen" aria-hidden="true"></div>
+        <div class="caustics" aria-hidden="true" style="opacity:.7"></div>
+        <div class="rays" aria-hidden="true" style="opacity:.85"></div>
+        <div id="gateFish" class="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+        <div id="gateParticles" class="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+
+        <!-- Water surface wave (sweeps upward past you on submerge) -->
+        <div id="gateWave" aria-hidden="true">
+            <svg class="wave-strip slow" viewBox="0 0 2880 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradB" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#67E8F9" stop-opacity="0.45"/>
+                        <stop offset="100%" stop-color="#0B3A43" stop-opacity="0.85"/>
+                    </linearGradient>
+                </defs>
+                <path fill="url(#waveGradB)" d="M0,96 C240,32 480,152 720,96 C960,40 1200,156 1440,96 C1680,36 1920,152 2160,96 C2400,40 2640,156 2880,96 L2880,240 L0,240 Z"/>
+            </svg>
+            <svg class="wave-strip" viewBox="0 0 2880 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradA" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#CFFAFE" stop-opacity="0.75"/>
+                        <stop offset="45%" stop-color="#22D3EE" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#04121F" stop-opacity="0.95"/>
+                    </linearGradient>
+                </defs>
+                <path fill="url(#waveGradA)" d="M0,120 C200,60 420,170 720,118 C1020,66 1180,176 1440,120 C1700,64 1920,172 2160,118 C2400,64 2680,170 2880,120 L2880,240 L0,240 Z"/>
+                <path fill="none" stroke="#DFFBFF" stroke-opacity="0.55" stroke-width="2" d="M0,120 C200,60 420,170 720,118 C1020,66 1180,176 1440,120 C1700,64 1920,172 2160,118 C2400,64 2680,170 2880,120"/>
+            </svg>
+        </div>
+
+        <div id="gateWash" aria-hidden="true"></div>
+
+        <!-- Gate content -->
+        <div class="relative z-10 h-full w-full flex flex-col items-center justify-center px-6 py-10">
+
+            <div id="diveHud" class="dive-hud relative flex flex-col items-center">
+
+                <!-- Depth dial: floods with water as the descent progresses -->
+                <div id="hudBar" class="dial-wrap" role="progressbar" aria-label="Descending to the reef" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0">
+                    <span class="dial-glow" aria-hidden="true"></span>
+                    <span class="dial-pulse" aria-hidden="true"></span>
+                    <span class="dial-pulse delay" aria-hidden="true"></span>
+
+                    <svg class="dial" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#67E8F9"/>
+                                <stop offset="52%" stop-color="#22D3EE"/>
+                                <stop offset="100%" stop-color="#A78BFA"/>
+                            </linearGradient>
+                            <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#7DE9F8" stop-opacity="0.62"/>
+                                <stop offset="100%" stop-color="#0B3A43" stop-opacity="0.9"/>
+                            </linearGradient>
+                            <clipPath id="dialClip"><circle cx="120" cy="120" r="94"/></clipPath>
+                        </defs>
+
+                        <g clip-path="url(#dialClip)">
+                            <circle cx="120" cy="120" r="94" fill="rgba(255,255,255,0.028)"/>
+
+                            <!-- JS lifts this group; the waves scroll sideways on their own -->
+                            <g id="waterLift" transform="translate(0,112)">
+                                <g class="water-scroll slow">
+                                    <path fill="#22D3EE" fill-opacity="0.20" d="M0,127 C30,113 60,141 120,127 C180,113 210,141 240,127 C270,113 300,141 360,127 C420,113 450,141 480,127 L480,320 L0,320 Z"/>
+                                </g>
+                                <g class="water-scroll">
+                                    <path fill="url(#waterGrad)" d="M0,120 C30,104 60,136 120,120 C180,104 210,136 240,120 C270,104 300,136 360,120 C420,104 450,136 480,120 L480,320 L0,320 Z"/>
+                                    <path fill="none" stroke="#DFFBFF" stroke-opacity="0.5" stroke-width="1.5" d="M0,120 C30,104 60,136 120,120 C180,104 210,136 240,120 C270,104 300,136 360,120 C420,104 450,136 480,120"/>
+                                </g>
+                                <circle class="dial-bubble" cx="88"  cy="178" r="2.6" style="--dur:3.4s; --delay:0s"/>
+                                <circle class="dial-bubble" cx="133" cy="196" r="1.8" style="--dur:4.3s; --delay:0.9s"/>
+                                <circle class="dial-bubble" cx="108" cy="208" r="3.1" style="--dur:3.9s; --delay:1.8s"/>
+                                <circle class="dial-bubble" cx="152" cy="186" r="2.0" style="--dur:4.7s; --delay:2.7s"/>
+                            </g>
+                        </g>
+
+                        <!-- Graduation ring: a dashed circle reads as depth ticks -->
+                        <circle cx="120" cy="120" r="101" fill="none" stroke="#67E8F9" stroke-opacity="0.26"
+                                stroke-width="7" stroke-dasharray="1.6 14.2"/>
+
+                        <!-- Progress track and arc -->
+                        <circle cx="120" cy="120" r="111" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2.5"/>
+                        <circle id="hudArc" cx="120" cy="120" r="111" fill="none" stroke="url(#arcGrad)"
+                                stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 120 120)"
+                                stroke-dasharray="697.43" stroke-dashoffset="697.43"/>
+                    </svg>
+
+                    <!-- Centre readout, sitting above the rising water -->
+                    <div class="absolute inset-0 z-[2] flex flex-col items-center justify-center pointer-events-none">
+                        <span class="hud-label mb-2">Descending</span>
+                        <p class="font-display font-bold text-white leading-none" style="text-shadow: 0 2px 16px rgba(1,6,13,0.85);">
+                            <span id="depthNow" class="depth-readout text-[52px]">0</span><span class="text-xl text-brand-glow/85 ml-0.5">m</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Wordmark tracks in letter by letter -->
+                <p class="wordmark font-display font-bold text-white mt-9" aria-label="Dive Adda">
+                    <span style="--i:0">D</span><span style="--i:1">I</span><span style="--i:2">V</span><span style="--i:3">E</span><span style="--i:4">&nbsp;</span><span class="text-gradient-bio" style="--i:5">A</span><span class="text-gradient-bio" style="--i:6">D</span><span class="text-gradient-bio" style="--i:7">D</span><span class="text-gradient-bio" style="--i:8">A</span>
+                </p>
+                <p class="mt-3 text-[10px] font-bold uppercase tracking-[0.42em] text-brand-glow/70">Discover &mdash; The Deep</p>
+                <p id="diveStatus" class="stage-in mt-4 text-[10px] uppercase tracking-[0.3em] text-brand-glow/65">Checking regulators</p>
+            </div>
+
+            <p id="diveHint" class="mt-10 text-[10px] uppercase tracking-[0.3em] text-brand-dim/35">Tap anywhere to skip</p>
+        </div>
+    </div>

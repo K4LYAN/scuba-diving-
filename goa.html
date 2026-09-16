@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth gate-open">
+<head>
+    <meta charset="UTF-8">
+
+    <script>
+        /* Applied before the first paint so the page never flashes the wrong
+           theme. Dark is the brand default; light is opt-in and remembered. */
+        (function () {
+            var t = 'dark';
+            try { if (localStorage.getItem('db-theme') === 'light') t = 'light'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Scuba Diving in Goa | Dive Adda</title>
+
+    <meta name="description" content="Goa faces the Arabian Sea on India’s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="Dive Adda">
+    <meta name="theme-color" content="#04121F" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F3FAFC" media="(prefers-color-scheme: light)">
+    <link rel="canonical" href="https://www.diveaddaindia.com/goa.html">
+    <link rel="icon" href="assets/img/logo-mark.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/img/logo-mark.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Dive Adda">
+    <meta property="og:locale" content="en_IN">
+    <meta property="og:url" content="https://www.diveaddaindia.com/goa.html">
+    <meta property="og:title" content="Scuba Diving in Goa | Dive Adda">
+    <meta property="og:description" content="Goa faces the Arabian Sea on India’s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.">
+    <meta property="og:image" content="https://www.diveaddaindia.com/assets/img/brochure/cover-divers.jpg">
+    <meta property="og:image:alt" content="Divers exploring a reef with Dive Adda">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Scuba Diving in Goa | Dive Adda">
+    <meta name="twitter:description" content="Goa faces the Arabian Sea on India’s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.">
+    <meta name="twitter:image" content="https://www.diveaddaindia.com/assets/img/brochure/cover-divers.jpg">
+
+    <!-- Structured data mirrors the page exactly: no invented prices, ratings,
+         reviews, street address or dive sites. -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://www.diveaddaindia.com/#organization",
+      "name": "Dive Adda",
+      "alternateName": "Dive Adda India",
+      "slogan": "Discover — The Deep",
+      "url": "https://www.diveaddaindia.com/",
+      "description": "Dive Adda is an internationally certified scuba diving centre affiliated with SSI, running SSI courses, guided fun dives, snorkelling and underwater events.",
+      "telephone": "+918977762155",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.diveaddaindia.com/assets/img/logo-full.png"
+      },
+      "sameAs": [
+        "https://www.instagram.com/diveaddaindia/",
+        "https://www.facebook.com/diveaddaindia/"
+      ]
+    },
+    {
+      "@type": [
+        "LocalBusiness",
+        "SportsActivityLocation"
+      ],
+      "@id": "https://www.diveaddaindia.com/#divecentre",
+      "name": "Dive Adda — SSI Certified Scuba Centre",
+      "url": "https://www.diveaddaindia.com/",
+      "description": "SSI certified scuba diving centre in Vizag offering SSI courses, guided fun dives, snorkelling, boat, shore and confined diving, and underwater events.",
+      "telephone": "+918977762155",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Visakhapatnam",
+        "addressRegion": "Andhra Pradesh",
+        "addressCountry": "IN"
+      },
+      "areaServed": [
+        {
+          "@type": "City",
+          "name": "Visakhapatnam"
+        },
+        {
+          "@type": "City",
+          "name": "Rajahmundry"
+        },
+        {
+          "@type": "City",
+          "name": "Goa"
+        }
+      ],
+      "image": [
+        "https://www.diveaddaindia.com/assets/img/brochure/cover-divers.jpg",
+        "https://www.diveaddaindia.com/assets/img/brochure/ssi-pool-training.jpg",
+        "https://www.diveaddaindia.com/assets/img/brochure/guided-fun-dive.jpg"
+      ],
+      "parentOrganization": {
+        "@id": "https://www.diveaddaindia.com/#organization"
+      },
+      "makesOffer": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Scuba Diving",
+            "serviceType": "Guided scuba diving"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "SSI Courses",
+            "serviceType": "Scuba certification course"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Guided Fun Dives",
+            "serviceType": "Guided scuba diving"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Snorkelling",
+            "serviceType": "Guided snorkelling"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Boat Diving",
+            "serviceType": "Guided scuba diving"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Shore Diving",
+            "serviceType": "Guided scuba diving"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Confined Diving",
+            "serviceType": "Scuba skills training"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Underwater Events",
+            "serviceType": "Underwater event"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.diveaddaindia.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Destinations",
+          "item": "https://www.diveaddaindia.com/index.html#destinations"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Goa",
+          "item": "https://www.diveaddaindia.com/goa.html"
+        }
+      ]
+    },
+    {
+      "@type": "Service",
+      "name": "Scuba diving in Goa",
+      "description": "Goa faces the Arabian Sea on India’s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.",
+      "serviceType": "Scuba diving in Goa",
+      "provider": {
+        "@id": "https://www.diveaddaindia.com/#organization"
+      },
+      "url": "https://www.diveaddaindia.com/goa.html",
+      "areaServed": [
+        {
+          "@type": "City",
+          "name": "Visakhapatnam"
+        },
+        {
+          "@type": "City",
+          "name": "Rajahmundry"
+        },
+        {
+          "@type": "City",
+          "name": "Goa"
+        }
+      ]
+    }
+  ]
+}
+    </script>
+
+    <link rel="preload" as="image" fetchpriority="high" href="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1600&auto=format&fit=crop">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="assets/css/dive-adda.css">
+    <link rel="stylesheet" href="assets/css/dive-adda-pages.css">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment variables for artifact runtime
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+
+        let db, auth, user;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Critical Rule 3: Auth Before Queries
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    user = auth.currentUser;
+                } catch (e) {
+                    console.error("Authentication error:", e);
+                }
+            };
+            initAuth();
+        } catch (e) {
+            console.error("Firebase initialization skipped or failed:", e);
+        }
+
+        // Attach to window so our regular script tags can use it
+        window.saveBookingToDB = async function(bookingData) {
+            if (!user || !db) {
+                console.warn("DB not ready or user not authenticated.");
+                return false;
+            }
+            try {
+                // Critical Rule 1: Strict Paths required for permission checks
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+                await addDoc(colRef, {
+                    ...bookingData,
+                    userId: user.uid,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending_whatsapp'
+                });
+                return true;
+            } catch (e) {
+                console.error("Error saving booking to Firestore:", e);
+                return false;
+            }
+        }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            abyss:  '#01060D', // Deepest trench black-navy
+                            dark:   '#010913', // Overlay / gradient anchor
+                            deep:   '#04121F', // Page base (deep navy)
+                            base:   '#04121F',
+                            mid:    '#0A2036', // Elevated navy
+                            teal:   '#0B3A43', // Midnight teal
+                            card:   '#07182A', // Card body behind glass
+                            accent: '#22D3EE', // Bioluminescent cyan
+                            glow:   '#67E8F9', // Cyan highlight
+                            violet: '#A78BFA', // Soft bioluminescent purple
+                            warm:   '#FF8A5B', // Warm reef coral (used sparingly)
+                            ink:    '#E8F6FF', // Crisp primary text
+                            dim:    '#9FBCD0', // Secondary text
+                        }
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "linear-gradient(to bottom, rgba(1, 6, 13, 0.55), rgba(4, 18, 31, 1)), url('assets/img/brochure/cover-divers.jpg')",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <noscript>
+        <style>
+            /* Without JavaScript the descent loader would cover the page for ever
+               and the scroll lock would never lift - the site would be unreachable,
+               including for crawlers that do not execute JS. Fall back to content. */
+            html.gate-open, body.gate-open { overflow: auto !important; height: auto !important; }
+            #diveGate, #waterCursor, #bookNowModal { display: none !important; }
+            #siteRoot { opacity: 1 !important; transform: none !important; }
+            html .pre-dive { opacity: 1 !important; pointer-events: auto !important; }
+            html .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+            html body { cursor: auto !important; }
+        </style>
+    </noscript>
+</head>
+<body class="antialiased font-sans flex flex-col min-h-screen text-brand-dim selection:bg-brand-accent/30 selection:text-white overflow-x-hidden gate-open" data-page="goa" data-section="destinations" data-depth="10" data-depth-span="18">
+
+    <!-- ============================================================
+         AMBIENT UNDERWATER BACKGROUND (caustics, rays, plankton)
+         ============================================================ -->
+    <div id="ambient" aria-hidden="true">
+        <div class="caustics"></div>
+        <div class="caustics layer-2"></div>
+        <div class="rays"></div>
+        <div class="rays rays-2"></div>
+        <div id="fishField" class="absolute inset-0"></div>
+        <div id="particleField" class="absolute inset-0"></div>
+        <div class="vignette"></div>
+    </div>
+
+    <!-- Shared gradients for the marine life, defined once and referenced
+         by every cloned fish so the document holds a single copy. -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <defs>
+            <linearGradient id="bodyReef" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#14586E"/>
+                <stop offset="48%" stop-color="#2C90A6"/>
+                <stop offset="100%" stop-color="#5FC4D4"/>
+            </linearGradient>
+            <linearGradient id="bodySilver" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1B5C70"/>
+                <stop offset="52%" stop-color="#41A0B4"/>
+                <stop offset="100%" stop-color="#A5DEE8"/>
+            </linearGradient>
+            <linearGradient id="bodyTang" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#27507C"/>
+                <stop offset="55%" stop-color="#4A7CB4"/>
+                <stop offset="100%" stop-color="#9DB4EA"/>
+            </linearGradient>
+            <linearGradient id="finFilm" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#9BEAF8" stop-opacity="0.42"/>
+                <stop offset="100%" stop-color="#2C7C90" stop-opacity="0.28"/>
+            </linearGradient>
+            <linearGradient id="rayShade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#123349"/>
+                <stop offset="100%" stop-color="#1F6579"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- Species templates: cloned per fish so each one can carry its own
+         randomised timings (a <use> shadow tree could not). -->
+    <template id="tplReef">
+        <svg class="fish-art" viewBox="0 0 100 56" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M20,28 C12,23 6,15 2,6 C7,17 7,39 2,50 C6,41 12,33 20,28 Z" fill="url(#finFilm)"/>
+            </g>
+            <path d="M38,13 C46,3 60,1 70,7 C60,8 47,10 40,15 Z" fill="url(#finFilm)"/>
+            <path d="M42,43 C50,52 60,53 67,50 C58,48 48,46 43,42 Z" fill="url(#finFilm)"/>
+            <path d="M19,28 C24,14 37,7 56,9 C73,11 87,18 93,28 C87,38 73,45 56,47 C37,49 24,42 19,28 Z" fill="url(#bodyReef)"/>
+            <path d="M19,28 C24,14 37,7 56,9 C73,11 87,18 93,28" fill="none" stroke="#9BEAF8" stroke-opacity="0.34" stroke-width="1.2"/>
+            <path d="M50,11 C46,20 46,36 50,45" fill="none" stroke="#06202B" stroke-opacity="0.34" stroke-width="3"/>
+            <path d="M62,11 C58,19 58,37 62,46" fill="none" stroke="#06202B" stroke-opacity="0.26" stroke-width="2.4"/>
+            <g class="fish-fin">
+                <path d="M60,30 C66,34 68,41 65,46 C59,41 56,34 57,30 Z" fill="#67E8F9" fill-opacity="0.3"/>
+            </g>
+            <path d="M72,14 C68,20 68,36 72,42" fill="none" stroke="#06202B" stroke-opacity="0.28" stroke-width="1.4"/>
+            <circle cx="82" cy="24" r="3" fill="#04121F"/>
+            <circle cx="83" cy="23" r="1" fill="#CFFAFE" fill-opacity="0.85"/>
+        </svg>
+    </template>
+
+    <template id="tplJack">
+        <svg class="fish-art" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M22,20 C15,17 8,10 3,3 C8,12 8,28 3,37 C8,30 15,23 22,20 Z" fill="url(#finFilm)"/>
+            </g>
+            <path d="M44,12 C54,5 66,4 74,8 C64,9 52,11 46,14 Z" fill="url(#finFilm)"/>
+            <path d="M48,29 C56,35 64,36 70,34 C62,32 54,30 49,28 Z" fill="url(#finFilm)"/>
+            <path d="M21,20 C30,11 50,6 74,7 C92,8 108,13 114,20 C108,27 92,32 74,33 C50,34 30,29 21,20 Z" fill="url(#bodySilver)"/>
+            <path d="M21,20 C30,11 50,6 74,7 C92,8 108,13 114,20" fill="none" stroke="#C4F1FA" stroke-opacity="0.32" stroke-width="1"/>
+            <g class="fish-fin">
+                <path d="M74,22 C80,26 82,31 80,35 C74,31 71,25 72,22 Z" fill="#67E8F9" fill-opacity="0.26"/>
+            </g>
+            <path d="M92,10 C88,14 88,26 92,30" fill="none" stroke="#06202B" stroke-opacity="0.24" stroke-width="1.2"/>
+            <circle cx="104" cy="17" r="2.4" fill="#04121F"/>
+            <circle cx="105" cy="16.2" r="0.8" fill="#CFFAFE" fill-opacity="0.8"/>
+        </svg>
+    </template>
+
+    <template id="tplTang">
+        <svg class="fish-art" viewBox="0 0 92 88" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M24,46 C16,42 9,34 4,25 C10,36 10,56 4,67 C9,58 16,50 24,46 Z" fill="url(#finFilm)"/>
+            </g>
+            <!-- Long dorsal and anal fins, swept back well clear of the body -->
+            <path d="M34,30 C40,8 58,2 74,8 C60,13 46,21 39,33 Z" fill="url(#finFilm)"/>
+            <path d="M36,62 C42,82 58,88 74,82 C60,77 46,69 40,60 Z" fill="url(#finFilm)"/>
+            <!-- Compressed disc body with a pointed snout -->
+            <path d="M24,46 C25,25 38,13 56,14 C70,15 80,25 84,38 L88,43 C89,45 89,47 88,49 L84,54 C80,67 70,77 56,78 C38,79 25,67 24,46 Z" fill="url(#bodyTang)"/>
+            <path d="M24,46 C25,25 38,13 56,14 C70,15 80,25 84,38" fill="none" stroke="#CBE2FF" stroke-opacity="0.32" stroke-width="1.2"/>
+            <path d="M44,17 C40,32 40,60 44,75" fill="none" stroke="#061826" stroke-opacity="0.32" stroke-width="4.2"/>
+            <path d="M60,18 C56,32 56,60 60,74" fill="none" stroke="#061826" stroke-opacity="0.24" stroke-width="3.4"/>
+            <g class="fish-fin">
+                <path d="M58,50 C64,56 65,64 62,70 C56,63 53,55 55,50 Z" fill="#A78BFA" fill-opacity="0.26"/>
+            </g>
+            <path d="M70,20 C66,28 66,62 70,71" fill="none" stroke="#061826" stroke-opacity="0.22" stroke-width="1.4"/>
+            <circle cx="78" cy="37" r="3.2" fill="#04121F"/>
+            <circle cx="79" cy="36" r="1.05" fill="#CFFAFE" fill-opacity="0.85"/>
+        </svg>
+    </template>
+
+    <template id="tplRay">
+        <svg class="fish-art" viewBox="0 0 150 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="ray-body">
+                <!-- Wings sweep back and taper to points, the way a manta reads from above -->
+                <path d="M75,12 C86,12 99,17 114,26 C126,33 137,41 146,50 C142,52 134,51 124,48 C112,44 99,41 90,41 C83,41 78,43 75,47 C72,43 67,41 60,41 C51,41 38,44 26,48 C16,51 8,52 4,50 C13,41 24,33 36,26 C51,17 64,12 75,12 Z" fill="url(#rayShade)"/>
+                <!-- Cephalic fins either side of the mouth -->
+                <path d="M69,13 C67,7 70,3 73,4 C75,5 75,9 74,13 Z" fill="url(#rayShade)"/>
+                <path d="M81,13 C83,7 80,3 77,4 C75,5 75,9 76,13 Z" fill="url(#rayShade)"/>
+                <!-- Leading-edge light from the surface -->
+                <path d="M75,12 C86,12 99,17 114,26 C126,33 137,41 146,50" fill="none" stroke="#7FC4D6" stroke-opacity="0.3" stroke-width="1.3"/>
+                <path d="M75,12 C64,12 51,17 36,26 C24,33 13,41 4,50" fill="none" stroke="#7FC4D6" stroke-opacity="0.3" stroke-width="1.3"/>
+            </g>
+            <!-- Whip tail, tapering to nothing -->
+            <path d="M72.6,45 L77.4,45 C76.8,54 76.3,62 75,69 C73.7,62 73.2,54 72.6,45 Z" fill="url(#rayShade)"/>
+        </svg>
+    </template>
+
+    <!-- ============================================================
+         WATER CURSOR — fluid wake, refraction lens and ripple rings.
+         Purely decorative: pointer-events are off on every layer.
+         ============================================================ -->
+    <div id="waterCursor" aria-hidden="true">
+        <canvas id="waterCanvas"></canvas>
+        <div class="wc-lens"></div>
+        <div class="wc-dot"></div>
+    </div>
+
+
+    <!-- ============================================================
+         DESCENT LOADER — auto-playing dive-in sequence.
+         No sign-in, no gate: it descends to reef depth on its own and
+         then submerges to reveal the page. Any tap or key skips ahead.
+         ============================================================ -->
+    <div id="diveGate" role="status" aria-live="polite" aria-label="Entering the dive experience">
+        <div class="gate-sheen" aria-hidden="true"></div>
+        <div class="caustics" aria-hidden="true" style="opacity:.7"></div>
+        <div class="rays" aria-hidden="true" style="opacity:.85"></div>
+        <div id="gateFish" class="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+        <div id="gateParticles" class="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+
+        <!-- Water surface wave (sweeps upward past you on submerge) -->
+        <div id="gateWave" aria-hidden="true">
+            <svg class="wave-strip slow" viewBox="0 0 2880 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradB" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#67E8F9" stop-opacity="0.45"/>
+                        <stop offset="100%" stop-color="#0B3A43" stop-opacity="0.85"/>
+                    </linearGradient>
+                </defs>
+                <path fill="url(#waveGradB)" d="M0,96 C240,32 480,152 720,96 C960,40 1200,156 1440,96 C1680,36 1920,152 2160,96 C2400,40 2640,156 2880,96 L2880,240 L0,240 Z"/>
+            </svg>
+            <svg class="wave-strip" viewBox="0 0 2880 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradA" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#CFFAFE" stop-opacity="0.75"/>
+                        <stop offset="45%" stop-color="#22D3EE" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#04121F" stop-opacity="0.95"/>
+                    </linearGradient>
+                </defs>
+                <path fill="url(#waveGradA)" d="M0,120 C200,60 420,170 720,118 C1020,66 1180,176 1440,120 C1700,64 1920,172 2160,118 C2400,64 2680,170 2880,120 L2880,240 L0,240 Z"/>
+                <path fill="none" stroke="#DFFBFF" stroke-opacity="0.55" stroke-width="2" d="M0,120 C200,60 420,170 720,118 C1020,66 1180,176 1440,120 C1700,64 1920,172 2160,118 C2400,64 2680,170 2880,120"/>
+            </svg>
+        </div>
+
+        <div id="gateWash" aria-hidden="true"></div>
+
+        <!-- Gate content -->
+        <div class="relative z-10 h-full w-full flex flex-col items-center justify-center px-6 py-10">
+
+            <div id="diveHud" class="dive-hud relative flex flex-col items-center">
+
+                <!-- Depth dial: floods with water as the descent progresses -->
+                <div id="hudBar" class="dial-wrap" role="progressbar" aria-label="Descending to the reef" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0">
+                    <span class="dial-glow" aria-hidden="true"></span>
+                    <span class="dial-pulse" aria-hidden="true"></span>
+                    <span class="dial-pulse delay" aria-hidden="true"></span>
+
+                    <svg class="dial" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#67E8F9"/>
+                                <stop offset="52%" stop-color="#22D3EE"/>
+                                <stop offset="100%" stop-color="#A78BFA"/>
+                            </linearGradient>
+                            <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#7DE9F8" stop-opacity="0.62"/>
+                                <stop offset="100%" stop-color="#0B3A43" stop-opacity="0.9"/>
+                            </linearGradient>
+                            <clipPath id="dialClip"><circle cx="120" cy="120" r="94"/></clipPath>
+                        </defs>
+
+                        <g clip-path="url(#dialClip)">
+                            <circle cx="120" cy="120" r="94" fill="rgba(255,255,255,0.028)"/>
+
+                            <!-- JS lifts this group; the waves scroll sideways on their own -->
+                            <g id="waterLift" transform="translate(0,112)">
+                                <g class="water-scroll slow">
+                                    <path fill="#22D3EE" fill-opacity="0.20" d="M0,127 C30,113 60,141 120,127 C180,113 210,141 240,127 C270,113 300,141 360,127 C420,113 450,141 480,127 L480,320 L0,320 Z"/>
+                                </g>
+                                <g class="water-scroll">
+                                    <path fill="url(#waterGrad)" d="M0,120 C30,104 60,136 120,120 C180,104 210,136 240,120 C270,104 300,136 360,120 C420,104 450,136 480,120 L480,320 L0,320 Z"/>
+                                    <path fill="none" stroke="#DFFBFF" stroke-opacity="0.5" stroke-width="1.5" d="M0,120 C30,104 60,136 120,120 C180,104 210,136 240,120 C270,104 300,136 360,120 C420,104 450,136 480,120"/>
+                                </g>
+                                <circle class="dial-bubble" cx="88"  cy="178" r="2.6" style="--dur:3.4s; --delay:0s"/>
+                                <circle class="dial-bubble" cx="133" cy="196" r="1.8" style="--dur:4.3s; --delay:0.9s"/>
+                                <circle class="dial-bubble" cx="108" cy="208" r="3.1" style="--dur:3.9s; --delay:1.8s"/>
+                                <circle class="dial-bubble" cx="152" cy="186" r="2.0" style="--dur:4.7s; --delay:2.7s"/>
+                            </g>
+                        </g>
+
+                        <!-- Graduation ring: a dashed circle reads as depth ticks -->
+                        <circle cx="120" cy="120" r="101" fill="none" stroke="#67E8F9" stroke-opacity="0.26"
+                                stroke-width="7" stroke-dasharray="1.6 14.2"/>
+
+                        <!-- Progress track and arc -->
+                        <circle cx="120" cy="120" r="111" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2.5"/>
+                        <circle id="hudArc" cx="120" cy="120" r="111" fill="none" stroke="url(#arcGrad)"
+                                stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 120 120)"
+                                stroke-dasharray="697.43" stroke-dashoffset="697.43"/>
+                    </svg>
+
+                    <!-- Centre readout, sitting above the rising water -->
+                    <div class="absolute inset-0 z-[2] flex flex-col items-center justify-center pointer-events-none">
+                        <span class="hud-label mb-2">Descending</span>
+                        <p class="font-display font-bold text-white leading-none" style="text-shadow: 0 2px 16px rgba(1,6,13,0.85);">
+                            <span id="depthNow" class="depth-readout text-[52px]">0</span><span class="text-xl text-brand-glow/85 ml-0.5">m</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Wordmark tracks in letter by letter -->
+                <p class="wordmark font-display font-bold text-white mt-9" aria-label="Dive Adda">
+                    <span style="--i:0">D</span><span style="--i:1">I</span><span style="--i:2">V</span><span style="--i:3">E</span><span style="--i:4">&nbsp;</span><span class="text-gradient-bio" style="--i:5">A</span><span class="text-gradient-bio" style="--i:6">D</span><span class="text-gradient-bio" style="--i:7">D</span><span class="text-gradient-bio" style="--i:8">A</span>
+                </p>
+                <p class="mt-3 text-[10px] font-bold uppercase tracking-[0.42em] text-brand-glow/70">Discover &mdash; The Deep</p>
+                <p id="diveStatus" class="stage-in mt-4 text-[10px] uppercase tracking-[0.3em] text-brand-glow/65">Checking regulators</p>
+            </div>
+
+            <p id="diveHint" class="mt-10 text-[10px] uppercase tracking-[0.3em] text-brand-dim/35">Tap anywhere to skip</p>
+        </div>
+    </div>
+
+
+    <a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21%20I%27d%20like%20to%20ask%20about%20diving%20with%20you."
+       target="_blank" rel="noopener"
+       class="pre-dive post-dive-in float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
+       aria-label="Chat with Dive Adda on WhatsApp">
+        <span class="absolute inset-0 rounded-full bg-[#25D366]/30 blur-lg bio-pulse" style="--dur:5s" aria-hidden="true"></span>
+        <svg class="relative w-7 h-7 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+        <span class="absolute left-[68px] glass-deep text-brand-ink px-3 py-1.5 rounded-xl text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">Chat on WhatsApp</span>
+    </a>
+
+    <div id="callRail" class="pre-dive post-dive-in theme-scope" aria-label="Quick contact">
+        <a href="tel:+918977762155" class="call-pill glass-deep" aria-label="Call the Dive Adda dive desk on +91 89777 62155" title="Dive desk: +91 89777 62155">
+            <span class="call-ic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg></span>
+            <span class="call-text">
+                <span class="block text-[9px] uppercase tracking-[0.22em] text-brand-glow">Dive desk</span>
+                <span class="block text-sm font-bold text-white leading-tight">+91 89777 62155</span>
+            </span>
+        </a>
+        <button type="button" data-book class="group ripple-host glass-deep border-r-0 rounded-l-2xl py-6 px-2 md:px-3 flex flex-col items-center gap-3 text-brand-ink transition-all duration-500 hover:pr-4 hover:shadow-[-10px_0_40px_-8px_rgba(34,211,238,0.55)]">
+            <span class="absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-brand-accent via-brand-violet to-transparent shadow-[0_0_14px_#22D3EE]" aria-hidden="true"></span>
+            <svg class="w-5 h-5 text-brand-glow group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span style="writing-mode: vertical-rl; transform: rotate(180deg);" class="font-display font-bold tracking-[0.22em] text-[11px] uppercase text-brand-ink/90 group-hover:text-white transition-colors">Booking Open</span>
+        </button>
+    </div>
+
+    <div id="depthMeter" aria-hidden="true">
+        <span class="dm-label">Depth</span>
+        <span class="dm-track"><span class="dm-fill"></span></span>
+        <span class="dm-read">0m</span>
+    </div>
+
+    <nav id="navbar" class="pre-dive post-dive-in fixed w-full z-50 transition-all duration-500 py-4 px-4 sm:px-6 md:px-12 top-0">
+    <div class="city-bar">
+      <div class="cities">
+        <span class="hidden sm:inline text-[9.5px] font-bold uppercase tracking-[0.28em] text-brand-glow/70 mr-1 shrink-0">Dive with us in</span>
+        <a href="vizag.html" class="city-chip" data-city="vizag"><span class="pin"></span>Vizag</a><a href="rajahmundry.html" class="city-chip" data-city="rajahmundry"><span class="pin"></span>Rajahmundry</a><a href="goa.html" class="city-chip is-current" data-city="goa"><span class="pin"></span>Goa</a>
+      </div>
+      <div class="bar-meta">
+        <span class="inline-flex items-center gap-2 font-semibold tracking-wide"><img src="assets/img/ssi-dive-center.png" alt="" class="w-5 h-5" loading="lazy"> SSI Certified Dive Centre</span>
+        <a href="tel:+918977762155" class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg>+91 89777 62155</a>
+      </div>
+    </div>
+      <div id="navPill" class="glass-deep theme-scope relative max-w-7xl mx-auto flex justify-between items-center px-5 py-3 rounded-2xl transition-all duration-500">
+
+        <a href="index.html" class="flex items-center gap-3 group shrink-0" aria-label="Dive Adda — home">
+          <img src="assets/img/logo-mark-light.png" alt="" class="brand-mark logo-light" width="56" height="38">
+          <img src="assets/img/logo-mark.png" alt="" class="brand-mark logo-dark" width="56" height="38">
+          <span class="leading-none">
+            <span class="brand-word block text-[19px] text-white">DIVE ADDA</span>
+            <span class="brand-tag block mt-1">Discover &mdash; The Deep</span>
+          </span>
+        </a>
+
+        <div class="hidden xl:flex items-center gap-5 font-medium text-[13px]">
+          <a href="index.html" class="nav-link">Home</a>
+          <div class="nav-item"><button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">Diving<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button><div class="nav-drop glass-deep theme-scope"><span class="drop-title">Diving</span><a href="diving.html"><span class="dot"></span>All Diving</a><a href="diving.html#scuba-diving"><span class="dot"></span>Scuba Diving</a><a href="diving.html#fun-dives"><span class="dot"></span>Guided Fun Dives</a><a href="diving.html#boat-diving"><span class="dot"></span>Boat Diving</a><a href="diving.html#shore-diving"><span class="dot"></span>Shore Diving</a><a href="diving.html#confined-diving"><span class="dot"></span>Confined Diving</a></div></div>
+          <div class="nav-item"><button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">Courses<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button><div class="nav-drop glass-deep theme-scope"><span class="drop-title">Courses</span><a href="courses.html"><span class="dot"></span>All Courses</a><a href="courses.html#open-water"><span class="dot"></span>Open Water</a><a href="courses.html#advanced-adventurer"><span class="dot"></span>Advanced Adventurer</a><a href="courses.html#react-right"><span class="dot"></span>React Right</a><a href="courses.html#diver-stress-rescue"><span class="dot"></span>Diver Stress &amp; Rescue</a><a href="courses.html#dive-master"><span class="dot"></span>Dive Master</a></div></div>
+          <a href="water-sports.html" class="nav-link">Water Sports</a>
+          <div class="nav-item"><button type="button" class="nav-link is-active" aria-expanded="false" aria-haspopup="true">Destinations<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button><div class="nav-drop glass-deep theme-scope"><span class="drop-title">Destinations</span><a href="index.html#destinations"><span class="dot"></span>All Destinations</a><a href="vizag.html"><span class="dot"></span>Vizag</a><a href="rajahmundry.html"><span class="dot"></span>Rajahmundry</a><a href="goa.html"><span class="dot"></span>Goa</a></div></div>
+          <div class="nav-item"><button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">Events<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button><div class="nav-drop glass-deep theme-scope"><span class="drop-title">Underwater Events</span><a href="events.html"><span class="dot"></span>All Events</a><a href="events.html#birthday-parties"><span class="dot"></span>Birthday Parties</a><a href="events.html#marriage-proposals"><span class="dot"></span>Marriage Proposals</a><a href="events.html#pre-wedding-shoots"><span class="dot"></span>Pre-Wedding Shoots</a><a href="events.html#conservation-diving"><span class="dot"></span>Conservation Diving</a></div></div>
+          <a href="gallery.html" class="nav-link">Gallery</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="faq.html" class="nav-link">FAQ</a>
+          <a href="contact.html" class="nav-link">Contact</a>
+          <button type="button" data-book class="btn-bio liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-[13px] whitespace-nowrap">Book Now</button>
+        </div>
+
+        <div class="flex items-center gap-3 xl:ml-4">
+          <button id="themeToggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Switch between dark and light theme" title="Switch theme">
+            <span class="knob">
+              <svg class="ic ic-moon" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+              <svg class="ic ic-sun" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0 2.5a1 1 0 011 1V22a1 1 0 11-2 0v-1.5a1 1 0 011-1zm0-19a1 1 0 011 1V3a1 1 0 11-2 0V1.5a1 1 0 011-1zM3.5 11h1.5a1 1 0 110 2H3.5a1 1 0 110-2zm15.5 0h1.5a1 1 0 110 2H19a1 1 0 110-2zM5.6 4.2l1.1 1.1a1 1 0 11-1.4 1.4L4.2 5.6a1 1 0 011.4-1.4zm11.7 11.7l1.1 1.1a1 1 0 11-1.4 1.4l-1.1-1.1a1 1 0 011.4-1.4zM18.4 4.2a1 1 0 011.4 1.4l-1.1 1.1a1 1 0 11-1.4-1.4zM6.7 15.9a1 1 0 011.4 1.4l-1.1 1.1a1 1 0 11-1.4-1.4z"/></svg>
+            </span>
+          </button>
+          <button id="mobileMenuBtn" class="xl:hidden text-brand-glow focus:outline-none p-1" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobileMenu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+        </div>
+
+        <div id="mobileMenu" class="glass-deep theme-scope absolute top-full mt-3 left-0 right-0 hidden flex-col p-6 rounded-2xl transform origin-top transition-all">
+          <a href="index.html" class="m-link">Home</a>
+          <details class="m-group"><summary>Diving<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></summary><div class="m-links"><a href="diving.html">All Diving</a><a href="diving.html#scuba-diving">Scuba Diving</a><a href="diving.html#fun-dives">Guided Fun Dives</a><a href="diving.html#boat-diving">Boat Diving</a><a href="diving.html#shore-diving">Shore Diving</a><a href="diving.html#confined-diving">Confined Diving</a></div></details>
+          <details class="m-group"><summary>Courses<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></summary><div class="m-links"><a href="courses.html">All Courses</a><a href="courses.html#open-water">Open Water</a><a href="courses.html#advanced-adventurer">Advanced Adventurer</a><a href="courses.html#react-right">React Right</a><a href="courses.html#diver-stress-rescue">Diver Stress &amp; Rescue</a><a href="courses.html#dive-master">Dive Master</a></div></details>
+          <a href="water-sports.html" class="m-link">Water Sports</a>
+          <details class="m-group"><summary>Destinations<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></summary><div class="m-links"><a href="index.html#destinations">All Destinations</a><a href="vizag.html">Vizag</a><a href="rajahmundry.html">Rajahmundry</a><a href="goa.html">Goa</a></div></details>
+          <details class="m-group"><summary>Events<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></summary><div class="m-links"><a href="events.html">All Events</a><a href="events.html#birthday-parties">Birthday Parties</a><a href="events.html#marriage-proposals">Marriage Proposals</a><a href="events.html#pre-wedding-shoots">Pre-Wedding Shoots</a><a href="events.html#conservation-diving">Conservation Diving</a></div></details>
+          <a href="gallery.html" class="m-link">Gallery</a>
+          <a href="about.html" class="m-link">About</a>
+          <a href="faq.html" class="m-link">FAQ</a>
+          <a href="contact.html" class="m-link">Contact</a>
+          <button type="button" data-book class="btn-bio liquid ripple-host w-full mt-4 px-6 py-3 rounded-full font-bold">Book Now</button>
+        </div>
+      </div>
+    </nav>
+
+<div id="siteRoot" class="relative z-[1] flex flex-col flex-grow">
+
+    <header class="page-hero">
+        <img src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1546026423-cc4642628d2b?q=80&w=1600&auto=format&fit=crop 1600w" sizes="100vw" alt="" class="ph-img" fetchpriority="high"  decoding="async">
+        <div class="ph-shade"></div>
+        <div class="ph-glow"></div>
+        <span class="city-ghost" aria-hidden="true">GOA</span>
+        <div class="ph-inner reveal active">
+            <nav class="crumbs mb-7" aria-label="Breadcrumb"><a href="index.html">Home</a> <span class="opacity-40">/</span> <a href="index.html#destinations">Destinations</a> <span class="opacity-40">/</span> <span class="text-white/80">Goa</span></nav>
+            <div class="flex flex-wrap items-center gap-3 mb-5">
+                <span class="chip-cyan rounded-full px-4 py-1.5 font-bold tracking-[0.22em] uppercase text-[10px]">Destination</span>
+                <span class="chip depth-chip rounded-full px-3.5 py-1.5 text-[10px] font-bold tracking-[0.18em] uppercase">&minus;10 m</span>
+            </div>
+            <h1 class="ph-title font-display font-bold text-white heading-glow mb-6">Dive Adda <span class="text-gradient-bio">Goa</span></h1>
+            <p class="text-lg md:text-xl text-brand-ink/85 max-w-2xl leading-relaxed">Goa faces the Arabian Sea on India&rsquo;s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.</p>
+            <div class="flex flex-col sm:flex-row gap-4 mt-9 w-full sm:w-auto"><button type="button" data-book data-experience="" data-destination="Goa" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Book in Goa</button><a href="contact.html#enquire" class="btn-ghost liquid ripple-host px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2.5">Send an enquiry <svg class="w-4 h-4 text-brand-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a></div>
+        </div>
+    </header>
+<main class="theme-scope flex-grow pt-24 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full"><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">01 &mdash; Goa</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">What you can do here</h2><p class="text-brand-dim max-w-2xl text-lg leading-relaxed">Verified experiences our team runs in Goa.</p></div></div><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="benefit-pill glass-panel reveal"><span class="bp-dot"></span><span class="text-brand-ink text-sm font-semibold">Scuba Diving</span></div><div class="benefit-pill glass-panel reveal"><span class="bp-dot"></span><span class="text-brand-ink text-sm font-semibold">Water Sports</span></div></div><p class="text-sm text-brand-dim/80 mt-6 reveal">Sessions, meeting points and timings are confirmed by the dive desk when you book.</p></section><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">02 &mdash; On the map</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Find us in Goa</h2></div></div><div class="h-[420px] relative rounded-3xl overflow-hidden glass-panel p-2 reveal"><div id="diveMap" data-focus="goa"></div></div></section><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">03 &mdash; Gallery</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">From our dives</h2></div><div class="mt-6 md:mt-0"><a href="gallery.html" class="link-glow font-semibold flex items-center gap-2 group">Full gallery<svg class="w-4 h-4 group-hover:translate-x-1.5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a></div></div><div class="gallery-grid" id="galleryGoa" data-gallery><figure class="gallery-tile on-media g-wide g-tall reveal " data-cat="diving" data-caption="Divers over the reef"><img src="assets/img/brochure/cover-divers.jpg" alt="Divers over the reef" class="" loading="lazy" data-full="assets/img/brochure/cover-divers.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">Divers over the reef</p><p class="text-[11px] text-brand-dim mt-0.5">Dive, Discover, Repeat</p></figcaption><button type="button" class="g-open" aria-label="Open photo: Divers over the reef"></button></figure><figure class="gallery-tile on-media g-tall reveal delay-100" data-cat="courses" data-caption="SSI training session"><img src="assets/img/brochure/ssi-pool-training.jpg" alt="SSI training session" class="" loading="lazy" data-full="assets/img/brochure/ssi-pool-training.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">SSI training session</p><p class="text-[11px] text-brand-dim mt-0.5">Skills in confined water</p></figcaption><button type="button" class="g-open" aria-label="Open photo: SSI training session"></button></figure><figure class="gallery-tile on-media  reveal delay-200" data-cat="diving" data-caption="Guided fun dive"><img src="assets/img/brochure/guided-fun-dive.jpg" alt="Guided fun dive" class="" loading="lazy" data-full="assets/img/brochure/guided-fun-dive.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">Guided fun dive</p><p class="text-[11px] text-brand-dim mt-0.5">With a Dive Adda instructor</p></figcaption><button type="button" class="g-open" aria-label="Open photo: Guided fun dive"></button></figure><figure class="gallery-tile on-media  reveal delay-300" data-cat="snorkelling" data-caption="Snorkelling"><img src="assets/img/brochure/snorkelling.jpg" alt="Snorkelling" class="" loading="lazy" data-full="assets/img/brochure/snorkelling.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">Snorkelling</p><p class="text-[11px] text-brand-dim mt-0.5">Mask, snorkel and fins</p></figcaption><button type="button" class="g-open" aria-label="Open photo: Snorkelling"></button></figure><figure class="gallery-tile on-media  reveal " data-cat="destinations" data-caption="The Dive Adda centre"><img src="assets/img/brochure/dive-centre-storefront.jpg" alt="The Dive Adda centre" class="" loading="lazy" data-full="assets/img/brochure/dive-centre-storefront.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">The Dive Adda centre</p><p class="text-[11px] text-brand-dim mt-0.5">Scuba dive centre</p></figcaption><button type="button" class="g-open" aria-label="Open photo: The Dive Adda centre"></button></figure><figure class="gallery-tile on-media  reveal delay-100" data-cat="courses" data-caption="Confined water training"><img src="assets/img/brochure/confined-diving.jpg" alt="Confined water training" class="" loading="lazy" data-full="assets/img/brochure/confined-diving.jpg" decoding="async"><span class="tile-scrim"></span><figcaption class="gallery-cap"><p class="font-display font-bold text-white text-sm leading-tight">Confined water training</p><p class="text-[11px] text-brand-dim mt-0.5">Controlled environment</p></figcaption><button type="button" class="g-open" aria-label="Open photo: Confined water training"></button></figure></div></section><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">04 &mdash; Other destinations</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Also with Dive Adda</h2></div></div><div class="grid md:grid-cols-2 gap-6"><a href="vizag.html" class="group relative rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge reveal block" style="min-height:260px"><img src="assets/img/brochure/dive-centre-storefront.jpg" alt="Vizag" class="absolute inset-0 w-full h-full object-cover bento-image" loading="lazy"  decoding="async"><div class="absolute inset-0 duotone"></div><div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/50 to-transparent"></div><div class="absolute inset-0 p-6 flex flex-col justify-end z-[4]"><h3 class="font-display text-2xl font-bold text-white mb-1">Vizag</h3><p class="text-brand-ink/75 text-sm">Visakhapatnam &middot; Andhra Pradesh</p></div></a><a href="rajahmundry.html" class="group relative rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge reveal block" style="min-height:260px"><img src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 767px) 100vw, 50vw" alt="Rajahmundry" class="absolute inset-0 w-full h-full object-cover bento-image" loading="lazy"  decoding="async"><div class="absolute inset-0 duotone"></div><div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/50 to-transparent"></div><div class="absolute inset-0 p-6 flex flex-col justify-end z-[4]"><h3 class="font-display text-2xl font-bold text-white mb-1">Rajahmundry</h3><p class="text-brand-ink/75 text-sm">Andhra Pradesh</p></div></a></div></section><section class="mb-24"><div class="cta-band glass-deep bio-edge reveal"><div class="relative grid lg:grid-cols-[2fr_1fr] gap-8 items-center"><div><h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-3 heading-glow">Diving in Goa?</h2><p class="text-brand-dim text-lg leading-relaxed max-w-2xl">Tell us your dates and group size &mdash; we will confirm availability with the dive desk.</p></div><div class="flex flex-col gap-3"><button type="button" data-book data-experience="" data-destination="Goa" class="btn-bio liquid liquid-strong ripple-host px-7 py-4 rounded-full font-display font-bold">Book your dive</button><a href="tel:+918977762155" class="btn-ghost liquid ripple-host px-7 py-4 rounded-full font-semibold text-center">Call +91 89777 62155</a></div></div></div></section></main>
+
+    <footer class="theme-scope relative py-14 px-6 md:px-12 border-t border-white/[0.06] bg-brand-abyss/70 backdrop-blur-xl overflow-hidden">
+        <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-brand-accent/45 to-transparent" aria-hidden="true"></div>
+        <div class="absolute inset-0 pointer-events-none" aria-hidden="true" style="background: radial-gradient(70% 80% at 50% 120%, rgba(34,211,238,0.10), transparent 65%);"></div>
+
+        <div class="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div class="md:col-span-1">
+                <a href="index.html" class="inline-block mb-5" aria-label="Dive Adda — home">
+                    <img src="assets/img/logo-full-light.png" alt="Dive Adda — Discover the Deep" class="logo-light w-[168px] h-auto" width="168" height="138" loading="lazy">
+                    <img src="assets/img/logo-full.png" alt="Dive Adda — Discover the Deep" class="logo-dark w-[168px] h-auto" width="168" height="138" loading="lazy">
+                </a>
+                <p class="text-sm text-brand-dim/80 mb-5 leading-relaxed">An internationally certified dive centre, proudly affiliated with SSI. Safe, exciting and unforgettable diving experiences &mdash; for your first breath underwater and every dive after it.</p>
+                <div class="flex items-center gap-4 mb-5">
+                    <img src="assets/img/ssi-dive-center.png" alt="SSI Official Partner Dive Center" class="w-16 h-16" loading="lazy" width="64" height="64">
+                    <span class="text-[11px] uppercase tracking-[0.2em] text-brand-glow/80 font-bold leading-relaxed">SSI Certified<br>Dive Centre</span>
+                </div>
+                <div class="flex gap-3">
+                    <a href="https://www.instagram.com/diveaddaindia/" target="_blank" rel="noopener" aria-label="Dive Adda on Instagram" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-violet hover:border-brand-violet/45 hover:shadow-[0_0_22px_-6px_rgba(167,139,250,0.7)] transition-all duration-500">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    </a>
+                    <a href="https://www.facebook.com/diveaddaindia/" target="_blank" rel="noopener" aria-label="Dive Adda on Facebook" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-glow hover:border-brand-accent/45 hover:shadow-[0_0_22px_-6px_rgba(34,211,238,0.7)] transition-all duration-500">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0022 12z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h4>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">
+                    <li><a href="diving.html#scuba-diving" class="hover:text-brand-glow transition-colors">Scuba Diving</a></li><li><a href="courses.html" class="hover:text-brand-glow transition-colors">SSI Courses</a></li><li><a href="water-sports.html" class="hover:text-brand-glow transition-colors">Water Sports</a></li><li><a href="events.html" class="hover:text-brand-glow transition-colors">Underwater Events</a></li><li><a href="gallery.html" class="hover:text-brand-glow transition-colors">Gallery</a></li><li><a href="about.html" class="hover:text-brand-glow transition-colors">About Us</a></li><li><a href="faq.html" class="hover:text-brand-glow transition-colors">FAQ</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Destinations</h4>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">
+                    <li><a href="vizag.html" class="hover:text-brand-glow transition-colors">Vizag</a></li><li><a href="rajahmundry.html" class="hover:text-brand-glow transition-colors">Rajahmundry</a></li><li><a href="goa.html" class="hover:text-brand-glow transition-colors">Goa</a></li>
+                </ul>
+                <h4 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h4>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">
+                    <li><a href="courses.html#open-water" class="hover:text-brand-glow transition-colors">Open Water</a></li><li><a href="courses.html#advanced-adventurer" class="hover:text-brand-glow transition-colors">Advanced Adventurer</a></li><li><a href="courses.html#react-right" class="hover:text-brand-glow transition-colors">React Right</a></li><li><a href="courses.html#diver-stress-rescue" class="hover:text-brand-glow transition-colors">Diver Stress &amp; Rescue</a></li><li><a href="courses.html#dive-master" class="hover:text-brand-glow transition-colors">Dive Master</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Contact</h4>
+                <ul class="space-y-3 text-sm text-brand-dim/80">
+                    <li><a href="tel:+918977762155" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg>+91 89777 62155</a></li>
+                    <li><a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21" target="_blank" rel="noopener" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>WhatsApp</a></li>
+                    <li><a href="https://www.instagram.com/diveaddaindia/" target="_blank" rel="noopener" class="hover:text-brand-glow transition-colors">@diveaddaindia</a></li>
+                    <li>www.diveaddaindia.com</li>
+                    <li class="pt-1"><span class="chip-cyan px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">Booking open</span></li>
+                </ul>
+                <button type="button" data-book class="btn-bio liquid ripple-host mt-6 px-6 py-3 rounded-full font-display font-bold text-sm w-full">Book Your Dive</button>
+            </div>
+        </div>
+        <div class="relative max-w-7xl mx-auto text-center text-brand-dim/45 text-xs pt-8 border-t border-white/[0.06]">
+            &copy; <span data-year>2026</span> Dive Adda &mdash; Discover the Deep. All rights reserved.
+        </div>
+    </footer>
+
+</div><!-- /#siteRoot -->
+
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <div class="lb-backdrop"></div>
+        <span class="lb-count" id="lbCount"></span>
+        <button type="button" class="lb-btn lb-close" aria-label="Close photo viewer"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <button type="button" class="lb-btn lb-prev" aria-label="Previous photo"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+        <button type="button" class="lb-btn lb-next" aria-label="Next photo"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+        <figure>
+            <img id="lbImg" src="" alt="">
+            <figcaption id="lbCap" class="font-display font-semibold"></figcaption>
+        </figure>
+    </div>
+    <div id="chatbotWidget" class="glass-deep theme-scope fixed bottom-24 left-6 md:left-auto md:right-6 md:bottom-6 z-[100] hidden flex-col w-[350px] max-w-[calc(100vw-3rem)] rounded-2xl overflow-hidden transition-all duration-500 transform translate-y-4 opacity-0">
+        <div class="relative p-4 flex justify-between items-center z-10 border-b border-white/[0.07]" style="background: linear-gradient(120deg, rgba(6,24,43,0.9), rgba(11,58,67,0.85));">
+            <span class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-accent/50 to-transparent" aria-hidden="true"></span>
+            <div class="flex items-center gap-3">
+                <div class="chat-avatar w-10 h-10 rounded-full flex items-center justify-center relative">
+                    <svg class="w-5 h-5 text-[#02131B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#34D399] border-2 border-[#06182b] rounded-full shadow-[0_0_10px_#34D399]"></span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide text-white">Dive Adda Assistant</h3>
+                    <p class="text-[10px] text-brand-glow/80 font-medium tracking-wide">Booking &middot; replies instantly</p>
+                </div>
+            </div>
+            <button onclick="closeChat()" aria-label="Close chat" class="text-brand-dim hover:text-white transition-colors bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 p-1.5 rounded-full">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="chatBody" class="p-4 h-[350px] overflow-y-auto flex flex-col gap-3 scroll-smooth"></div>
+        <div id="chatInputArea" class="p-3 border-t border-white/[0.07] flex gap-2" style="background: rgba(4,18,31,0.75);">
+            <input type="text" id="chatInput" class="chat-input flex-1 rounded-full px-4 py-2.5 text-sm transition-all" placeholder="Type your message..." aria-label="Your answer">
+            <button id="chatSendBtn" aria-label="Send message" class="btn-bio ripple-host w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform">
+                <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="assets/js/dive-adda.js"></script>
+    <script src="assets/js/dive-adda-pages.js"></script>
+</body>
+</html>

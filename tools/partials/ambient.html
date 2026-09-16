@@ -1,0 +1,131 @@
+    <!-- ============================================================
+         AMBIENT UNDERWATER BACKGROUND (caustics, rays, plankton)
+         ============================================================ -->
+    <div id="ambient" aria-hidden="true">
+        <div class="caustics"></div>
+        <div class="caustics layer-2"></div>
+        <div class="rays"></div>
+        <div class="rays rays-2"></div>
+        <div id="fishField" class="absolute inset-0"></div>
+        <div id="particleField" class="absolute inset-0"></div>
+        <div class="vignette"></div>
+    </div>
+
+    <!-- Shared gradients for the marine life, defined once and referenced
+         by every cloned fish so the document holds a single copy. -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <defs>
+            <linearGradient id="bodyReef" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#14586E"/>
+                <stop offset="48%" stop-color="#2C90A6"/>
+                <stop offset="100%" stop-color="#5FC4D4"/>
+            </linearGradient>
+            <linearGradient id="bodySilver" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1B5C70"/>
+                <stop offset="52%" stop-color="#41A0B4"/>
+                <stop offset="100%" stop-color="#A5DEE8"/>
+            </linearGradient>
+            <linearGradient id="bodyTang" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#27507C"/>
+                <stop offset="55%" stop-color="#4A7CB4"/>
+                <stop offset="100%" stop-color="#9DB4EA"/>
+            </linearGradient>
+            <linearGradient id="finFilm" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#9BEAF8" stop-opacity="0.42"/>
+                <stop offset="100%" stop-color="#2C7C90" stop-opacity="0.28"/>
+            </linearGradient>
+            <linearGradient id="rayShade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#123349"/>
+                <stop offset="100%" stop-color="#1F6579"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- Species templates: cloned per fish so each one can carry its own
+         randomised timings (a <use> shadow tree could not). -->
+    <template id="tplReef">
+        <svg class="fish-art" viewBox="0 0 100 56" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M20,28 C12,23 6,15 2,6 C7,17 7,39 2,50 C6,41 12,33 20,28 Z" fill="url(#finFilm)"/>
+            </g>
+            <path d="M38,13 C46,3 60,1 70,7 C60,8 47,10 40,15 Z" fill="url(#finFilm)"/>
+            <path d="M42,43 C50,52 60,53 67,50 C58,48 48,46 43,42 Z" fill="url(#finFilm)"/>
+            <path d="M19,28 C24,14 37,7 56,9 C73,11 87,18 93,28 C87,38 73,45 56,47 C37,49 24,42 19,28 Z" fill="url(#bodyReef)"/>
+            <path d="M19,28 C24,14 37,7 56,9 C73,11 87,18 93,28" fill="none" stroke="#9BEAF8" stroke-opacity="0.34" stroke-width="1.2"/>
+            <path d="M50,11 C46,20 46,36 50,45" fill="none" stroke="#06202B" stroke-opacity="0.34" stroke-width="3"/>
+            <path d="M62,11 C58,19 58,37 62,46" fill="none" stroke="#06202B" stroke-opacity="0.26" stroke-width="2.4"/>
+            <g class="fish-fin">
+                <path d="M60,30 C66,34 68,41 65,46 C59,41 56,34 57,30 Z" fill="#67E8F9" fill-opacity="0.3"/>
+            </g>
+            <path d="M72,14 C68,20 68,36 72,42" fill="none" stroke="#06202B" stroke-opacity="0.28" stroke-width="1.4"/>
+            <circle cx="82" cy="24" r="3" fill="#04121F"/>
+            <circle cx="83" cy="23" r="1" fill="#CFFAFE" fill-opacity="0.85"/>
+        </svg>
+    </template>
+
+    <template id="tplJack">
+        <svg class="fish-art" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M22,20 C15,17 8,10 3,3 C8,12 8,28 3,37 C8,30 15,23 22,20 Z" fill="url(#finFilm)"/>
+            </g>
+            <path d="M44,12 C54,5 66,4 74,8 C64,9 52,11 46,14 Z" fill="url(#finFilm)"/>
+            <path d="M48,29 C56,35 64,36 70,34 C62,32 54,30 49,28 Z" fill="url(#finFilm)"/>
+            <path d="M21,20 C30,11 50,6 74,7 C92,8 108,13 114,20 C108,27 92,32 74,33 C50,34 30,29 21,20 Z" fill="url(#bodySilver)"/>
+            <path d="M21,20 C30,11 50,6 74,7 C92,8 108,13 114,20" fill="none" stroke="#C4F1FA" stroke-opacity="0.32" stroke-width="1"/>
+            <g class="fish-fin">
+                <path d="M74,22 C80,26 82,31 80,35 C74,31 71,25 72,22 Z" fill="#67E8F9" fill-opacity="0.26"/>
+            </g>
+            <path d="M92,10 C88,14 88,26 92,30" fill="none" stroke="#06202B" stroke-opacity="0.24" stroke-width="1.2"/>
+            <circle cx="104" cy="17" r="2.4" fill="#04121F"/>
+            <circle cx="105" cy="16.2" r="0.8" fill="#CFFAFE" fill-opacity="0.8"/>
+        </svg>
+    </template>
+
+    <template id="tplTang">
+        <svg class="fish-art" viewBox="0 0 92 88" xmlns="http://www.w3.org/2000/svg">
+            <g class="fish-tail">
+                <path d="M24,46 C16,42 9,34 4,25 C10,36 10,56 4,67 C9,58 16,50 24,46 Z" fill="url(#finFilm)"/>
+            </g>
+            <!-- Long dorsal and anal fins, swept back well clear of the body -->
+            <path d="M34,30 C40,8 58,2 74,8 C60,13 46,21 39,33 Z" fill="url(#finFilm)"/>
+            <path d="M36,62 C42,82 58,88 74,82 C60,77 46,69 40,60 Z" fill="url(#finFilm)"/>
+            <!-- Compressed disc body with a pointed snout -->
+            <path d="M24,46 C25,25 38,13 56,14 C70,15 80,25 84,38 L88,43 C89,45 89,47 88,49 L84,54 C80,67 70,77 56,78 C38,79 25,67 24,46 Z" fill="url(#bodyTang)"/>
+            <path d="M24,46 C25,25 38,13 56,14 C70,15 80,25 84,38" fill="none" stroke="#CBE2FF" stroke-opacity="0.32" stroke-width="1.2"/>
+            <path d="M44,17 C40,32 40,60 44,75" fill="none" stroke="#061826" stroke-opacity="0.32" stroke-width="4.2"/>
+            <path d="M60,18 C56,32 56,60 60,74" fill="none" stroke="#061826" stroke-opacity="0.24" stroke-width="3.4"/>
+            <g class="fish-fin">
+                <path d="M58,50 C64,56 65,64 62,70 C56,63 53,55 55,50 Z" fill="#A78BFA" fill-opacity="0.26"/>
+            </g>
+            <path d="M70,20 C66,28 66,62 70,71" fill="none" stroke="#061826" stroke-opacity="0.22" stroke-width="1.4"/>
+            <circle cx="78" cy="37" r="3.2" fill="#04121F"/>
+            <circle cx="79" cy="36" r="1.05" fill="#CFFAFE" fill-opacity="0.85"/>
+        </svg>
+    </template>
+
+    <template id="tplRay">
+        <svg class="fish-art" viewBox="0 0 150 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="ray-body">
+                <!-- Wings sweep back and taper to points, the way a manta reads from above -->
+                <path d="M75,12 C86,12 99,17 114,26 C126,33 137,41 146,50 C142,52 134,51 124,48 C112,44 99,41 90,41 C83,41 78,43 75,47 C72,43 67,41 60,41 C51,41 38,44 26,48 C16,51 8,52 4,50 C13,41 24,33 36,26 C51,17 64,12 75,12 Z" fill="url(#rayShade)"/>
+                <!-- Cephalic fins either side of the mouth -->
+                <path d="M69,13 C67,7 70,3 73,4 C75,5 75,9 74,13 Z" fill="url(#rayShade)"/>
+                <path d="M81,13 C83,7 80,3 77,4 C75,5 75,9 76,13 Z" fill="url(#rayShade)"/>
+                <!-- Leading-edge light from the surface -->
+                <path d="M75,12 C86,12 99,17 114,26 C126,33 137,41 146,50" fill="none" stroke="#7FC4D6" stroke-opacity="0.3" stroke-width="1.3"/>
+                <path d="M75,12 C64,12 51,17 36,26 C24,33 13,41 4,50" fill="none" stroke="#7FC4D6" stroke-opacity="0.3" stroke-width="1.3"/>
+            </g>
+            <!-- Whip tail, tapering to nothing -->
+            <path d="M72.6,45 L77.4,45 C76.8,54 76.3,62 75,69 C73.7,62 73.2,54 72.6,45 Z" fill="url(#rayShade)"/>
+        </svg>
+    </template>
+
+    <!-- ============================================================
+         WATER CURSOR — fluid wake, refraction lens and ripple rings.
+         Purely decorative: pointer-events are off on every layer.
+         ============================================================ -->
+    <div id="waterCursor" aria-hidden="true">
+        <canvas id="waterCanvas"></canvas>
+        <div class="wc-lens"></div>
+        <div class="wc-dot"></div>
+    </div>
