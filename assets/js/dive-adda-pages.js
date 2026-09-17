@@ -37,6 +37,27 @@
     });
     document.addEventListener('click', (e) => { if (!e.target.closest('.nav-item')) closeAll(); });
 
+    /* ---------- 2b. Locations flyout: choose a location, see its activities ---------- */
+    $$('.loc-drop').forEach((drop) => {
+        const tabs = $$('.loc-tab', drop);
+        const show = (tab) => tabs.forEach((t) => {
+            const on = t === tab;
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            const panel = document.getElementById(t.getAttribute('aria-controls'));
+            if (panel) panel.hidden = !on;
+        });
+        tabs.forEach((t, i) => {
+            t.addEventListener('click', (e) => { e.stopPropagation(); show(t); });
+            t.addEventListener('mouseenter', () => show(t));
+            t.addEventListener('focus', () => show(t));
+            t.addEventListener('keydown', (e) => {
+                if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+                e.preventDefault();
+                tabs[(i + (e.key === 'ArrowDown' ? 1 : tabs.length - 1)) % tabs.length].focus();
+            });
+        });
+    });
+
     /* ---------- 3. Mark the current page in the navigation ---------- */
     const page = document.body.getAttribute('data-page');
     if (page) {
@@ -49,15 +70,17 @@
     if (meter) {
         const fill = $('.dm-fill', meter);
         const read = $('.dm-read', meter);
-        const base = parseInt(document.body.getAttribute('data-depth') || '0', 10) || 0;
-        const span = parseInt(document.body.getAttribute('data-depth-span') || '18', 10) || 18;
+        // Every page reads the same scale: 0 m at the top of the page, 40 m at the bottom
+        const base = 0;
+        const span = 40;
         let ticking = false;
         const paint = () => {
             ticking = false;
             const max = document.documentElement.scrollHeight - innerHeight;
             const p = max > 0 ? Math.min(Math.max(scrollY / max, 0), 1) : 0;
             fill.style.transform = 'scaleY(' + p.toFixed(3) + ')';
-            read.textContent = '-' + Math.round(base + span * p) + 'm';
+            const m = Math.round(base + span * p);
+            read.textContent = (m ? '-' : '') + m + 'm';
         };
         addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }, { passive: true });
         paint();

@@ -1,0 +1,377 @@
+/* ================================================================
+   DIVE ADDA — RESPONSIVE + RENDERING LAYER
+   Loaded last (after the compiled Tailwind utilities). Nothing here
+   restyles the brand; it sizes, spaces and de-janks what exists.
+   ================================================================ */
+
+/* ---------- Layout tokens ----------
+   The navbar height is built from explicit parts, so every offset that must
+   clear it (hero padding, anchor landing) is exact instead of guessed.     */
+:root {
+    --gutter: clamp(18px, 5vw, 48px);
+    --nav-pad: 10px;
+    --pill-h: 60px;
+    --nav-h: calc(var(--nav-pad) * 2 + var(--pill-h));
+    --nav-h-compact: var(--nav-h);
+}
+@media (max-width: 767px) {
+    :root { --nav-pad: 8px; --pill-h: 56px; }
+}
+
+.site-gutter { padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* Anchors land below the (collapsed) navbar, never under it */
+:where(section, article, header, div, form, details, figure)[id] {
+    scroll-margin-top: calc(var(--nav-h-compact) + 20px);
+}
+
+html, body { max-width: 100%; }
+/* clip, not hidden: hidden makes the page a scroll container that focus()
+   and scrollIntoView can still shift sideways. Beats the Tailwind class. */
+body, body.overflow-x-hidden { overflow-x: clip; }
+img, video { max-width: 100%; }
+.site-main :where(p, li, h1, h2, h3, h4, dd, a, figcaption) { overflow-wrap: break-word; }
+
+/* ================================================================
+   NAVBAR
+   ================================================================ */
+#navbar {
+    padding: var(--nav-pad) var(--gutter);
+    transition: opacity 1s var(--ease-buoy);
+}
+
+#navPill {
+    min-height: var(--pill-h);
+    padding: 0 clamp(8px, 2vw, 20px) 0 clamp(12px, 2.4vw, 20px);
+    transition: box-shadow 0.5s ease;
+}
+#navbar.nav-scrolled #navPill {
+    box-shadow: 0 20px 60px -24px rgba(1, 6, 13, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+html[data-theme="light"] #navbar.nav-scrolled #navPill {
+    box-shadow: 0 20px 50px -26px rgba(10, 34, 51, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.nav-brand { gap: clamp(8px, 1.6vw, 12px); flex-shrink: 1; }
+@media (min-width: 1280px) { .nav-brand { flex-shrink: 0; } }
+.brand-mark { height: clamp(30px, 26px + 1vw, 38px); }
+.brand-word { font-size: clamp(16px, 14.5px + 0.4vw, 19px); white-space: nowrap; }
+.brand-tag { white-space: nowrap; }
+.nav-actions { flex-shrink: 0; }
+
+.theme-toggle::after { content: ''; position: absolute; inset: -8px 0; }
+
+.nav-burger {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -6px;
+    border-radius: 12px;
+}
+.nav-burger .ic { grid-area: 1 / 1; transition: opacity 0.22s ease, transform 0.4s var(--ease-liquid); }
+.nav-burger .ic-close { opacity: 0; transform: rotate(-90deg) scale(0.6); }
+.nav-burger[aria-expanded="true"] .ic-open { opacity: 0; transform: rotate(90deg) scale(0.6); }
+.nav-burger[aria-expanded="true"] .ic-close { opacity: 1; transform: none; }
+.nav-burger:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
+@media (min-width: 1280px) { .nav-burger { display: none; } }
+
+@media (max-width: 400px) {
+    #navPill { gap: 8px; }
+    .nav-actions { gap: 6px; }
+    .brand-tag { font-size: 7.5px; letter-spacing: 0.16em; }
+}
+
+/* ---------- Mobile menu: animated, scrollable, above everything ---------- */
+#mobileMenu {
+    display: flex !important;
+    flex-direction: column;
+    max-height: calc(100vh - var(--nav-h) - 24px);
+    max-height: calc(100svh - var(--nav-h) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate3d(0, -10px, 0) scale(0.985);
+    transform-origin: 50% 0;
+    transition: opacity 0.24s ease, transform 0.42s var(--ease-buoy), visibility 0s linear 0.42s;
+}
+#mobileMenu.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: opacity 0.24s ease, transform 0.42s var(--ease-buoy), visibility 0s;
+}
+@media (min-width: 1280px) { #mobileMenu { display: none !important; } }
+
+.m-link, .m-group summary { min-height: 48px; display: flex; align-items: center; }
+.m-group summary { justify-content: space-between; }
+.m-group .m-links a { min-height: 44px; display: flex; align-items: center; }
+
+html.menu-open #navbar { z-index: 140; }
+html.menu-open .float-widget,
+html.menu-open #callRail { opacity: 0 !important; pointer-events: none !important; }
+
+/* Scrim behind the open menu; tapping it closes the menu */
+#siteRoot::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(1, 6, 13, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+html.menu-open #siteRoot::after {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.3s ease, visibility 0s;
+}
+html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); }
+@media (min-width: 1280px) { html.menu-open #siteRoot::after { display: none; } }
+
+/* ================================================================
+   HEROES — sized by their content, always clear of the navbar
+   ================================================================ */
+.home-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: calc(var(--nav-h) + clamp(20px, 4.5vh, 56px)) var(--gutter) clamp(48px, 8vh, 96px);
+}
+.hero-title { font-size: clamp(3rem, 1.5rem + 7.2vw, 8.5rem); }
+.hero-tagline { font-size: clamp(10px, 0.55rem + 0.3vw, 14px); letter-spacing: clamp(0.26em, 0.1em + 0.8vw, 0.5em); }
+.hero-lead { font-size: clamp(1rem, 0.9rem + 0.55vw, 1.25rem); }
+@media (max-width: 767px), (max-height: 760px) { .hero-cue { display: none; } }
+
+.dest-select { max-width: 100%; }
+.dest-select button { min-height: 40px; }
+@media (max-width: 420px) {
+    .dest-select button { padding: 9px 12px; letter-spacing: 0.14em; }
+}
+
+.page-hero {
+    min-height: clamp(440px, 72vh, 860px);
+    min-height: clamp(440px, 72svh, 860px);
+    padding: calc(var(--nav-h) + clamp(28px, 6vh, 72px)) var(--gutter) clamp(44px, 7vh, 80px);
+}
+.page-hero .ph-title { font-size: clamp(2.4rem, 1.1rem + 5.8vw, 6.5rem); line-height: 1; }
+.page-hero .ph-inner > p { font-size: clamp(1rem, 0.9rem + 0.55vw, 1.25rem); }
+.crumbs a { padding-block: 12px; }
+
+/* ================================================================
+   MAIN FLOW — spacing, type scale, grids
+   ================================================================ */
+.site-main { padding: clamp(56px, 9vw, 96px) var(--gutter) clamp(40px, 6vw, 80px); }
+.site-main > section.mb-32 { margin-bottom: clamp(80px, 11vw, 128px); }
+.site-main > section.mb-28 { margin-bottom: clamp(72px, 10vw, 112px); }
+.site-main > section.mb-24 { margin-bottom: clamp(64px, 9vw, 96px); }
+.sec-head { margin-bottom: clamp(1.75rem, 4vw, 3rem); }
+
+.site-main h2.text-3xl,
+.site-main h2.text-4xl,
+.site-main h3.text-3xl { font-size: clamp(1.6rem, 1.05rem + 2.1vw, 2.25rem); line-height: 1.12; }
+.site-main .sec-head h2 { font-size: clamp(1.85rem, 1.15rem + 2.8vw, 3rem); line-height: 1.08; }
+.site-main p.text-lg { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem); }
+.fact-num { font-size: clamp(2.1rem, 1.5rem + 2.2vw, 3.4rem); }
+
+/* A lone last card in a two-column range spans the row instead of dangling */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+    .orphan-sm-lg > :last-child:nth-child(odd) { grid-column: span 2 / span 2; }
+}
+@media (min-width: 640px) and (max-width: 1279.98px) {
+    .orphan-sm-xl > :last-child:nth-child(odd) { grid-column: span 2 / span 2; }
+}
+.gallery-grid { grid-auto-flow: dense; }
+
+.info-card, .trust-card { padding: clamp(20px, 3vw, 26px); }
+.ddp-card { padding: clamp(22px, 3vw, 30px); }
+.ddp-word { font-size: clamp(2.1rem, 1.35rem + 2vw, 3.8rem); }
+
+/* Destination cards grow with their content instead of clipping it */
+.dest-card {
+    height: auto;
+    min-height: clamp(440px, 62vh, 560px);
+    min-height: clamp(440px, 62svh, 560px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+.dest-card .dc-body { position: relative; inset: auto; padding: clamp(20px, 4.5vw, 36px); }
+.dest-card .dc-name { font-size: clamp(2rem, 1.15rem + 4.2vw, 4.6rem); }
+
+/* Activity switcher: slides share one grid cell, so the stage is as tall as
+   the tallest slide and copy can never be cut off */
+.act-stage { display: grid; height: auto; }
+.act-slide {
+    position: relative;
+    grid-area: 1 / 1;
+    min-height: clamp(380px, 56vh, 520px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border-radius: 22px;
+    overflow: hidden;
+}
+.act-slide .as-body { position: relative; inset: auto; padding: clamp(20px, 4.5vw, 40px); }
+@media (max-width: 1023px) {
+    .act-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .act-tab { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; font-size: 14px; line-height: 1.25; }
+}
+
+/* ---------- Touch targets ---------- */
+.filter-btn { min-height: 40px; }
+.car-dots button { position: relative; }
+.car-dots button::after { content: ''; position: absolute; inset: -12px -2px; }
+.site-footer li > a { padding-block: 10px; }
+.site-footer li > a:not([class*="flex"]) { display: inline-block; }
+.site-footer ul > li { margin-top: 0 !important; }
+@media (max-width: 1023px), (pointer: coarse) {
+    .site-footer a.w-9 { width: 44px; height: 44px; }
+}
+
+/* ---------- Footer ---------- */
+.site-footer li { overflow-wrap: anywhere; }
+
+/* ---------- Floating chrome ---------- */
+#chatbotWidget { max-height: calc(100vh - 7rem); max-height: calc(100svh - 7rem); }
+#chatBody { height: auto; flex: 1 1 auto; min-height: 160px; max-height: 350px; }
+#bookNowModal .modal-card,
+.da-modal .modal-card {
+    max-height: calc(100vh - 2.5rem);
+    max-height: calc(100svh - 2.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+@media (max-width: 767px) {
+    /* A mid-screen rail covers body text on a phone: dock the call button
+       bottom-right, mirroring WhatsApp bottom-left. Booking lives in the menu,
+       the hero and every section CTA. */
+    html #callRail {
+        top: auto;
+        bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        right: calc(1.5rem + env(safe-area-inset-right, 0px));
+        transform: none;
+        padding-right: 0;
+    }
+    #callRail .rail-book { display: none; }
+    html #callRail .call-pill,
+    html #callRail .call-pill:hover {
+        width: 56px;
+        height: 56px;
+        max-width: 56px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 999px;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .site-footer { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ================================================================
+   RENDERING PERFORMANCE
+   ================================================================ */
+
+/* Rays parallax runs on the independent `translate` property, so it no
+   longer fights the CSS sway animation that owns `transform`. */
+#ambient .rays { translate: 0 var(--ray-y, 0px); }
+
+/* Heroes only parallax on large pointer screens; elsewhere don't hold a layer */
+@media (max-width: 1023px), (hover: none) {
+    .page-hero .ph-img { will-change: auto; }
+}
+
+/* On touch and narrow screens, frosted glass inside the scrolling page is the
+   main source of scroll jank: every panel re-blurs the animated water behind
+   it on every frame. Keep the blur on the fixed chrome (a handful of
+   elements) and give in-flow panels an equivalent tinted fill. */
+@media (max-width: 1023px), (hover: none) {
+    .site-main .glass-panel,
+    .site-main .glass-dark {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: linear-gradient(160deg, rgba(18, 44, 68, 0.78), rgba(7, 24, 40, 0.7));
+    }
+    html[data-theme="light"] .site-main .glass-panel,
+    html[data-theme="light"] .site-main .glass-dark {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(246, 251, 253, 0.86));
+    }
+    .site-main .chip {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: rgba(4, 18, 31, 0.58);
+    }
+    .site-footer {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background-color: rgba(1, 6, 13, 0.9);
+    }
+    /* Blend modes force offscreen compositing per card; hover-only anyway */
+    .duotone { display: none; }
+}
+
+/* ================================================================
+   DEEPER WATER — a darker ground in the dark theme
+   ================================================================ */
+html { background-color: #02080F; }
+body::before {
+    background:
+        radial-gradient(120% 80% at 50% -10%, rgba(11, 58, 67, 0.3), transparent 58%),
+        linear-gradient(180deg, #030C16 0%, #041424 35%, #020B14 68%, #01050B 100%);
+}
+.caustics { opacity: 0.5; }
+.caustics.layer-2 { opacity: 0.34; }
+html:not([data-theme="light"]) #ambient .rays { opacity: 0.7; }
+.home-hero .hero-media { opacity: 0.42; }
+.page-hero .ph-img { opacity: 0.44; }
+@media (min-width: 1024px) and (hover: hover) {
+    html:not([data-theme="light"]) .glass-panel,
+    html:not([data-theme="light"]) .glass-dark {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+    }
+}
+html:not([data-theme="light"]) .glass-deep {
+    background: linear-gradient(165deg, rgba(7, 24, 42, 0.8), rgba(2, 10, 18, 0.88));
+}
+/* Dropdowns and the mobile menu sit inside the frosted navbar, and a blur nested in
+   a blur cannot reach the page behind it. Without an opaque fill the hero type
+   shows straight through, so keep them solid enough to read. */
+html:not([data-theme="light"]) .nav-drop.glass-deep,
+html:not([data-theme="light"]) #mobileMenu.glass-deep {
+    background: linear-gradient(165deg, rgba(6, 20, 36, 0.97), rgba(2, 9, 17, 0.98));
+}
+html[data-theme="light"] .nav-drop.glass-deep,
+html[data-theme="light"] #mobileMenu.glass-deep {
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(240, 248, 252, 0.97));
+}
+@media (max-width: 1023px), (hover: none) {
+    html:not([data-theme="light"]) .site-main .glass-panel,
+    html:not([data-theme="light"]) .site-main .glass-dark {
+        background: linear-gradient(160deg, rgba(12, 32, 52, 0.8), rgba(4, 15, 27, 0.78));
+    }
+}
+
+/* ================================================================
+   REDUCED MOTION
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+    #navbar, #navPill, #mobileMenu, #siteRoot::after, .nav-burger .ic, .city-bar { transition: none !important; }
+    #ambient .rays { translate: none !important; }
+    .page-hero .ph-img, #heroVideo { transform: none !important; }
+    .carousel-track { scroll-behavior: auto; }
+    .gallery-tile.is-entering, .dest-panel .dp-in, .faq-item[open] .fq-body { animation: none !important; }
+    .act-slide img { transform: none !important; }
+    .city-chip:hover, .filter-btn:hover, .act-tab:hover, .info-card:hover, .trust-card:hover,
+    .benefit-pill:hover, .gallery-tile:hover, .team-card:hover, .bento-card:hover { transform: none !important; }
+    .group:hover .bento-image { transform: none !important; }
+}

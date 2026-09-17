@@ -1,3 +1,7 @@
+        /* ============================================================
+           DESIGN TOKENS
+           ============================================================ */
+        :root {
             --abyss:   #01060D;
             --deep:    #04121F;
             --mid:     #0A2036;
@@ -14,14 +18,23 @@
             --ease-buoy:   cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        html, body { background-color: var(--deep); }
+        html { background-color: var(--deep); }
 
         body {
             color: var(--ink-dim);
+            background: transparent;
+        }
+        /* The water gradient is painted once on a fixed layer. background-attachment:
+           fixed repaints the entire viewport on every scroll frame (and iOS ignores it). */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
             background:
                 radial-gradient(120% 80% at 50% -10%, rgba(11, 58, 67, 0.55), transparent 60%),
                 linear-gradient(180deg, #04121F 0%, #061C2E 35%, #04121F 68%, #010913 100%);
-            background-attachment: fixed;
         }
 
         /* Scroll lock while the dive gate is open */
@@ -405,21 +418,21 @@
         /* ============================================================
            BUOYANT SCROLL REVEALS
            ============================================================ */
+        /* Transform + opacity only, so every reveal stays on the compositor.
+           No blur (re-rasterises the section each frame), no scale (soft text
+           mid-flight), no permanent will-change (one GPU layer per section),
+           and transform: none once shown so layers are released. */
         .reveal {
             opacity: 0;
-            transform: translate3d(0, 52px, 0) scale(0.984);
-            filter: blur(6px);
+            transform: translate3d(0, 32px, 0);
             transition:
-                opacity 1.05s var(--ease-buoy),
-                transform 1.25s var(--ease-buoy),
-                filter 0.9s ease-out;
+                opacity 0.8s var(--ease-buoy),
+                transform 0.95s var(--ease-buoy);
             transition-delay: var(--rd, 0ms);
-            will-change: transform, opacity;
         }
         .reveal.active {
             opacity: 1;
-            transform: translate3d(0, 0, 0) scale(1);
-            filter: blur(0);
+            transform: none;
         }
         .delay-100 { --rd: 110ms; }
         .delay-200 { --rd: 220ms; }
@@ -868,88 +881,6 @@
         }
 
         /* ============================================================
-           WATER CURSOR - refraction lens, fluid wake, ripple rings
-           The layer sits above the descent loader so the cursor stays
-           alive there too, and never intercepts a pointer event.
-           ============================================================ */
-        #waterCursor {
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            pointer-events: none;
-        }
-        #waterCanvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-        }
-        .wc-lens, .wc-dot {
-            position: absolute;
-            top: 0;
-            left: 0;
-            border-radius: 50%;
-            pointer-events: none;
-            will-change: transform;
-            opacity: 0;
-            transition: opacity 0.6s ease;
-        }
-        #waterCursor.wc-live .wc-lens,
-        #waterCursor.wc-live .wc-dot { opacity: 1; }
-
-        /* The lens genuinely refracts whatever sits underneath it */
-        .wc-lens {
-            width: 112px;
-            height: 112px;
-            margin: -56px 0 0 -56px;
-            backdrop-filter: blur(3px) saturate(1.22) brightness(1.06);
-            -webkit-backdrop-filter: blur(3px) saturate(1.22) brightness(1.06);
-            background:
-                radial-gradient(circle at 34% 30%, rgba(255,255,255,0.20), rgba(255,255,255,0.03) 42%, transparent 63%),
-                radial-gradient(circle at 64% 76%, rgba(34,211,238,0.14), transparent 60%);
-            box-shadow:
-                inset 0 1px 1px rgba(255,255,255,0.42),
-                inset 0 -12px 24px -14px rgba(34,211,238,0.6),
-                0 0 36px -6px rgba(34,211,238,0.3);
-        }
-        /* Low-power devices keep the glow but drop the costly backdrop pass */
-        #waterCursor.wc-nolens .wc-lens {
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            background: radial-gradient(circle at 40% 34%, rgba(255,255,255,0.16), rgba(34,211,238,0.10) 46%, transparent 68%);
-        }
-
-        .wc-dot {
-            width: 7px;
-            height: 7px;
-            margin: -3.5px 0 0 -3.5px;
-            background: radial-gradient(circle at 38% 34%, #FFFFFF, #A5F3FC 55%, rgba(34,211,238,0) 76%);
-            box-shadow: 0 0 12px rgba(167, 243, 250, 0.95);
-        }
-
-        /* Hide the OS cursor, but keep every affordance that carries meaning.
-           Leaflet applies its own grab / interactive cursors directly to those
-           elements, so they still win over this inherited `none`. */
-        html.wc-on, html.wc-on body { cursor: none; }
-        html.wc-on a,
-        html.wc-on button,
-        html.wc-on label,
-        html.wc-on summary,
-        html.wc-on select,
-        html.wc-on [role="button"],
-        html.wc-on [onclick],
-        html.wc-on input[type="checkbox"],
-        html.wc-on input[type="radio"],
-        html.wc-on input[type="submit"],
-        html.wc-on input[type="button"] { cursor: pointer; }
-        html.wc-on input[type="text"],
-        html.wc-on input[type="email"],
-        html.wc-on input[type="number"],
-        html.wc-on input[type="search"],
-        html.wc-on input[type="tel"],
-        html.wc-on textarea { cursor: text; }
-
-        /* ============================================================
            GALLERY
            ============================================================ */
         .gallery-grid {
@@ -1294,8 +1225,9 @@
             --ink: #E8F6FF;
             --ink-dim: #9FBCD0;
         }
-        html[data-theme="light"] body {
-            color: #47677E;
+        html[data-theme="light"] { background-color: #F3FAFC; }
+        html[data-theme="light"] body { color: #47677E; }
+        html[data-theme="light"] body::before {
             background:
                 radial-gradient(120% 80% at 50% -10%, rgba(34, 211, 238, 0.20), transparent 58%),
                 linear-gradient(180deg, #F3FAFC 0%, #E3F1F8 38%, #EEF7FB 70%, #F8FCFD 100%);
@@ -1491,21 +1423,6 @@
         }
         html[data-theme="light"] .leaflet-control-attribution a { color: #0A7A91 !important; }
 
-        /* Water cursor reads as a droplet on light ground too */
-        html[data-theme="light"] .wc-lens {
-            background:
-                radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.55), rgba(34, 211, 238, 0.1) 45%, transparent 64%),
-                radial-gradient(circle at 64% 76%, rgba(10, 122, 145, 0.12), transparent 60%);
-            box-shadow:
-                inset 0 1px 1px rgba(255, 255, 255, 0.85),
-                inset 0 -12px 24px -14px rgba(10, 122, 145, 0.5),
-                0 0 30px -8px rgba(10, 122, 145, 0.35);
-        }
-        html[data-theme="light"] .wc-dot {
-            background: radial-gradient(circle at 38% 34%, #FFFFFF, #22D3EE 55%, rgba(34, 211, 238, 0) 76%);
-            box-shadow: 0 0 12px rgba(10, 122, 145, 0.8);
-        }
-
         /* Scrollbar */
         html[data-theme="light"] ::-webkit-scrollbar-track { background: #E6F1F6; }
         html[data-theme="light"] ::-webkit-scrollbar-thumb { border-color: #E6F1F6; }
@@ -1536,16 +1453,6 @@
 
         /* Scrolling the chat should not drag the page behind it */
         #chatBody { overscroll-behavior: contain; }
-
-        @media (max-width: 767px) {
-            /* Animating a blur re-rasterises the whole section on every scroll
-               frame. Transform and opacity stay on the compositor. */
-            .reveal {
-                filter: none;
-                transition: opacity 0.9s var(--ease-buoy), transform 1s var(--ease-buoy);
-            }
-            .reveal.active { filter: none; }
-        }
 
         @media (hover: none) {
             /* No grey flash, no legacy 300ms tap delay */
@@ -1596,11 +1503,6 @@
             .liquid:hover { transform: none; }
         }
 
-        /* No pointer to follow on touch: tap ripples still fire, nothing else runs */
-        @media (hover: none), (pointer: coarse) {
-            .wc-lens, .wc-dot { display: none !important; }
-        }
-
         /* Hover-only effects stay off touch devices (no sticky hover states) */
         @media (hover: none) {
             .glow-hover::after { display: none; }
@@ -1614,9 +1516,8 @@
                 scroll-behavior: auto !important;
             }
             .rays, .caustics, .particle, .gate-sheen, #gateWave { display: none !important; }
-            #waterCursor { display: none !important; }
             .fish { display: none !important; }
             .dial-pulse { display: none !important; }
             .team-avatar::before { animation: none !important; }
-            .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+            .reveal { opacity: 1 !important; transform: none !important; }
         }

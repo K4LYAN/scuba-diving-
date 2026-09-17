@@ -1,0 +1,102 @@
+{
+ "boat-diving": {
+  "h": 805,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "confined-diving": {
+  "h": 800,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "cover-divers": {
+  "h": 712,
+  "w": 1600,
+  "widths": [
+   640,
+   1600
+  ]
+ },
+ "dive-centre-storefront": {
+  "h": 1625,
+  "w": 1209,
+  "widths": [
+   640,
+   1209
+  ]
+ },
+ "event-birthday": {
+  "h": 375,
+  "w": 579,
+  "widths": [
+   579
+  ]
+ },
+ "event-conservation": {
+  "h": 375,
+  "w": 567,
+  "widths": [
+   567
+  ]
+ },
+ "event-prewedding": {
+  "h": 375,
+  "w": 567,
+  "widths": [
+   567
+  ]
+ },
+ "event-proposal": {
+  "h": 375,
+  "w": 579,
+  "widths": [
+   579
+  ]
+ },
+ "guided-fun-dive": {
+  "h": 800,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "outbound-trip": {
+  "h": 762,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "shore-diving": {
+  "h": 791,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "snorkelling": {
+  "h": 791,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ },
+ "ssi-pool-training": {
+  "h": 805,
+  "w": 1167,
+  "widths": [
+   640,
+   1167
+  ]
+ }
+}

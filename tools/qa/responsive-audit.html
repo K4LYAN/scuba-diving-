@@ -1,0 +1,229 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Dive Adda responsive audit</title>
+<style>
+  body { font: 12px/1.45 ui-monospace, Consolas, monospace; background: #0b1016; color: #d6e2ea; margin: 0; padding: 12px; }
+  h1 { font-size: 14px; margin: 0 0 8px; }
+  .ok { color: #6ee7b7; } .bad { color: #fca5a5; } .warn { color: #fcd34d; }
+  iframe { border: 0; position: absolute; left: -100000px; top: 0; }
+</style>
+<h1>Dive Adda — responsive audit <span id="status">running…</span></h1>
+<pre id="out"></pre>
+<script>
+/*  Dev-only QA tool. Loads every page at every target viewport in same-origin
+    iframes and measures real layout: page overflow, navbar covering hero
+    content, clipped hero content, text escaping its box, and touch targets.
+    Open /tools/qa/responsive-audit.html on a local server; results are also
+    exposed as window.__audit for scripted checks.  ?pages=index,faq to limit. */
+const ALL_PAGES = ['index', 'about', 'first-time-scuba', 'courses', 'open-water-diver', 'advanced-adventurer', 'react-right', 'diver-stress-rescue', 'dive-master', 'visakhapatnam', 'rajahmundry', 'blog', 'gallery', 'events', 'faq', 'contact', 'privacy-policy', 'terms-and-conditions', 'refund-policy'];
+const SIZES = [[360, 740], [375, 667], [390, 844], [414, 896], [430, 932], [480, 854], [768, 1024], [1024, 768], [1280, 720], [1440, 900], [1920, 1080]];
+const params = new URLSearchParams(location.search);
+const PAGES = params.get('pages') ? params.get('pages').split(',') : ALL_PAGES;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+window.__audit = { done: false, results: {}, issues: 0 };
+try { sessionStorage.setItem('da-dived', '1'); sessionStorage.setItem('da-modal', '1'); } catch (e) {}
+
+function frame(src, w, h) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe');
+    f.style.width = w + 'px'; f.style.height = h + 'px';
+    f.onload = () => resolve(f);
+    f.src = src;
+    document.body.appendChild(f);
+  });
+}
+
+function desc(el) {
+  const cls = (typeof el.className === 'string' ? el.className : '').split(/\s+/).filter((c) => c && !c.includes('[') && !c.includes(':')).slice(0, 3).join('.');
+  return el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (cls ? '.' + cls : '');
+}
+
+// Freeze the page in its settled, post-dive state so rects are final positions
+function settle(w, d) {
+  const st = d.createElement('style');
+  st.textContent = '*,*::before,*::after{transition:none!important;animation:none!important}';
+  d.head.appendChild(st);
+  d.documentElement.classList.remove('gate-open', 'modal-open');
+  d.body.classList.remove('gate-open');
+  const g = d.getElementById('diveGate'); if (g) g.style.display = 'none';
+  // Land the dive-in intro: mid-tween the whole page is scaled and offset
+  if (w.gsap) { w.gsap.killTweensOf('#siteRoot'); w.gsap.set('#siteRoot', { clearProps: 'all' }); }
+  d.querySelectorAll('.pre-dive').forEach((e) => e.classList.remove('pre-dive'));
+  d.querySelectorAll('.reveal').forEach((e) => e.classList.add('active'));
+  ['bookNowModal', 'profileModal', 'lightbox'].forEach((id) => { const m = d.getElementById(id); if (m) m.classList.remove('open', 'in'); });
+  d.documentElement.style.scrollBehavior = 'auto';
+  w.scrollTo(0, 0);
+  d.querySelectorAll('.carousel-track').forEach((t) => { t.scrollLeft = 0; });
+}
+
+function audit(w, d) {
+  const vw = w.innerWidth, vh = w.innerHeight;
+  const r = { vw, vh, issues: [] };
+  const add = (sev, msg) => r.issues.push([sev, msg]);
+
+  const docOver = d.documentElement.scrollWidth - vw;
+  if (docOver > 0) add('bad', 'page scrolls horizontally by ' + docOver + 'px');
+
+  const nav = d.getElementById('navbar');
+  const navBottom = nav.getBoundingClientRect().bottom;
+  r.navH = Math.round(navBottom);
+
+  // Navbar must never cover the first hero content
+  const first = d.querySelector('.page-hero .crumbs') || d.querySelector('header .reveal > *');
+  if (first) {
+    const gap = Math.round(first.getBoundingClientRect().top - navBottom);
+    r.heroGap = gap;
+    if (gap < 12) add('bad', 'navbar covers hero content (gap ' + gap + 'px, nav ' + r.navH + 'px)');
+  }
+  // Hero content must fit inside its header (headers clip overflow)
+  const hdr = d.querySelector('header');
+  const inner = hdr && hdr.querySelector('.ph-inner, .reveal');
+  if (inner) {
+    const hr = hdr.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+    if (ir.bottom > hr.bottom + 1) add('bad', 'hero content clipped at bottom by ' + Math.round(ir.bottom - hr.bottom) + 'px');
+    if (ir.top < hr.top - 1) add('bad', 'hero content clipped at top by ' + Math.round(hr.top - ir.top) + 'px');
+  }
+
+  const SKIP = '#ambient,#diveGate,#waterCursor,#chatbotWidget,#lightbox,#profileModal,#bookNowModal,template,.leaflet-container';
+  const visible = (el) => { const cs = w.getComputedStyle(el); return cs.display !== 'none' && cs.visibility !== 'hidden'; };
+  function clipped(el) {
+    for (let p = el.parentElement; p && p !== d.body; p = p.parentElement) {
+      const cs = w.getComputedStyle(p);
+      if (cs.overflowX !== 'visible') { const pr = p.getBoundingClientRect(); if (pr.right <= vw + 1 && pr.left >= -1) return true; }
+    }
+    return false;
+  }
+  const hidden = (el) => { for (let p = el; p && p !== d.body; p = p.parentElement) { if (w.getComputedStyle(p).display === 'none') return true; } return false; };
+
+  // Anything poking outside the viewport that nothing clips
+  const out = [];
+  d.querySelectorAll('body *').forEach((el) => {
+    if (el.closest(SKIP)) return;
+    const b = el.getBoundingClientRect();
+    if (!b.width || !b.height) return;
+    if ((b.right > vw + 1 || b.left < -1) && visible(el) && !clipped(el) && !out.some((o) => o.el.contains(el))) {
+      out.push({ el, s: desc(el) + ' [' + Math.round(b.left) + '→' + Math.round(b.right) + ']' });
+    }
+  });
+  out.slice(0, 6).forEach((o) => add('bad', 'overflows viewport: ' + o.s));
+
+  // Text wider than its own box
+  const tx = [];
+  d.querySelectorAll('h1,h2,h3,h4,p,a,button,li,dd,label,summary,figcaption').forEach((el) => {
+    if (el.closest(SKIP) || hidden(el)) return;
+    const cs = w.getComputedStyle(el);
+    if (cs.display === 'inline' || cs.overflowX !== 'visible' || !el.clientWidth) return;
+    if (el.scrollWidth > el.clientWidth + 2) tx.push(desc(el) + ' (' + el.scrollWidth + '>' + el.clientWidth + ') "' + el.textContent.trim().slice(0, 28) + '"');
+  });
+  tx.slice(0, 6).forEach((t) => add('bad', 'text overflows box: ' + t));
+
+  // Copy cut off inside cards that clip their content
+  const cut = new Set();
+  d.querySelectorAll('.loc-card,.dest-card,.act-slide.is-on,.bento-card,.course-card,.gallery-tile,.info-card,.trust-card,.ddp-card,.team-card,.j-card,.cta-band,[class*="auto-rows-"] > *').forEach((card) => {
+    if (card.closest(SKIP) || hidden(card)) return;
+    const cs = w.getComputedStyle(card);
+    if (cs.overflow === 'visible' && cs.overflowY === 'visible') return;
+    const cr = card.getBoundingClientRect();
+    card.querySelectorAll('h2,h3,p,a,button,.chip,.chip-cyan').forEach((t) => {
+      if (hidden(t) || t.closest('.info-card[aria-expanded="false"] .ic-more')) return;
+      const tr = t.getBoundingClientRect();
+      if (!tr.height) return;
+      if (tr.top < cr.top - 1 || tr.bottom > cr.bottom + 1 || tr.right > cr.right + 1 || tr.left < cr.left - 1) {
+        cut.add(desc(card) + ' cuts off ' + desc(t) + ' "' + t.textContent.trim().slice(0, 24) + '"');
+      }
+    });
+  });
+  [...cut].slice(0, 5).forEach((c) => add('bad', 'content clipped: ' + c));
+
+  // The navbar must match the height the layout reserves for it
+  const reserved = parseFloat(w.getComputedStyle(d.documentElement).getPropertyValue('--nav-h')) ||
+    (() => { const probe = d.createElement('div'); probe.style.cssText = 'position:absolute;visibility:hidden;height:var(--nav-h)'; d.body.appendChild(probe); const h = probe.getBoundingClientRect().height; probe.remove(); return h; })();
+  r.navReserved = Math.round(reserved);
+  if (reserved && Math.abs(reserved - navBottom) > 2) add('bad', 'navbar is ' + r.navH + 'px but layout reserves ' + r.navReserved + 'px');
+
+  // Siblings in the desktop nav pill must not collide
+  const pill = d.getElementById('navPill');
+  if (pill) {
+    const kids = [...pill.children].filter((k) => k.id !== 'mobileMenu' && visible(k) && k.getBoundingClientRect().width);
+    for (let i = 1; i < kids.length; i++) {
+      const a = kids[i - 1].getBoundingClientRect(), b = kids[i].getBoundingClientRect();
+      if (a.right > b.left + 1) add('bad', 'nav items collide: ' + desc(kids[i - 1]) + ' / ' + desc(kids[i]) + ' by ' + Math.round(a.right - b.left) + 'px');
+    }
+  }
+  const cities = d.querySelector('.city-bar .cities'), meta = d.querySelector('.city-bar .bar-meta');
+  if (cities && meta && visible(meta)) {
+    const lastChip = [...cities.children].pop().getBoundingClientRect(), m = meta.getBoundingClientRect();
+    if (lastChip.right > m.left - 4) add('bad', 'city bar chips collide with contact meta');
+  }
+
+  // Touch targets on touch-sized screens
+  if (vw < 1024) {
+    const small = {};
+    d.querySelectorAll('#mobileMenuBtn,#themeToggle,.city-chip,.filter-btn,.car-btn,.car-dots button,.dest-select button,.act-tab,.faq-item summary,.lb-btn,footer a,.crumbs a,.float-widget').forEach((el) => {
+      if (el.closest(SKIP) || hidden(el)) return;
+      const b = el.getBoundingClientRect();
+      const after = w.getComputedStyle(el, '::after');
+      let hitH = b.height, hitW = b.width;
+      if (after.content !== 'none' && after.position === 'absolute') {
+        hitH = b.height - (parseFloat(after.top) || 0) - (parseFloat(after.bottom) || 0);
+        hitW = b.width - (parseFloat(after.left) || 0) - (parseFloat(after.right) || 0);
+      }
+      const need = el.matches('.car-dots button') ? 24 : 40;
+      if (b.height && (hitH < need || hitW < need * (el.matches('#mobileMenuBtn,.car-btn,.lb-btn,.float-widget') ? 1 : 0.6))) {
+        const k = el.matches('footer a') ? 'footer a' : el.matches('.crumbs a') ? '.crumbs a' : desc(el).split('.').slice(0, 2).join('.');
+        small[k] = Math.min(small[k] || 999, Math.round(hitH));
+      }
+    });
+    Object.keys(small).forEach((k) => add('warn', 'touch target under 40px: ' + k + ' (' + small[k] + 'px tall)'));
+  }
+
+  // Mobile menu: opens within the viewport, above content, scrollable
+  const btn = d.getElementById('mobileMenuBtn'), menu = d.getElementById('mobileMenu');
+  if (btn && menu && visible(btn)) {
+    btn.click();
+    const m = menu.getBoundingClientRect();
+    if (!menu.classList.contains('is-open') || w.getComputedStyle(menu).visibility === 'hidden') add('bad', 'mobile menu did not open');
+    else {
+      if (m.bottom > vh + 1 && w.getComputedStyle(menu).overflowY === 'visible') add('bad', 'mobile menu runs off screen and cannot scroll');
+      if (m.right > vw + 1 || m.left < -1) add('bad', 'mobile menu wider than viewport');
+      const z = +w.getComputedStyle(nav).zIndex || 0;
+      if (z < 50) add('bad', 'navbar z-index too low (' + z + ')');
+    }
+    btn.click();
+  }
+  return r;
+}
+
+(async function run() {
+  const outEl = document.getElementById('out');
+  let lines = [];
+  for (const page of PAGES) {
+    // Measure a few viewports at a time and discard them before loading more:
+    // eleven heavy pages loading at once let frames shift mid-measurement.
+    window.__audit.results[page] = {};
+    lines.push(page);
+    for (let i = 0; i < SIZES.length; i += 4) {
+      const sizes = SIZES.slice(i, i + 4);
+      const batch = await Promise.all(sizes.map(([w, h]) => frame('../../' + page + '.html', w, h)));
+      await sleep(1600);
+      batch.forEach((f, k) => {
+        const [w, h] = sizes[k];
+        let res;
+        try { settle(f.contentWindow, f.contentDocument); res = audit(f.contentWindow, f.contentDocument); }
+        catch (e) { res = { vw: w, vh: h, issues: [['bad', 'audit error: ' + e.message]] }; }
+        window.__audit.results[page][w + 'x' + h] = res;
+        window.__audit.issues += res.issues.filter((x) => x[0] === 'bad').length;
+        const tag = (w + 'x' + h).padEnd(10);
+        if (!res.issues.length) lines.push('  <span class="ok">' + tag + ' ok</span>  nav ' + res.navH + 'px (reserved ' + res.navReserved + ')' + (res.heroGap !== undefined ? ', hero gap ' + res.heroGap + 'px' : ''));
+        else res.issues.forEach(([sev, msg], j) => lines.push('  <span class="' + sev + '">' + (j ? ''.padEnd(10) : tag) + ' ' + msg.replace(/</g, '&lt;') + '</span>'));
+        f.remove();
+      });
+    }
+    outEl.innerHTML = lines.join('\n');
+  }
+  window.__audit.done = true;
+  document.getElementById('status').innerHTML = window.__audit.issues ? '<span class="bad">' + window.__audit.issues + ' layout problems</span>' : '<span class="ok">all clear</span>';
+})();
+</script>

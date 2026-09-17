@@ -12,9 +12,12 @@ Source of truth for copy: the Dive Adda brochure (Scuba Diving Brochure.pdf)
 and the details supplied by the owner. Nothing here states a price, a rating,
 a street address or a dive site, because none of those are verified.
 """
+import hashlib
 import html
 import json
 import os
+import shutil
+import subprocess
 from urllib.parse import quote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,14 +66,53 @@ def B(name):
     return 'assets/img/brochure/%s.jpg' % name
 
 
+_MANIFEST = None
+
+
+def manifest():
+    """Widths written by tools/optimize_images.py for each brochure photo."""
+    global _MANIFEST
+    if _MANIFEST is None:
+        path = os.path.join(ROOT, 'assets', 'img', 'brochure', 'manifest.json')
+        _MANIFEST = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {}
+    return _MANIFEST
+
+
+def _brochure_meta(src):
+    if not src.startswith('assets/img/brochure/'):
+        return None, None
+    stem = src.rsplit('/', 1)[1].rsplit('.', 1)[0]
+    return stem, manifest().get(stem)
+
+
+def webp_srcset(src):
+    stem, m = _brochure_meta(src)
+    if not m:
+        return ''
+    return ', '.join('assets/img/brochure/%s-%d.webp %dw' % (stem, w, w) for w in m['widths'])
+
+
+def full_src(src):
+    """Largest rendition, for the lightbox."""
+    stem, m = _brochure_meta(src)
+    return 'assets/img/brochure/%s-%d.webp' % (stem, m['widths'][-1]) if m else src
+
+
 def photo(src, alt, cls='', sizes='100vw', lazy=True, extra=''):
-    """An <img>, with a responsive srcset when the source is an Unsplash id."""
+    """A responsive image: Unsplash srcset, or WebP renditions with the JPEG as fallback."""
+    load = 'loading="lazy"' if lazy else 'fetchpriority="high"'
     if src.startswith('uns:'):
         pid = src[4:]
         return ('<img src="%s" srcset="%s" sizes="%s" alt="%s" class="%s" %s %s decoding="async">'
-                % (U(pid), uset(pid), sizes, E(alt), cls, 'loading="lazy"' if lazy else 'fetchpriority="high"', extra))
-    return ('<img src="%s" alt="%s" class="%s" %s %s decoding="async">'
-            % (src, E(alt), cls, 'loading="lazy"' if lazy else 'fetchpriority="high"', extra))
+                % (U(pid), uset(pid), sizes, E(alt), cls, load, extra))
+    _, m = _brochure_meta(src)
+    dims = 'width="%d" height="%d"' % (m['w'], m['h']) if m else ''
+    img = ('<img src="%s" alt="%s" class="%s" %s %s %s decoding="async">'
+           % (src, E(alt), cls, dims, load, extra))
+    srcset = webp_srcset(src)
+    if not srcset:
+        return img
+    return '<picture><source type="image/webp" srcset="%s" sizes="%s">%s</picture>' % (srcset, sizes, img)
 
 
 def src_of(src):
@@ -112,62 +154,118 @@ def wa_link(text):
 
 # ---------------------------------------------------------------- site data
 DESTS = [
-    dict(id='vizag', name='Vizag', file='vizag.html', sub='Visakhapatnam &middot; Andhra Pradesh',
-         img='assets/img/brochure/dive-centre-storefront.jpg',
-         hero=B('cover-divers'),
-         blurb='Our SSI certified scuba centre, on the Bay of Bengal coast. This is where first dives, SSI courses and guided fun dives begin.',
-         long='Vizag &mdash; Visakhapatnam &mdash; is the coastal home of Dive Adda. Our SSI certified scuba centre runs training from confined water through to guided open water dives, for complete beginners and certified divers alike.',
-         acts=['Scuba Diving', 'SSI Courses', 'Guided Fun Dives', 'Snorkelling', 'Boat Diving', 'Shore Diving', 'Confined Diving', 'Underwater Events']),
-    dict(id='rajahmundry', name='Rajahmundry', file='rajahmundry.html', sub='Andhra Pradesh',
-         img='uns:1583212292454-1fe6229603b7',
-         hero='uns:1583212292454-1fe6229603b7',
-         blurb='Scuba diving and water sports with the Dive Adda team, on the banks of the Godavari.',
-         long='Rajahmundry sits on the Godavari in Andhra Pradesh. Dive Adda brings scuba diving and water sport experiences here, guided by the same instructors who teach at our centre.',
-         acts=['Scuba Diving', 'Water Sports']),
-    dict(id='goa', name='Goa', file='goa.html', sub='West coast of India',
-         img='uns:1546026423-cc4642628d2b',
-         hero='uns:1546026423-cc4642628d2b',
-         blurb='Scuba diving and water sports on India&rsquo;s west coast, along the Arabian Sea.',
-         long='Goa faces the Arabian Sea on India&rsquo;s west coast. Dive Adda runs scuba diving and water sport experiences here for first-timers and certified divers.',
-         acts=['Scuba Diving', 'Water Sports']),
+    dict(id='visakhapatnam', name='Visakhapatnam', short='Vizag', file='visakhapatnam.html',
+         sub='Vizag &middot; Andhra Pradesh', img=B('cover-divers'), hero=B('cover-divers'), depth=12,
+         blurb='Home of our SSI certified scuba centre on the Bay of Bengal &mdash; try scuba, snorkel and ride the waves.',
+         long='Visakhapatnam (Vizag) is the coastal home of Dive Adda. Our SSI certified scuba centre runs Try Scuba, SSI courses and guided dives here, alongside snorkeling and water activities on the Bay of Bengal.',
+         acts=[
+             ('scuba-diving', 'Scuba Diving', 'wave', 'Breathe underwater with an SSI instructor beside you. New to diving? Start with Try Scuba.', 'first-time-scuba.html'),
+             ('snorkeling', 'Snorkeling', 'eye', 'Explore underwater life effortlessly, floating with a mask, snorkel and fins. No certification needed.', None),
+             ('jet-ski', 'Jet Ski', 'bolt', 'A fast, thrilling ride across the water on a jet ski.', None),
+             ('leisure-boat', 'Leisure Boat', 'boat', 'A relaxed boat ride out on the water.', None),
+             ('atv-rides', 'ATV Rides', 'spark', 'Off-road fun on an all-terrain vehicle.', None),
+         ]),
+    dict(id='rajahmundry', name='Rajahmundry', short='Rajahmundry', file='rajahmundry.html',
+         sub='On the Godavari &middot; Andhra Pradesh', img='uns:1583212292454-1fe6229603b7',
+         hero='uns:1583212292454-1fe6229603b7', depth=3,
+         blurb='Water rides and adventures on the Godavari river with the Dive Adda team.',
+         long='Rajahmundry sits on the banks of the Godavari in Andhra Pradesh. Dive Adda runs speed boat rides, jet ski rides and kayaking here, plus towed rides for groups.',
+         acts=[
+             ('speed-boat-ride', 'Speed Boat Ride', 'boat', 'A high-speed boat ride across the Godavari.', None),
+             ('jet-ski-ride', 'Jet Ski Ride', 'bolt', 'Skim across the river on a jet ski.', None),
+             ('kayaking', 'Kayaking', 'wave', 'Paddle at your own pace in a kayak.', None),
+             ('dragon-ride', 'Dragon Ride', 'spark', 'A towed inflatable ride for groups &mdash; hold on tight.', None),
+             ('disco-ride', 'Disco Ride', 'spark', 'A spinning towed ride that is all about the laughs.', None),
+             ('bumper-ride', 'Bumper Ride', 'people', 'A towed bumper ride that bounces across the water.', None),
+         ]),
 ]
 
 COURSES = [
-    dict(id='open-water', name='Open Water', full='SSI Open Water Diver', level='Beginner', step='01',
+    dict(id='open-water', file='open-water-diver.html', name='Open Water Diver', full='SSI Open Water Diver', level='Beginner', step='01', depth=18,
          img=B('ssi-pool-training'),
          short='The entry-level SSI certification &mdash; your first step from confined water practice to diving in open water.',
          long='Open Water Diver is where most divers begin. You learn the essential skills in confined water with an instructor beside you, then put them to use in open water. It is an internationally recognised SSI certification.',
+         who='Anyone who wants a scuba certification of their own. No previous diving experience is needed.',
          learn=['Essential diving skills', 'How your equipment works', 'Safe diving practices', 'An internationally recognised SSI certification']),
-    dict(id='advanced-adventurer', name='Advanced Adventurer', full='SSI Advanced Adventurer', level='Certified divers', step='02',
+    dict(id='advanced-adventurer', file='advanced-adventurer.html', name='Advanced Adventurer', full='SSI Advanced Adventurer', level='Certified divers', step='02', depth=30,
          img='uns:1582967788606-a171c1080cb0',
          short='Build on your training and try different types of diving with an instructor alongside you.',
          long='Advanced Adventurer is the natural next step after Open Water. You dive with an instructor across different kinds of diving, adding experience and confidence to the skills you already have.',
+         who='Certified Open Water divers ready to try different types of diving.',
          learn=['Experience across different types of diving', 'More confidence in the water', 'Guided dives with an instructor', 'A foundation for further SSI training']),
-    dict(id='react-right', name='React Right', full='SSI React Right', level='First aid &middot; all levels', step='03',
+    dict(id='react-right', file='react-right.html', name='React Right', full='SSI React Right', level='First aid &middot; all levels', step='03', depth=5,
          img=B('confined-diving'),
          short='SSI&rsquo;s first aid and emergency response training, for divers and non-divers.',
          long='React Right is SSI&rsquo;s first aid and emergency response programme. It teaches you to recognise an emergency and respond to it calmly &mdash; skills that matter on a dive boat and on dry land.',
+         who='Divers and non-divers who want first aid and emergency response skills.',
          learn=['Recognising an emergency', 'First aid and emergency response', 'Staying calm under pressure', 'A core part of the rescue pathway']),
-    dict(id='diver-stress-rescue', name='Diver Stress &amp; Rescue', full='SSI Diver Stress &amp; Rescue', level='Continuing education', step='04',
+    dict(id='diver-stress-rescue', file='diver-stress-rescue.html', name='Diver Stress &amp; Rescue', full='SSI Diver Stress &amp; Rescue', level='Continuing education', step='04', depth=20,
          img='uns:1530053969600-caed2596d242',
          short='Learn to spot stress early, prevent problems, and help another diver when something goes wrong.',
          long='Stress is behind most diving incidents. This programme teaches you to recognise it in yourself and your buddy, prevent problems before they escalate, and manage a rescue if one is needed.',
+         who='Certified divers who want to recognise and manage problems underwater.',
          learn=['Recognising stress in yourself and others', 'Preventing problems before they grow', 'Rescue skills and techniques', 'Diving with greater awareness']),
-    dict(id='dive-master', name='Dive Master', full='SSI Divemaster', level='Professional', step='05',
+    dict(id='dive-master', file='dive-master.html', name='Dive Master', full='SSI Divemaster', level='Professional', step='05', depth=40,
          img=B('guided-fun-dive'),
          short='The first professional level &mdash; for divers who want to guide, assist and build a career in diving.',
          long='Dive Master is the first professional rating in the SSI pathway. It is for experienced divers who want to guide certified divers, assist instructors, and take diving from a hobby to a career.',
+         who='Experienced divers who want to guide others and take diving from a hobby to a career.',
          learn=['Guiding certified divers', 'Assisting instructors', 'Dive leadership and planning', 'The start of a career in diving']),
 ]
 
-ACTIVITIES = [
-    dict(id='boat-diving', name='Boat Diving', n='01', img=B('boat-diving'),
-         text='Boat diving offers easy access to deeper dive sites, stunning marine life, and unforgettable underwater adventures.'),
-    dict(id='shore-diving', name='Shore Diving', n='02', img=B('shore-diving'),
-         text='Shore diving is an easy, accessible dive from the beach, offering stunning underwater exploration.'),
-    dict(id='confined-diving', name='Confined Diving', n='03', img=B('confined-diving'),
-         text='Confined diving is training in a controlled water environment, like a pool, ensuring safety and skill development.'),
+# ---- First Time Scuba (Try Scuba), from the Dive Adda program
+TRY_FACTS = [('6:30 AM &ndash; 12:30 PM', 'Morning experience'), ('&asymp; 40 min', 'Dive time per person'),
+             ('6&ndash;8 m', 'Maximum depth'), ('8 years', 'Minimum age')]
+
+TRY_STEPS = [
+    ('6:30 AM &ndash; 6:45 AM', 'Report at Centre',
+     'Report at the Dive Adda centre to complete the necessary formalities before starting your scuba diving experience.'),
+    ('6:45 AM &ndash; 7:15 AM', 'Equipment &amp; Dive Briefing',
+     'Join our classroom briefing to learn about your scuba diving equipment, safety procedures and dive plan. Our team will help you understand your gear and the important instructions you need to follow for a safe and enjoyable underwater experience.'),
+    ('7:30 AM &ndash; 8:30 AM', 'Travel to the Dive Site',
+     'Travel to the beach, where the boat will be loaded before heading to the dive site. After a short 10&ndash;15 minute boat ride, you&rsquo;ll reach the dive site and begin your underwater experience accompanied by a professional diving instructor.'),
+    ('About 40 minutes per person', 'Your Dive',
+     'Each scuba diving session lasts approximately 40 minutes per person, reaching a maximum depth of 6&ndash;8 metres.'),
+    ('12:00 PM &ndash; 12:30 PM', 'Return to Beach &amp; Centre',
+     'After returning, your scuba diving pictures and video will be transferred to you at the centre. If the transfer is not possible at the centre, they will be shared online.'),
 ]
+
+TRY_INCLUDED = ['Boat', 'Scuba diving equipment', 'Experienced instructors', 'Snacks, fruits and water', 'Pictures and video of your experience']
+
+TRY_REQUIREMENTS = ['Minimum age: 8 years',
+                    'Guests with major medical conditions require prior written approval from a physician',
+                    'It is recommended that you do not fly within 18&ndash;24 hours after diving']
+
+TRY_KNOW = [
+    ('camera', 'Bring Your Essentials', 'Please bring a cap, change of clothes and towel.'),
+    ('heart', 'Eat Light Before Diving', 'We recommend eating light before arriving to avoid feeling uncomfortable during the boat journey.'),
+    ('wave', 'Weather &amp; Sea Conditions', 'The itinerary may change depending on sea and local weather conditions.'),
+    ('pin', 'Transport &amp; Accommodation', 'Guests need to arrange their own transportation and accommodation.'),
+]
+
+TRY_FAQS = [
+    ('What is Try Scuba?', 'Try Scuba is an introduction to scuba diving that allows beginners to experience the underwater world with equipment training, safety briefing and guidance from an experienced diving instructor.'),
+    ('Do I need previous scuba diving experience?', 'No. Try Scuba is an introductory scuba diving experience designed for people who are trying scuba diving.'),
+    ('What is the minimum age for Try Scuba?', 'The minimum age for Try Scuba is 8 years.'),
+    ('How long is the scuba diving session?', 'Each scuba diving session lasts approximately 40 minutes per person.'),
+    ('How deep will I go during Try Scuba?', 'The maximum depth is 6&ndash;8 metres.'),
+    ('Is scuba diving equipment provided?', 'Yes. The boat and scuba diving equipment are included in the Try Scuba experience.'),
+    ('Will an instructor accompany me during the dive?', 'Yes. Your dive is accompanied by an experienced, professional diving instructor.'),
+    ('Will I get photos and videos of my dive?', 'Yes. Pictures and a video are included in the experience.'),
+    ('What should I bring for scuba diving?', 'Bring a cap, change of clothes and towel. It is also recommended to eat light before arriving.'),
+    ('Can I fly after scuba diving?', 'We recommend that you do not fly within 18&ndash;24 hours after diving.'),
+    ('Can I scuba dive if I have a medical condition?', 'Guests with major medical conditions require prior written approval from a physician.'),
+    ('What happens if the weather is bad?', 'If weather conditions are unsuitable, the dive may be postponed according to guest availability. If postponement is not possible, the amount will be refunded after deducting the cost of activities already undertaken.'),
+    ('What is the cancellation policy?', 'Cancellation 72 hours before the activity: 50% refund. Cancellation 24&ndash;48 hours before the activity: no refund. See our <a href="refund-policy.html" class="link-glow font-semibold">Refund Policy</a> for details.'),
+]
+
+# Everything a guest can ask for by name: forms, the booking assistant and Book buttons share it
+EXPERIENCE_OPTIONS = ['Try Scuba (first dive)', 'SSI Course']
+for _d in DESTS:
+    for _a in _d['acts']:
+        if _a[1] not in EXPERIENCE_OPTIONS:
+            EXPERIENCE_OPTIONS.append(_a[1])
+EXPERIENCE_OPTIONS += ['Underwater Event', 'Something else']
 
 EVENTS = [
     dict(id='birthday-parties', name='Birthday Parties', img=B('event-birthday'), icon='gift',
@@ -178,37 +276,6 @@ EVENTS = [
          text='An underwater pre-wedding shoot, guided by divers who know how to keep you comfortable and photogenic below the surface.'),
     dict(id='conservation-diving', name='Conservation Diving', img=B('event-conservation'), icon='globe',
          text='Divers witness the effects of pollution firsthand. Join a conservation dive &mdash; cleaning up waste, protecting reefs and building ocean awareness.'),
-]
-
-EXPERIENCES = [
-    dict(name='Scuba Diving', href='diving.html#scuba-diving', img='uns:1544551763-46a013bb70d5',
-         desc='Breathe underwater and explore the marine world with a Dive Adda instructor beside you.',
-         chip='For everyone', chipcls='chip-coral', big=True, exp='Scuba Diving (first dive)'),
-    dict(name='SSI Courses', href='courses.html', img=B('ssi-pool-training'),
-         desc='Certification from beginner to professional level.', chip='Certification', chipcls='chip-cyan', exp='SSI Course'),
-    dict(name='Guided Fun Dives', href='diving.html#fun-dives', img=B('guided-fun-dive'),
-         desc='Safe, exciting dives with expert instructors.', chip='Guided', chipcls='chip', exp='Guided Fun Dive'),
-    dict(name='Snorkelling', href='water-sports.html#snorkelling', img=B('snorkelling'), wide=True,
-         desc='Explore underwater life effortlessly, floating with a mask, snorkel and fins. No certification needed.',
-         chip='No certification needed', chipcls='chip', exp='Snorkelling'),
-    dict(name='Boat Diving', href='diving.html#boat-diving', img=B('boat-diving'),
-         desc='Easy access to deeper dive sites.', chip='Activity', chipcls='chip', exp='Boat Diving'),
-    dict(name='Shore Diving', href='diving.html#shore-diving', img=B('shore-diving'),
-         desc='An easy, accessible dive from the beach.', chip='Activity', chipcls='chip', exp='Shore Diving'),
-    dict(name='Confined Diving', href='diving.html#confined-diving', img=B('confined-diving'),
-         desc='Skills training in controlled water.', chip='Training', chipcls='chip', exp='Confined Diving'),
-    dict(name='Underwater Events', href='events.html', img=B('event-prewedding'), wide=True,
-         desc='Birthdays, proposals, pre-wedding shoots and conservation dives &mdash; planned with our team.',
-         chip='Signature', chipcls='chip-violet', exp='Underwater Event'),
-]
-
-WHY = [
-    ('shield', 'SSI Certified', 'An internationally certified dive centre, proudly affiliated with SSI, so our training meets the highest global standards.'),
-    ('people', 'Professional Guidance', 'A team of expert instructors with over 15 years of industry experience between them.'),
-    ('heart', 'Safety First', 'Top-notch safety and expert guidance on every experience we run &mdash; it is the core of how we dive.'),
-    ('spark', 'Beginner Friendly', 'Whether it is your first breath underwater or your hundredth dive, there is a way in for you.'),
-    ('cap', 'Dive Training', 'Courses from beginner through to professional level, for divers who want to go further.'),
-    ('globe', 'Underwater Adventure', 'Fun dives, snorkelling, boat and shore diving, outbound trips and underwater events.'),
 ]
 
 SCUBA_CARDS = [
@@ -241,15 +308,6 @@ SCUBA_CARDS = [
      'the more awareness we create about keeping our oceans clean and safe for future generations.</p>'),
 ]
 
-JOURNEY = [
-    ('01', 'Meet your instructor', 'You are introduced to the SSI professional who stays with you from the first briefing to the last bubble.'),
-    ('02', 'Safety briefing', 'How the dive works, the signals you will use, and what happens at every stage. Questions welcome.'),
-    ('03', 'Learn the equipment', 'Your mask, fins and breathing apparatus &mdash; what each part does and how it feels.'),
-    ('04', 'Practice', 'Skills first, in controlled water, until breathing underwater feels ordinary.'),
-    ('05', 'Enter the water', 'From shore or boat, with your instructor beside you the whole way down.'),
-    ('06', 'Discover the underwater world', 'Weightless, quiet, and face to face with marine life in its own habitat.'),
-]
-
 GALLERY = [
     (B('cover-divers'), 'diving', 'Divers over the reef', 'Dive, Discover, Repeat', 'g-wide g-tall'),
     (B('ssi-pool-training'), 'courses', 'SSI training session', 'Skills in confined water', 'g-tall'),
@@ -258,7 +316,6 @@ GALLERY = [
     (B('dive-centre-storefront'), 'destinations', 'The Dive Adda centre', 'Scuba dive centre', 'g-tall'),
     (B('boat-diving'), 'boat', 'Boat diving', 'Entry from the boat', 'g-wide'),
     (B('confined-diving'), 'courses', 'Confined water training', 'Controlled environment', ''),
-    (B('shore-diving'), 'diving', 'Shore diving', 'Walking in from the beach', ''),
     (B('outbound-trip'), 'destinations', 'Outbound trip', 'Diving together', 'g-wide'),
     (B('event-birthday'), 'events', 'Underwater birthday', 'Celebrating below the surface', ''),
     (B('event-proposal'), 'events', 'Underwater proposal', 'The question, underwater', ''),
@@ -267,7 +324,7 @@ GALLERY = [
 ]
 
 GALLERY_FILTERS = [('all', 'All'), ('diving', 'Diving'), ('courses', 'Courses'), ('snorkelling', 'Snorkelling'),
-                   ('boat', 'Boat Diving'), ('events', 'Underwater Events'), ('destinations', 'Destinations')]
+                   ('boat', 'Boat Diving'), ('events', 'Underwater Events'), ('destinations', 'Locations')]
 
 TEAM = [
     dict(mono='DA', name='Our Founder', role='Founder, Dive Adda',
@@ -282,54 +339,68 @@ TEAM = [
          bio='Our team of expert instructors provides professional dive training for all levels &mdash; from beginners taking their first dive to advanced divers and professionals looking to enhance their skills.'),
 ]
 
-FAQS = [
-    ('Do I need diving experience?',
-     'No. Dive Adda trains divers at every level, from beginners taking their first breath underwater through to advanced divers and professionals. If it is your first time, an instructor stays with you from the briefing to the end of the dive.'),
-    ('What is scuba diving?',
-     'Scuba diving is an underwater adventure that allows you to explore the marine world using a Self-Contained Underwater Breathing Apparatus (SCUBA). It enables divers to breathe underwater and move freely while exploring coral reefs, shipwrecks and marine life. It is both a recreational and a professional activity, with applications in marine research, underwater photography, rescue operations and even archaeology.'),
-    ('What happens during a first dive?',
-     'You meet your instructor and get a full safety briefing, learn how the equipment works, and practise the core skills in controlled water. Only then do you enter the water &mdash; with your instructor beside you the whole way &mdash; to discover the underwater world.'),
-    ('What courses are available?',
-     'Dive Adda runs SSI certified courses from beginner to professional level: Open Water, Advanced Adventurer, React Right, Diver Stress &amp; Rescue and Dive Master.'),
-    ('What equipment is provided?',
-     'Scuba diving uses a Self-Contained Underwater Breathing Apparatus; snorkelling uses a mask, snorkel and fins. Exactly what is included depends on the experience you book &mdash; the dive desk confirms it with you before your dive.'),
-    ('How do I book?',
-     'Use the booking assistant on this site, send an enquiry through the contact form, message us on WhatsApp, or call the dive desk on %s. We confirm availability for your date and take it from there.' % PHONE_TXT),
-    ('Where are Dive Adda experiences available?',
-     'Our SSI certified scuba centre is in Vizag (Visakhapatnam), and we run scuba diving and water sport experiences in Rajahmundry and Goa.'),
+GENERAL_FAQS = [
     ('Is Dive Adda SSI certified?',
      'Yes. Dive Adda is an internationally certified dive centre, proudly affiliated with SSI (Scuba Schools International), which means our training programmes meet the highest global standards.'),
+    ('What courses are available?',
+     'SSI courses from beginner to professional level: Open Water Diver, Advanced Adventurer, React Right, Diver Stress &amp; Rescue and Dive Master. Each course has its own page with details.'),
+    ('Where does Dive Adda operate?',
+     'Our SSI certified scuba centre is in Visakhapatnam (Vizag). We also run water activities in Rajahmundry.'),
+    ('What activities are available in Visakhapatnam?',
+     'Scuba diving, snorkeling, jet ski, leisure boat rides and ATV rides.'),
+    ('What activities are available in Rajahmundry?',
+     'Speed boat rides, jet ski rides, kayaking, dragon rides, disco rides and bumper rides.'),
+    ('How do I book?',
+     'Use the booking assistant on this site, send an enquiry through the contact form, message us on WhatsApp, or call us on %s. We confirm availability for your date and take it from there.' % PHONE_TXT),
 ]
+
 
 NAV = [
     ('home', 'Home', 'index.html', None),
-    ('diving', 'Diving', 'diving.html', [('All Diving', 'diving.html')] + [('Scuba Diving', 'diving.html#scuba-diving'), ('Guided Fun Dives', 'diving.html#fun-dives'), ('Boat Diving', 'diving.html#boat-diving'), ('Shore Diving', 'diving.html#shore-diving'), ('Confined Diving', 'diving.html#confined-diving')]),
-    ('courses', 'Courses', 'courses.html', [('All Courses', 'courses.html')] + [(c['name'], 'courses.html#' + c['id']) for c in COURSES]),
-    ('water-sports', 'Water Sports', 'water-sports.html', None),
-    ('destinations', 'Destinations', 'index.html#destinations', [('All Destinations', 'index.html#destinations')] + [(d['name'], d['file']) for d in DESTS]),
-    ('events', 'Events', 'events.html', [('All Events', 'events.html')] + [(e['name'], 'events.html#' + e['id']) for e in EVENTS]),
-    ('gallery', 'Gallery', 'gallery.html', None),
-    ('about', 'About', 'about.html', None),
-    ('faq', 'FAQ', 'faq.html', None),
-    ('contact', 'Contact', 'contact.html', None),
+    ('about', 'About Us', 'about.html', None),
+    ('first-time-scuba', 'First Time Scuba', 'first-time-scuba.html', None),
+    ('courses', 'Courses', 'courses.html', [(c['name'], c['file']) for c in COURSES] + [('View all courses', 'courses.html')]),
+    ('locations', 'Locations', None, 'locations'),
+    ('more', 'More', None, [('Blog', 'blog.html'), ('Gallery', 'gallery.html'), ('Events', 'events.html'), ('FAQ&rsquo;s', 'faq.html')]),
+    ('contact', 'Contact Us', 'contact.html', None),
 ]
+
+CARET = ('<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">'
+         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>')
+M_CARET = ('<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">'
+           '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>')
 
 
 # ---------------------------------------------------------------- chrome
-def city_bar(page):
-    chips = ''.join(
-        '<a href="%s" class="city-chip%s" data-city="%s"><span class="pin"></span>%s</a>'
-        % (d['file'], ' is-current' if page == d['id'] else '', d['id'], d['name']) for d in DESTS)
-    return ('''    <div class="city-bar">
-      <div class="cities">
-        <span class="hidden sm:inline text-[9.5px] font-bold uppercase tracking-[0.28em] text-brand-glow/70 mr-1 shrink-0">Dive with us in</span>
-        ''' + chips + '''
-      </div>
-      <div class="bar-meta">
-        <span class="inline-flex items-center gap-2 font-semibold tracking-wide"><img src="assets/img/ssi-dive-center.png" alt="" class="w-5 h-5" loading="lazy"> SSI Certified Dive Centre</span>
-        <a href="tel:''' + PHONE_TEL + '''" class="inline-flex items-center gap-1.5">''' + svg('phone', 'w-3.5 h-3.5') + PHONE_TXT + '''</a>
-      </div>
-    </div>''')
+def locations_drop():
+    # Desktop flyout: pick a location, its activities show alongside
+    tabs = ''.join(
+        '<button type="button" class="loc-tab" role="tab" id="loct-%s" aria-selected="%s" aria-controls="locp-%s">'
+        '<span>%s</span><span class="loc-count">%d</span></button>'
+        % (d['id'], 'true' if i == 0 else 'false', d['id'], d['name'], len(d['acts']))
+        for i, d in enumerate(DESTS))
+    panels = ''.join(
+        '<div class="loc-panel" id="locp-%s" role="tabpanel" aria-labelledby="loct-%s"%s>'
+        '<span class="drop-title">Activities</span>%s'
+        '<a class="loc-all" href="%s">Explore %s &rarr;</a></div>'
+        % (d['id'], d['id'], '' if i == 0 else ' hidden',
+           ''.join('<a href="%s#%s"><span class="dot"></span>%s</a>' % (d['file'], a[0], a[1]) for a in d['acts']),
+           d['file'], d['name'])
+        for i, d in enumerate(DESTS))
+    return ('<div class="nav-drop loc-drop glass-deep theme-scope">'
+            '<div class="loc-tabs" role="tablist" aria-label="Locations">' + tabs + '</div>'
+            '<div class="loc-panels">' + panels + '</div></div>')
+
+
+def locations_mobile():
+    subs = ''.join(
+        '<details class="m-sub"><summary>%s%s</summary><div class="m-sub-links">%s'
+        '<a class="m-sub-all" href="%s">Explore %s &rarr;</a></div></details>'
+        % (d['name'], M_CARET,
+           ''.join('<a href="%s#%s">%s</a>' % (d['file'], a[0], a[1]) for a in d['acts']),
+           d['file'], d['name'])
+        for d in DESTS)
+    return '<details class="m-group"><summary>Locations' + M_CARET + '</summary><div class="m-links">' + subs + '</div></details>'
 
 
 def nav(page, section):
@@ -338,52 +409,54 @@ def nav(page, section):
     for key, label, href, children in NAV:
         active = ' is-active' if section == key else ''
         aria = ' aria-current="page"' if section == key else ''
-        if children:
-            drop = ''.join('<a href="%s"><span class="dot"></span>%s</a>' % (h, l) for l, h in children)
+        if children == 'locations':
+            desktop.append('<div class="nav-item nav-loc"><button type="button" class="nav-link%s" aria-expanded="false" aria-haspopup="true">Locations%s</button>%s</div>'
+                           % (active, CARET, locations_drop()))
+            mobile.append(locations_mobile())
+        elif children:
+            drop = ''.join('<a href="%s"%s><span class="dot"></span>%s</a>'
+                           % (h, ' class="drop-all"' if l.startswith('View all') else '', l) for l, h in children)
             desktop.append(
-                '<div class="nav-item"><button type="button" class="nav-link%s" aria-expanded="false" aria-haspopup="true">%s'
-                '<svg class="caret" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>'
-                '</button><div class="nav-drop glass-deep theme-scope"><span class="drop-title">%s</span>%s</div></div>'
-                % (active, label, 'Underwater Events' if key == 'events' else label, drop))
-            mobile.append(
-                '<details class="m-group"><summary>%s<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></summary>'
-                '<div class="m-links">%s</div></details>'
-                % (label, ''.join('<a href="%s">%s</a>' % (h, l) for l, h in children)))
+                '<div class="nav-item"><button type="button" class="nav-link%s" aria-expanded="false" aria-haspopup="true">%s%s</button>'
+                '<div class="nav-drop glass-deep theme-scope"><span class="drop-title">%s</span>%s</div></div>'
+                % (active, label, CARET, label, drop))
+            mobile.append('<details class="m-group"><summary>%s%s</summary><div class="m-links">%s</div></details>'
+                          % (label, M_CARET, ''.join('<a href="%s">%s</a>' % (h, l) for l, h in children)))
         else:
             desktop.append('<a href="%s" class="nav-link%s"%s>%s</a>' % (href, active, aria, label))
             mobile.append('<a href="%s" class="m-link">%s</a>' % (href, label))
 
-    return '''    <nav id="navbar" class="pre-dive post-dive-in fixed w-full z-50 transition-all duration-500 py-4 px-4 sm:px-6 md:px-12 top-0">
-''' + city_bar(page) + '''
-      <div id="navPill" class="glass-deep theme-scope relative max-w-7xl mx-auto flex justify-between items-center px-5 py-3 rounded-2xl transition-all duration-500">
+    return '''    <nav id="navbar" class="pre-dive post-dive-in fixed inset-x-0 top-0 z-50" aria-label="Main">
+      <div id="navPill" class="glass-deep theme-scope relative max-w-7xl mx-auto flex justify-between items-center gap-3 rounded-2xl">
 
-        <a href="index.html" class="flex items-center gap-3 group shrink-0" aria-label="Dive Adda — home">
-          <img src="assets/img/logo-mark-light.png" alt="" class="brand-mark logo-light" width="56" height="38">
-          <img src="assets/img/logo-mark.png" alt="" class="brand-mark logo-dark" width="56" height="38">
-          <span class="leading-none">
-            <span class="brand-word block text-[19px] text-white">DIVE ADDA</span>
+        <a href="index.html" class="nav-brand flex items-center group min-w-0" aria-label="Dive Adda — home">
+          <img src="assets/img/logo-mark-light-2x.png" alt="" class="brand-mark logo-light" width="69" height="38">
+          <img src="assets/img/logo-mark-2x.png" alt="" class="brand-mark logo-dark" width="69" height="38">
+          <span class="brand-text leading-none min-w-0">
+            <span class="brand-word block text-white">DIVE ADDA</span>
             <span class="brand-tag block mt-1">Discover &mdash; The Deep</span>
           </span>
         </a>
 
-        <div class="hidden xl:flex items-center gap-5 font-medium text-[13px]">
+        <div class="nav-links hidden xl:flex items-center gap-5 font-medium text-[13px]">
           ''' + '\n          '.join(desktop) + '''
           <button type="button" data-book class="btn-bio liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-[13px] whitespace-nowrap">Book Now</button>
         </div>
 
-        <div class="flex items-center gap-3 xl:ml-4">
+        <div class="nav-actions flex items-center gap-2 sm:gap-3 shrink-0 xl:ml-4">
           <button id="themeToggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Switch between dark and light theme" title="Switch theme">
             <span class="knob">
               <svg class="ic ic-moon" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
               <svg class="ic ic-sun" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0 2.5a1 1 0 011 1V22a1 1 0 11-2 0v-1.5a1 1 0 011-1zm0-19a1 1 0 011 1V3a1 1 0 11-2 0V1.5a1 1 0 011-1zM3.5 11h1.5a1 1 0 110 2H3.5a1 1 0 110-2zm15.5 0h1.5a1 1 0 110 2H19a1 1 0 110-2zM5.6 4.2l1.1 1.1a1 1 0 11-1.4 1.4L4.2 5.6a1 1 0 011.4-1.4zm11.7 11.7l1.1 1.1a1 1 0 11-1.4 1.4l-1.1-1.1a1 1 0 011.4-1.4zM18.4 4.2a1 1 0 011.4 1.4l-1.1 1.1a1 1 0 11-1.4-1.4zM6.7 15.9a1 1 0 011.4 1.4l-1.1 1.1a1 1 0 11-1.4-1.4z"/></svg>
             </span>
           </button>
-          <button id="mobileMenuBtn" class="xl:hidden text-brand-glow focus:outline-none p-1" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobileMenu">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          <button id="mobileMenuBtn" type="button" class="nav-burger xl:hidden text-brand-glow" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+            <svg class="ic ic-open w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            <svg class="ic ic-close w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
 
-        <div id="mobileMenu" class="glass-deep theme-scope absolute top-full mt-3 left-0 right-0 hidden flex-col p-6 rounded-2xl transform origin-top transition-all">
+        <div id="mobileMenu" class="glass-deep theme-scope absolute top-full mt-3 left-0 right-0 flex-col p-5 sm:p-6 rounded-2xl">
           ''' + '\n          '.join(mobile) + '''
           <button type="button" data-book class="btn-bio liquid ripple-host w-full mt-4 px-6 py-3 rounded-full font-bold">Book Now</button>
         </div>
@@ -412,7 +485,7 @@ def float_widgets():
                 <span class="block text-sm font-bold text-white leading-tight">''' + PHONE_TXT + '''</span>
             </span>
         </a>
-        <button type="button" data-book class="group ripple-host glass-deep border-r-0 rounded-l-2xl py-6 px-2 md:px-3 flex flex-col items-center gap-3 text-brand-ink transition-all duration-500 hover:pr-4 hover:shadow-[-10px_0_40px_-8px_rgba(34,211,238,0.55)]">
+        <button type="button" data-book class="rail-book group ripple-host glass-deep border-r-0 rounded-l-2xl py-6 px-2 md:px-3 flex flex-col items-center gap-3 text-brand-ink transition-all duration-500 hover:pr-4 hover:shadow-[-10px_0_40px_-8px_rgba(34,211,238,0.55)]">
             <span class="absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-brand-accent via-brand-violet to-transparent shadow-[0_0_14px_#22D3EE]" aria-hidden="true"></span>
             <svg class="w-5 h-5 text-brand-glow group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span style="writing-mode: vertical-rl; transform: rotate(180deg);" class="font-display font-bold tracking-[0.22em] text-[11px] uppercase text-brand-ink/90 group-hover:text-white transition-colors">Booking Open</span>
@@ -428,29 +501,32 @@ def float_widgets():
 
 
 def footer():
-    explore = [('Scuba Diving', 'diving.html#scuba-diving'), ('SSI Courses', 'courses.html'),
-               ('Water Sports', 'water-sports.html'), ('Underwater Events', 'events.html'),
-               ('Gallery', 'gallery.html'), ('About Us', 'about.html'), ('FAQ', 'faq.html')]
-    return '''    <footer class="theme-scope relative py-14 px-6 md:px-12 border-t border-white/[0.06] bg-brand-abyss/70 backdrop-blur-xl overflow-hidden">
+    explore = [('About Us', 'about.html'), ('First Time Scuba', 'first-time-scuba.html'), ('SSI Courses', 'courses.html'),
+               ('Events', 'events.html'), ('Gallery', 'gallery.html'), ('Blog', 'blog.html'), ('FAQ&rsquo;s', 'faq.html'),
+               ('Contact Us', 'contact.html')]
+    legal = [('Privacy Policy', 'privacy-policy.html'), ('Terms &amp; Conditions', 'terms-and-conditions.html'),
+             ('Refund Policy', 'refund-policy.html'), ('FAQ&rsquo;s', 'faq.html')]
+    links = lambda items: ''.join('<li><a href="%s" class="hover:text-brand-glow transition-colors">%s</a></li>' % (h, l) for l, h in items)
+    return '''    <footer class="site-footer theme-scope relative py-14 site-gutter border-t border-white/[0.06] bg-brand-abyss/80 backdrop-blur-xl overflow-hidden">
         <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-brand-accent/45 to-transparent" aria-hidden="true"></div>
-        <div class="absolute inset-0 pointer-events-none" aria-hidden="true" style="background: radial-gradient(70% 80% at 50% 120%, rgba(34,211,238,0.10), transparent 65%);"></div>
+        <div class="absolute inset-0 pointer-events-none" aria-hidden="true" style="background: radial-gradient(70% 80% at 50% 120%, rgba(34,211,238,0.08), transparent 65%);"></div>
 
-        <div class="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div class="md:col-span-1">
+        <div class="relative max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-10">
+            <div class="sm:col-span-2 lg:col-span-1">
                 <a href="index.html" class="inline-block mb-5" aria-label="Dive Adda — home">
-                    <img src="assets/img/logo-full-light.png" alt="Dive Adda — Discover the Deep" class="logo-light w-[168px] h-auto" width="168" height="138" loading="lazy">
-                    <img src="assets/img/logo-full.png" alt="Dive Adda — Discover the Deep" class="logo-dark w-[168px] h-auto" width="168" height="138" loading="lazy">
+                    <img src="assets/img/logo-full-light-2x.png" alt="Dive Adda — Discover the Deep" class="logo-light w-[168px] h-auto" width="168" height="138" loading="lazy">
+                    <img src="assets/img/logo-full-2x.png" alt="Dive Adda — Discover the Deep" class="logo-dark w-[168px] h-auto" width="168" height="138" loading="lazy">
                 </a>
-                <p class="text-sm text-brand-dim/80 mb-5 leading-relaxed">An internationally certified dive centre, proudly affiliated with SSI. Safe, exciting and unforgettable diving experiences &mdash; for your first breath underwater and every dive after it.</p>
+                <p class="text-sm text-brand-dim/80 mb-5 leading-relaxed">An internationally certified dive centre, proudly affiliated with SSI. Try Scuba, SSI courses and water adventures in Visakhapatnam and Rajahmundry.</p>
                 <div class="flex items-center gap-4 mb-5">
-                    <img src="assets/img/ssi-dive-center.png" alt="SSI Official Partner Dive Center" class="w-16 h-16" loading="lazy" width="64" height="64">
+                    <img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="w-16 h-16 object-contain" loading="lazy" width="64" height="52">
                     <span class="text-[11px] uppercase tracking-[0.2em] text-brand-glow/80 font-bold leading-relaxed">SSI Certified<br>Dive Centre</span>
                 </div>
                 <div class="flex gap-3">
-                    <a href="''' + IG + '''" target="_blank" rel="noopener" aria-label="Dive Adda on Instagram" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-violet hover:border-brand-violet/45 hover:shadow-[0_0_22px_-6px_rgba(167,139,250,0.7)] transition-all duration-500">
+                    <a href="''' + IG + '''" target="_blank" rel="noopener" aria-label="Dive Adda on Instagram" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-violet hover:border-brand-violet/45 transition-colors duration-300">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                     </a>
-                    <a href="''' + FB + '''" target="_blank" rel="noopener" aria-label="Dive Adda on Facebook" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-glow hover:border-brand-accent/45 hover:shadow-[0_0_22px_-6px_rgba(34,211,238,0.7)] transition-all duration-500">
+                    <a href="''' + FB + '''" target="_blank" rel="noopener" aria-label="Dive Adda on Facebook" class="w-9 h-9 rounded-xl flex items-center justify-center text-brand-dim bg-white/[0.04] border border-white/[0.08] hover:text-brand-glow hover:border-brand-accent/45 transition-colors duration-300">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0022 12z"/></svg>
                     </a>
                 </div>
@@ -458,20 +534,14 @@ def footer():
 
             <div>
                 <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h4>
-                <ul class="space-y-2.5 text-sm text-brand-dim/80">
-                    ''' + ''.join('<li><a href="%s" class="hover:text-brand-glow transition-colors">%s</a></li>' % (h, l) for l, h in explore) + '''
-                </ul>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links(explore) + '''</ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Destinations</h4>
-                <ul class="space-y-2.5 text-sm text-brand-dim/80">
-                    ''' + ''.join('<li><a href="%s" class="hover:text-brand-glow transition-colors">%s</a></li>' % (d['file'], d['name']) for d in DESTS) + '''
-                </ul>
+                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Locations</h4>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links([(d['name'], d['file']) for d in DESTS]) + '''</ul>
                 <h4 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h4>
-                <ul class="space-y-2.5 text-sm text-brand-dim/80">
-                    ''' + ''.join('<li><a href="courses.html#%s" class="hover:text-brand-glow transition-colors">%s</a></li>' % (c['id'], c['name']) for c in COURSES) + '''
-                </ul>
+                <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links([(c['name'], c['file']) for c in COURSES]) + '''</ul>
             </div>
 
             <div>
@@ -480,14 +550,15 @@ def footer():
                     <li><a href="tel:''' + PHONE_TEL + '''" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors">''' + svg('phone', 'w-4 h-4') + PHONE_TXT + '''</a></li>
                     <li><a href="''' + wa_link('Hi Dive Adda!') + '''" target="_blank" rel="noopener" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors">''' + svg('chat', 'w-4 h-4') + '''WhatsApp</a></li>
                     <li><a href="''' + IG + '''" target="_blank" rel="noopener" class="hover:text-brand-glow transition-colors">@diveaddaindia</a></li>
-                    <li>www.diveaddaindia.com</li>
-                    <li class="pt-1"><span class="chip-cyan px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">Booking open</span></li>
+                    <li class="break-words">www.diveaddaindia.com</li>
                 </ul>
                 <button type="button" data-book class="btn-bio liquid ripple-host mt-6 px-6 py-3 rounded-full font-display font-bold text-sm w-full">Book Your Dive</button>
             </div>
         </div>
-        <div class="relative max-w-7xl mx-auto text-center text-brand-dim/45 text-xs pt-8 border-t border-white/[0.06]">
-            &copy; <span data-year>2026</span> Dive Adda &mdash; Discover the Deep. All rights reserved.
+
+        <div class="relative max-w-7xl mx-auto pt-6 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-brand-dim/60">
+            <p>&copy; <span data-year>2026</span> Dive Adda &mdash; Discover the Deep. All rights reserved.</p>
+            <nav class="footer-legal" aria-label="Legal">''' + ''.join('<a href="%s" class="hover:text-brand-glow transition-colors">%s</a>' % (h, l) for l, h in legal) + '''</nav>
         </div>
     </footer>
 '''
@@ -577,7 +648,7 @@ BOOK_MODAL = '''    <div id="bookNowModal" role="dialog" aria-modal="true" aria-
                 <ul class="space-y-2.5 mb-7 text-sm">
                     <li class="flex items-center gap-3 text-brand-ink"><span class="w-1.5 h-1.5 rounded-full bg-brand-accent shadow-[0_0_10px_#22D3EE]"></span>SSI certified instructors</li>
                     <li class="flex items-center gap-3 text-brand-ink"><span class="w-1.5 h-1.5 rounded-full bg-brand-accent shadow-[0_0_10px_#22D3EE]"></span>Beginners welcome &mdash; no experience needed</li>
-                    <li class="flex items-center gap-3 text-brand-ink"><span class="w-1.5 h-1.5 rounded-full bg-brand-accent shadow-[0_0_10px_#22D3EE]"></span>Vizag, Rajahmundry and Goa</li>
+                    <li class="flex items-center gap-3 text-brand-ink"><span class="w-1.5 h-1.5 rounded-full bg-brand-accent shadow-[0_0_10px_#22D3EE]"></span>Visakhapatnam and Rajahmundry</li>
                 </ul>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="button" id="bookModalGo" class="btn-bio liquid ripple-host flex-1 px-6 py-3.5 rounded-full font-display font-bold tracking-wide">Book Now</button>
@@ -598,7 +669,7 @@ def ld_org():
         "alternateName": "Dive Adda India",
         "slogan": "Discover — The Deep",
         "url": DOMAIN,
-        "description": "Dive Adda is an internationally certified scuba diving centre affiliated with SSI, running SSI courses, guided fun dives, snorkelling and underwater events.",
+        "description": "Dive Adda is an internationally certified scuba diving centre affiliated with SSI, running Try Scuba, SSI courses and water activities in Visakhapatnam and Rajahmundry.",
         "telephone": PHONE_TEL,
         "logo": {"@type": "ImageObject", "url": DOMAIN + "assets/img/logo-full.png"},
         "sameAs": [IG, FB],
@@ -606,24 +677,19 @@ def ld_org():
 
 
 def ld_centre():
+    offers = ['Try Scuba', 'SSI Courses'] + [html.unescape(a[1]) for d in DESTS for a in d['acts']]
     return {
         "@type": ["LocalBusiness", "SportsActivityLocation"],
         "@id": CENTRE_ID,
         "name": "Dive Adda — SSI Certified Scuba Centre",
         "url": DOMAIN,
-        "description": "SSI certified scuba diving centre in Vizag offering SSI courses, guided fun dives, snorkelling, boat, shore and confined diving, and underwater events.",
+        "description": "SSI certified scuba diving centre in Visakhapatnam offering Try Scuba, SSI courses, snorkeling and water activities, with water rides in Rajahmundry.",
         "telephone": PHONE_TEL,
         "address": {"@type": "PostalAddress", "addressLocality": "Visakhapatnam", "addressRegion": "Andhra Pradesh", "addressCountry": "IN"},
-        "areaServed": [{"@type": "City", "name": n} for n in ("Visakhapatnam", "Rajahmundry", "Goa")],
+        "areaServed": [{"@type": "City", "name": n} for n in ("Visakhapatnam", "Rajahmundry")],
         "image": [DOMAIN + B('cover-divers'), DOMAIN + B('ssi-pool-training'), DOMAIN + B('guided-fun-dive')],
         "parentOrganization": {"@id": ORG_ID},
-        "makesOffer": [
-            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": n, "serviceType": t}}
-            for n, t in [("Scuba Diving", "Guided scuba diving"), ("SSI Courses", "Scuba certification course"),
-                         ("Guided Fun Dives", "Guided scuba diving"), ("Snorkelling", "Guided snorkelling"),
-                         ("Boat Diving", "Guided scuba diving"), ("Shore Diving", "Guided scuba diving"),
-                         ("Confined Diving", "Scuba skills training"), ("Underwater Events", "Underwater event")]
-        ],
+        "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": n}} for n in dict.fromkeys(offers)],
     }
 
 
@@ -642,7 +708,7 @@ def ld_faq(items):
 def ld_service(name, desc, path):
     return {"@type": "Service", "name": name, "description": desc, "serviceType": name,
             "provider": {"@id": ORG_ID}, "url": DOMAIN + path,
-            "areaServed": [{"@type": "City", "name": n} for n in ("Visakhapatnam", "Rajahmundry", "Goa")]}
+            "areaServed": [{"@type": "City", "name": n} for n in ("Visakhapatnam", "Rajahmundry")]}
 
 
 def ld_course(c):
@@ -650,17 +716,21 @@ def ld_course(c):
             "description": html.unescape(c['long']),
             "provider": {"@id": ORG_ID},
             "educationalCredentialAwarded": "SSI certification",
-            "url": DOMAIN + "courses.html#" + c['id'],
+            "url": DOMAIN + c['file'],
             "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "onsite",
                                   "location": {"@id": CENTRE_ID}}}
 
 
 # ---------------------------------------------------------------- shell
 def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
-          use_map=False, book_modal=False, lightbox=False, profile=False, span=18):
+          use_map=False, book_modal=False, lightbox=False, profile=False, span=40, noindex=False):
     graph = [ld_org(), ld_centre()] + ld
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": graph}, indent=2, ensure_ascii=False)
-    preload = ('    <link rel="preload" as="image" fetchpriority="high" href="%s">\n' % src_of(hero_img)) if hero_img else ''
+    preload = ''
+    if hero_img:
+        ss = webp_srcset(hero_img)
+        preload = ('    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="100vw">\n' % ss
+                   if ss else '    <link rel="preload" as="image" fetchpriority="high" href="%s">\n' % src_of(hero_img))
     leaflet_css = '    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>\n' if use_map else ''
     leaflet_js = '    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>\n' if use_map else ''
     og_img = DOMAIN + B('cover-divers')
@@ -684,13 +754,13 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
     <title>''' + title + '''</title>
 
     <meta name="description" content="''' + E(desc) + '''">
-    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="robots" content="''' + ('noindex, follow' if noindex else 'index, follow, max-image-preview:large') + '''">
     <meta name="author" content="Dive Adda">
     <meta name="theme-color" content="#04121F" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#F3FAFC" media="(prefers-color-scheme: light)">
     <link rel="canonical" href="''' + DOMAIN + path + '''">
-    <link rel="icon" href="assets/img/logo-mark.png" type="image/png">
-    <link rel="apple-touch-icon" href="assets/img/logo-mark.png">
+    <link rel="icon" href="assets/img/favicon-64.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Dive Adda">
@@ -711,18 +781,17 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 ''' + jsonld + '''
     </script>
 
-''' + preload + '''    <script src="https://cdn.tailwindcss.com"></script>
-
+''' + preload + '''
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-''' + leaflet_css + '''    <link rel="stylesheet" href="assets/css/dive-adda.css">
-    <link rel="stylesheet" href="assets/css/dive-adda-pages.css">
+''' + leaflet_css + '''    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda.css') + '''">
+    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda-pages.css') + '''">
+    <link rel="stylesheet" href="''' + asset('assets/css/tailwind.css') + '''">
+    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda-responsive.css') + '''">
 
 ''' + FIREBASE + '''
-
-''' + TWCONFIG + '''
 
 ''' + NOSCRIPT + '''
 </head>
@@ -744,8 +813,8 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 ''' + (BOOK_MODAL if book_modal else '') + (PROFILE_MODAL if profile else '') + (LIGHTBOX if lightbox else '') + CHATBOT + '''
 ''' + leaflet_js + '''    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="assets/js/dive-adda.js"></script>
-    <script src="assets/js/dive-adda-pages.js"></script>
+    <script src="''' + asset('assets/js/dive-adda.js') + '''"></script>
+    <script src="''' + asset('assets/js/dive-adda-pages.js') + '''"></script>
 </body>
 </html>
 '''
@@ -769,10 +838,10 @@ def sec_head(num, eyebrow, title, desc='', link=None, center=False):
                l))
 
 
-def page_hero(eyebrow, title, desc, img, depth, crumbs, ghost=None, ctas='', extra=''):
+def page_hero(eyebrow, title, desc, img, depth, crumbs, ghost=None, ctas='', extra='', compact=False):
     crumb = ' <span class="opacity-40">/</span> '.join(
         ['<a href="%s">%s</a>' % (h, n) if h else '<span class="text-white/80">%s</span>' % n for n, h in crumbs])
-    return '''    <header class="page-hero">
+    return '''    <header class="page-hero''' + (' is-compact' if compact else '') + '''">
         ''' + photo(img, '', 'ph-img', '100vw', lazy=False) + '''
         <div class="ph-shade"></div>
         <div class="ph-glow"></div>
@@ -798,52 +867,9 @@ def hero_ctas(primary='Book Your Dive', experience='', destination=''):
             '</div>' % (experience, destination, primary, svg('arrow', 'w-4 h-4 text-brand-glow')))
 
 
-def bento(e, delay=''):
-    span = 'md:col-span-2 md:row-span-2' if e.get('big') else ('md:col-span-2' if e.get('wide') else '')
-    title_size = 'text-3xl' if e.get('big') else 'text-xl'
-    return ('<a href="%s" class="group relative %s rounded-3xl overflow-hidden bento-card on-media liquid %s glow-hover bio-edge isolate reveal %s block">'
-            '%s'
-            '<div class="absolute inset-0 duotone"></div>'
-            '<div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/55 to-transparent"></div>'
-            '<div class="absolute inset-0 p-6 md:p-7 flex flex-col justify-end transform transition-transform duration-700 group-hover:translate-y-[-8px] z-[4]">'
-            '<span class="%s w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] mb-3">%s</span>'
-            '<h3 class="font-display %s font-bold text-white mb-2">%s</h3>'
-            '<p class="text-brand-ink/75 text-sm max-w-md">%s</p>'
-            '<span class="mt-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-glow">Explore %s</span>'
-            '</div></a>'
-            % (e['href'], span, 'liquid-strong' if e.get('big') else '', delay,
-               photo(e['img'], e['name'], 'absolute inset-0 w-full h-full object-cover bento-image',
-                     '(max-width: 767px) 100vw, 50vw' if e.get('big') or e.get('wide') else '(max-width: 767px) 100vw, 25vw'),
-               e['chipcls'], e['chip'], title_size, e['name'], e['desc'],
-               svg('arrow', 'w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-500')))
-
-
-def experiences_section():
-    cards = ''.join(bento(e, ['', 'delay-100', 'delay-200', 'delay-300'][i % 4]) for i, e in enumerate(EXPERIENCES))
-    return ('<section id="experiences" class="mb-32">'
-            + sec_head('01', 'Experiences', 'Select your adventure',
-                       'From your first breath underwater to professional training, every Dive Adda experience is guided by SSI certified instructors.',
-                       ('See all courses', 'courses.html'))
-            + '<div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[250px]">' + cards + '</div></section>')
-
-
-def why_section():
-    cards = ''.join(
-        '<div class="trust-card glass-panel bio-edge reveal %s">'
-        '<span class="trust-ic bg-brand-accent/12 border border-brand-accent/30 text-brand-glow shadow-[0_0_26px_-8px_rgba(34,211,238,0.8)] mb-5">%s</span>'
-        '<h3 class="font-display text-xl font-bold text-white mb-2">%s</h3>'
-        '<p class="text-brand-dim text-sm leading-relaxed">%s</p></div>'
-        % (['', 'delay-100', 'delay-200'][i % 3], svg(ic, 'w-6 h-6'), t, d)
-        for i, (ic, t, d) in enumerate(WHY))
-    return ('<section id="why" class="mb-32">'
-            + sec_head('02', 'Why Dive Adda', 'Trust, training and the deep',
-                       'Everything we claim here comes from how we actually run the centre.', center=True)
-            + '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">' + cards + '</div></section>')
-
-
 def story_section():
     return '''<section id="story" class="mb-32">
-        ''' + sec_head('03', 'Our Story', 'Rooted in the world beneath the waves',
+        ''' + sec_head('01', 'Our Story', 'Rooted in the world beneath the waves',
                        'At Dive Adda, we bring the depths of the ocean closer to you.') + '''
         <div class="grid lg:grid-cols-2 gap-10 items-center">
             <div class="reveal">
@@ -855,7 +881,7 @@ def story_section():
                 <p class="text-brand-dim text-lg leading-relaxed mb-5">Dive Adda was founded by a seasoned professional with <b class="text-brand-ink">15 years of service in the Indian Navy</b>, over a decade of experience in submarines, and 10 years in the oil &amp; gas industry.</p>
                 <p class="text-brand-dim leading-relaxed mb-5">With years of hands-on experience in underwater marine operations, our passion for the ocean led us to create a scuba diving company that offers safe, exciting and unforgettable diving experiences. Whether you are a beginner eager to take your first breath underwater or an experienced diver looking to explore new depths, we ensure top-notch safety, expert guidance, and an adventure like no other.</p>
                 <div class="glass-panel rounded-2xl p-5 flex items-center gap-5 mb-7">
-                    <img src="assets/img/ssi-dive-center.png" alt="SSI Official Partner Dive Center" class="ssi-badge w-20 h-20" loading="lazy" width="80" height="80">
+                    <img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="ssi-badge w-20 h-20 object-contain" loading="lazy" width="80" height="65">
                     <div>
                         <h4 class="font-display font-bold text-white text-lg">Internationally certified</h4>
                         <p class="text-sm text-brand-dim leading-relaxed">We are proudly affiliated with SSI, ensuring our training programmes meet the highest global standards.</p>
@@ -866,7 +892,6 @@ def story_section():
         '<div class="stat-tile rounded-2xl p-5"><p class="fact-num text-gradient-bio">%s</p><p class="text-xs text-brand-dim mt-2 leading-relaxed">%s</p></div>' % (n, l)
         for n, l in [('15', 'years of service in the Indian Navy'), ('10+', 'years of experience in submarines'), ('15+', 'years of industry experience as a team')]) + '''
                 </div>
-                <a href="about.html" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold inline-flex items-center gap-2.5">Read our full story ''' + svg('arrow', 'w-4 h-4 text-brand-glow') + '''</a>
             </div>
         </div>
     </section>'''
@@ -902,57 +927,22 @@ def course_card(c, i):
             '<div class="p-6 flex flex-col flex-grow">'
             '<h3 class="font-display text-xl font-bold text-white mb-2">%s</h3>'
             '<p class="text-brand-dim text-sm leading-relaxed flex-grow">%s</p>'
-            '<a href="courses.html#%s" class="mt-5 btn-ghost liquid ripple-host px-5 py-2.5 rounded-full text-sm font-semibold inline-flex items-center justify-center gap-2">Explore course %s</a>'
+            '<a href="%s" class="mt-5 btn-ghost liquid ripple-host px-5 py-2.5 rounded-full text-sm font-semibold inline-flex items-center justify-center gap-2">View course %s</a>'
             '</div></article>'
             % (['', 'delay-100', 'delay-200'][i % 3],
                photo(c['img'], c['full'], 'bento-image', '(max-width: 767px) 100vw, 33vw'),
-               c['step'], c['level'], c['name'], c['short'], c['id'],
+               c['step'], c['level'], c['name'], c['short'], c['file'],
                svg('arrow', 'w-3.5 h-3.5 text-brand-glow')))
 
 
-def courses_section(num='05'):
-    path = ''.join(
-        '<span class="chip px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.16em]">%s</span>%s'
-        % (c['name'], '<span class="cp-arrow"></span>' if i < len(COURSES) - 1 else '')
-        for i, c in enumerate(COURSES))
+def courses_section(num='02', exclude=None, title='Certified, beginner to professional',
+                    desc='SSI certified courses from beginners to professional level, taught by our instructor team.',
+                    link=('All courses', 'courses.html')):
+    items = [c for c in COURSES if c is not exclude]
     return ('<section id="courses" class="mb-32">'
-            + sec_head(num, 'SSI Courses', 'Certified, beginner to professional',
-                       'SSI certified courses from beginners to professional level, taught by our instructor team.',
-                       ('All courses', 'courses.html'))
-            + '<div class="course-path mb-10 reveal">' + path + '</div>'
-            + '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">'
-            + ''.join(course_card(c, i) for i, c in enumerate(COURSES)) + '</div></section>')
-
-
-def activities_section(num='06'):
-    tabs = ''.join(
-        '<button type="button" class="act-tab glass-panel" role="tab" aria-selected="%s" aria-controls="act-%s">'
-        '<span class="at-n">%s</span><span class="font-display font-bold">%s</span></button>'
-        % ('true' if i == 0 else 'false', a['id'], a['n'], a['name'])
-        for i, a in enumerate(ACTIVITIES))
-    slides = ''.join(
-        '<div class="act-slide on-media %s" id="act-%s" role="tabpanel">'
-        '%s'
-        '<span class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/50 to-brand-abyss/10"></span>'
-        '<div class="absolute inset-0 p-7 md:p-10 flex flex-col justify-end as-copy">'
-        '<span class="chip-cyan w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em] mb-4">Activity %s</span>'
-        '<h3 class="font-display text-3xl md:text-4xl font-bold text-white mb-3">%s</h3>'
-        '<p class="text-brand-ink/85 max-w-xl leading-relaxed mb-6">%s</p>'
-        '<div class="flex flex-wrap gap-3">'
-        '<button type="button" data-book data-experience="%s" class="btn-bio liquid ripple-host px-6 py-3 rounded-full font-bold text-sm">Book %s</button>'
-        '<a href="diving.html#%s" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Learn more</a>'
-        '</div></div></div>'
-        % ('is-on' if i == 0 else '', a['id'],
-           photo(a['img'], a['name'], '', '100vw', lazy=(i != 0)),
-           a['n'], a['name'], a['text'], a['name'], a['name'], a['id'])
-        for i, a in enumerate(ACTIVITIES))
-    return ('<section id="activities" class="mb-32" data-act>'
-            + sec_head(num, 'Diving Activities', 'Boat, shore and confined',
-                       'Three ways into the water, each with its own reason to choose it.')
-            + '<div class="grid lg:grid-cols-[minmax(0,1fr)_2fr] gap-8 items-start">'
-            + '<div class="act-tabs lg:flex-col reveal" role="tablist" aria-label="Diving activities">' + tabs + '</div>'
-            + '<div class="act-stage glass-panel p-2 reveal delay-100">' + slides + '</div>'
-            + '</div></section>')
+            + sec_head(num, 'SSI Courses', title, desc, link)
+            + '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 orphan-sm-xl">'
+            + ''.join(course_card(c, i) for i, c in enumerate(items)) + '</div></section>')
 
 
 def events_section(num='07'):
@@ -965,7 +955,7 @@ def events_section(num='07'):
         '<span class="ic-icon mb-4 w-11 h-11">%s</span>'
         '<h3 class="font-display text-xl md:text-2xl font-bold text-white mb-2">%s</h3>'
         '<p class="text-brand-ink/75 text-sm">%s</p></div></a>'
-        % (e['id'], ['', 'delay-100', 'delay-200', 'delay-300'][i], 'md:col-span-2' if i == 0 else '',
+        % (e['id'], ['', 'delay-100', 'delay-200', 'delay-300'][i], 'lg:col-span-2' if i in (0, len(EVENTS) - 1) else '',
            photo(e['img'], e['name'], 'absolute inset-0 w-full h-full object-cover bento-image', '(max-width: 767px) 100vw, 50vw'),
            svg(e['icon'], 'w-5 h-5'), e['name'], e['text'])
         for i, e in enumerate(EVENTS))
@@ -973,72 +963,90 @@ def events_section(num='07'):
             + sec_head(num, 'Underwater Events', 'Celebrate below the surface',
                        'The moments people remember, moved underwater and planned with our team.',
                        ('All underwater events', 'events.html'))
-            + '<div class="grid md:grid-cols-4 gap-6 auto-rows-[260px]">' + cards + '</div></section>')
+            + '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 auto-rows-[260px]">' + cards + '</div></section>')
 
 
-def dest_card(d, i):
-    acts = ''.join('<span class="chip px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em]">%s</span>' % a for a in d['acts'][:5])
-    return ('<article class="dest-card bento-card on-media group liquid glow-hover bio-edge" data-dest-id="%s" data-label="%s">'
-            '%s'
-            '<div class="absolute inset-0 duotone"></div>'
-            '<div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/55 to-transparent"></div>'
-            '<div class="absolute inset-0 p-7 md:p-9 flex flex-col justify-end z-[4]">'
-            '<span class="chip-cyan w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] mb-4">%s</span>'
-            '<h3 class="dc-name text-white mb-3">%s</h3>'
-            '<p class="text-brand-ink/80 leading-relaxed max-w-md mb-5">%s</p>'
-            '<div class="flex flex-wrap gap-2 mb-6">%s</div>'
-            '<div class="flex flex-wrap gap-3">'
+def fact_tiles(items):
+    return ('<div class="grid grid-cols-2 gap-3">' + ''.join(
+        '<div class="stat-tile rounded-2xl p-4"><p class="font-display font-bold text-white text-lg leading-tight">%s</p>'
+        '<p class="text-xs text-brand-dim mt-1 leading-relaxed">%s</p></div>' % (v, l) for v, l in items) + '</div>')
+
+
+def pill_list(items, cols='sm:grid-cols-2'):
+    return ('<ul class="grid %s gap-3">' % cols + ''.join(
+        '<li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">%s</span></li>' % x
+        for x in items) + '</ul>')
+
+
+def itinerary_timeline():
+    steps = ''.join(
+        '<div class="j-step"><span class="j-node">%02d</span>'
+        '<div class="j-card glass-panel"><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-glow mb-1.5">%s</p>'
+        '<h3 class="font-display font-bold text-white text-lg mb-1.5">%s</h3>'
+        '<p class="text-sm text-brand-dim leading-relaxed">%s</p></div></div>' % (i + 1, t, h, d)
+        for i, (t, h, d) in enumerate(TRY_STEPS))
+    return '<div class="journey journey-vertical reveal"><span class="journey-line" aria-hidden="true"><span></span></span>' + steps + '</div>'
+
+
+def first_time_teaser(num='01'):
+    return ('<section id="first-time-scuba" class="mb-32">'
+            + sec_head(num, 'First Time Scuba', 'Try scuba diving in Vizag',
+                       'Never tried scuba diving before? No problem. Try Scuba introduces you to diving with equipment training, a safety briefing and an experienced instructor beside you.',
+                       ('Full experience details', 'first-time-scuba.html'))
+            + '<div class="grid lg:grid-cols-2 gap-8 items-stretch">'
+            + '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[300px] lg:h-full lg:min-h-[420px]">'
+            + photo(B('boat-diving'), 'Guests heading out by boat for Try Scuba', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
+            + '</div></div>'
+            + '<div class="reveal delay-100 flex flex-col gap-6">'
+            + fact_tiles(TRY_FACTS)
+            + '<div class="glass-panel rounded-2xl p-5"><h3 class="font-display font-bold text-white mb-3">What&rsquo;s included</h3>'
+            + '<div class="flex flex-wrap gap-2">' + ''.join('<span class="chip px-3 py-1.5 rounded-full text-xs font-semibold">%s</span>' % x for x in TRY_INCLUDED) + '</div></div>'
+            + '<div class="flex flex-col sm:flex-row gap-3">'
+            + '<button type="button" data-book data-experience="Try Scuba (first dive)" data-destination="Visakhapatnam" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Book Try Scuba</button>'
+            + '<a href="first-time-scuba.html" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold text-center">See the full day</a>'
+            + '</div></div></div></section>')
+
+
+def location_card(d, i):
+    chips = ''.join('<a href="%s#%s" class="chip loc-chip px-3 py-1.5 rounded-full text-xs font-semibold">%s</a>'
+                    % (d['file'], a[0], a[1]) for a in d['acts'])
+    return ('<article class="loc-card glass-panel rounded-3xl overflow-hidden flex flex-col reveal %s">'
+            '<div class="relative h-[220px] md:h-[260px] overflow-hidden on-media">%s'
+            '<span class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/40 to-transparent"></span>'
+            '<div class="absolute left-5 right-5 bottom-4"><span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em]">%s</span>'
+            '<h3 class="font-display font-bold text-white text-3xl md:text-4xl mt-3">%s</h3></div></div>'
+            '<div class="p-6 md:p-7 flex flex-col gap-5 flex-grow">'
+            '<p class="text-brand-dim leading-relaxed">%s</p>'
+            '<div><p class="field-label mb-2">Activities</p><div class="flex flex-wrap gap-2">%s</div></div>'
+            '<div class="flex flex-wrap gap-3 mt-auto">'
             '<a href="%s" class="btn-bio liquid ripple-host px-6 py-3 rounded-full font-bold text-sm">Explore %s</a>'
             '<button type="button" data-book data-destination="%s" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Book here</button>'
             '</div></div></article>'
-            % (d['id'], d['name'],
-               photo(d['img'], 'Dive Adda ' + d['name'], 'absolute inset-0 w-full h-full object-cover bento-image', '(max-width: 767px) 100vw, 50vw', lazy=(i != 0)),
-               d['sub'], d['name'], d['blurb'], acts, d['file'], d['name'], d['name']))
+            % ('' if i == 0 else 'delay-100',
+               photo(d['img'], d['name'], 'bento-image absolute inset-0 w-full h-full object-cover', '(max-width: 767px) 100vw, 50vw'),
+               d['sub'], d['name'], d['blurb'], chips, d['file'], d['name'], d['name']))
 
 
-def destinations_section(num='08', with_map=True):
-    cards = ''.join(dest_card(d, i) for i, d in enumerate(DESTS))
-    mp = ''
-    if with_map:
-        mp = ('<div class="grid lg:grid-cols-3 gap-8 items-stretch mt-12">'
-              '<div class="lg:col-span-1 reveal">'
-              '<h3 class="font-display text-2xl font-bold text-white mb-4">Where we dive</h3>'
-              '<p class="text-brand-dim leading-relaxed mb-6">Our SSI certified scuba centre is in Vizag, and we run scuba diving and water sports in Rajahmundry and Goa. '
-              'Meeting points and timings are confirmed by the dive desk when you book.</p>'
-              '<ul class="space-y-3">'
-              + ''.join('<li><a href="%s" class="glass-panel liquid rounded-2xl p-4 flex items-start gap-4 group">'
-                        '<span class="shrink-0 p-2.5 rounded-xl bg-brand-accent/12 border border-brand-accent/30 text-brand-glow shadow-[0_0_22px_-8px_rgba(34,211,238,0.8)]">%s</span>'
-                        '<span><span class="block text-white font-bold">%s</span>'
-                        '<span class="block text-sm text-brand-dim/85">%s</span></span></a></li>'
-                        % (d['file'], svg('pin'), d['name'], d['sub']) for d in DESTS)
-              + '</ul></div>'
-              '<div class="lg:col-span-2 h-[460px] relative rounded-3xl overflow-hidden glass-panel p-2 reveal delay-200">'
-              '<div id="diveMap"></div></div></div>')
-    return ('<section id="destinations" class="mb-32">'
-            + sec_head(num, 'Destinations', 'Three ways to dive with us',
-                       'Vizag, Rajahmundry and Goa &mdash; swipe through and pick where you want to be underwater.')
-            + '<div class="carousel reveal" data-autoplay data-map-sync>'
-            + '<div class="carousel-track" tabindex="0" role="group" aria-label="Dive Adda destinations">' + cards + '</div>'
-            + '<div class="flex items-center justify-between mt-2">'
-            + '<div class="car-dots" role="tablist" aria-label="Choose a destination"></div>'
-            + '<div class="flex gap-3">'
-            + '<button type="button" data-car-prev class="car-btn glass-panel liquid" aria-label="Previous destination"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>'
-            + '<button type="button" data-car-next class="car-btn glass-panel liquid" aria-label="Next destination"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>'
-            + '</div></div></div>' + mp + '</section>')
+def locations_section(num='03'):
+    return ('<section id="locations" class="mb-32">'
+            + sec_head(num, 'Locations', 'Where to find us',
+                       'Scuba diving and water activities in Visakhapatnam, and water rides on the Godavari in Rajahmundry.')
+            + '<div class="grid md:grid-cols-2 gap-6">' + ''.join(location_card(d, i) for i, d in enumerate(DESTS)) + '</div></section>')
 
 
-def journey_section(num='09'):
-    steps = ''.join(
-        '<div class="j-step"><span class="j-node">%s</span>'
-        '<div class="j-card glass-panel"><h3 class="font-display font-bold text-white mb-1.5">%s</h3>'
-        '<p class="text-sm text-brand-dim leading-relaxed">%s</p></div></div>' % (n, t, d)
-        for n, t, d in JOURNEY)
-    return ('<section id="first-dive" class="mb-32">'
-            + sec_head(num, 'Your First Dive', 'What actually happens',
-                       'No experience needed. This is how a first dive with Dive Adda goes, start to finish.', center=True)
-            + '<div class="journey reveal"><span class="journey-line" aria-hidden="true"><span></span></span>' + steps + '</div>'
-            + '<div class="text-center mt-12 reveal"><button type="button" data-book data-experience="Scuba Diving (first dive)" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Book your first dive</button></div>'
-            + '</section>')
+def book_section(num='04'):
+    return ('<section id="book" class="mb-16"><div class="cta-band glass-deep bio-edge reveal">'
+            '<div class="relative grid lg:grid-cols-[1.4fr_1fr] gap-8 items-center">'
+            '<div><p class="eyebrow mb-4">%s &mdash; Book</p>'
+            '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-3 heading-glow">Ready to discover the deep?</h2>'
+            '<p class="text-brand-dim text-lg leading-relaxed max-w-xl mb-6">Tell us the experience, location and date. The Dive Adda team confirms availability and gets you ready.</p>'
+            '<div class="flex items-center gap-3 text-sm text-brand-dim"><img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="w-12 h-12 object-contain" width="48" height="39" loading="lazy">'
+            '<span>SSI certified dive centre &middot; Visakhapatnam</span></div></div>'
+            '<div class="flex flex-col gap-3">'
+            '<button type="button" data-book class="btn-bio liquid liquid-strong ripple-host px-7 py-4 rounded-full font-display font-bold">Book Now</button>'
+            '<a href="%s" target="_blank" rel="noopener" class="liquid ripple-host px-7 py-4 rounded-full font-semibold text-center text-white bg-[#128C4A]/90 border border-[#4ade80]/35">Chat on WhatsApp</a>'
+            '<a href="tel:%s" class="btn-ghost liquid ripple-host px-7 py-4 rounded-full font-semibold text-center">Call %s</a>'
+            '</div></div></div></section>' % (num, wa_link("Hi Dive Adda! I'd like to book."), PHONE_TEL, PHONE_TXT))
 
 
 def gallery_grid(gid, items, filters=True):
@@ -1059,7 +1067,7 @@ def gallery_grid(gid, items, filters=True):
         '<button type="button" class="g-open" aria-label="Open photo: %s"></button>'
         '</figure>'
         % (span, ['', 'delay-100', 'delay-200', 'delay-300'][i % 4], cat, E(cap),
-           photo(img, cap, '', '(max-width: 767px) 50vw, 25vw', extra='data-full="%s"' % img),
+           photo(img, cap, '', '(max-width: 767px) 50vw, 25vw', extra='data-full="%s"' % full_src(img)),
            cap, sub, E(cap))
         for i, (img, cat, cap, sub, span) in enumerate(items))
     return bar + '<div class="gallery-grid" id="%s" data-gallery>%s</div>' % (gid, tiles)
@@ -1112,32 +1120,26 @@ def conservation_section(num='12'):
     return ('<section id="conservation" class="mb-32">'
             + sec_head(num, 'Ocean Conservation', 'Dive. Discover. Protect.',
                        'The more people who learn to dive responsibly, the more awareness we create about keeping our oceans clean and safe for future generations.', center=True)
-            + '<div class="grid md:grid-cols-3 gap-6">' + cards + '</div>'
+            + '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 orphan-sm-lg">' + cards + '</div>'
             + '<div class="text-center mt-10 reveal"><a href="events.html#conservation-diving" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold inline-flex items-center gap-2.5">Join a conservation dive %s</a></div>'
             % svg('arrow', 'w-4 h-4 text-brand-glow')
             + '</section>')
 
 
-def faq_section(num='13', items=None, head=True):
-    items = items or FAQS[:7]
+def faq_block(num, eyebrow, title, desc, items, sid='faq', footer=True):
     acc = ''.join(
         '<details class="faq-item glass-panel reveal"%s><summary>%s<span class="fq-icon">%s</span></summary>'
         '<div class="fq-body">%s</div></details>' % (' open' if i == 0 else '', q, svg('plus', 'w-4 h-4'), a)
         for i, (q, a) in enumerate(items))
-    h = sec_head(num, 'FAQ', 'Questions before you dive',
-                 'Everything below is answered by the Dive Adda team &mdash; no guesswork.', center=True) if head else ''
-    return ('<section id="faq" class="mb-32">' + h
-            + '<div class="max-w-3xl mx-auto grid gap-4" data-faq-group>' + acc + '</div>'
-            + '<p class="text-center text-brand-dim mt-10 reveal">Still unsure? <a href="contact.html#enquire" class="link-glow font-semibold">Send us your question</a> or call <a href="tel:%s" class="link-glow font-semibold">%s</a>.</p>'
-            % (PHONE_TEL, PHONE_TXT)
-            + '</section>')
+    tail = ('<p class="text-center text-brand-dim mt-10 reveal">Still unsure? <a href="contact.html#enquire" class="link-glow font-semibold">Send us your question</a> or call <a href="tel:%s" class="link-glow font-semibold">%s</a>.</p>'
+            % (PHONE_TEL, PHONE_TXT)) if footer else ''
+    return ('<section id="%s" class="mb-28">' % sid + sec_head(num, eyebrow, title, desc, center=True)
+            + '<div class="max-w-3xl mx-auto grid gap-4" data-faq-group>' + acc + '</div>' + tail + '</section>')
 
 
 def enquiry_section(num='14'):
     dest_opts = ''.join('<option value="%s">%s</option>' % (d['name'], d['name']) for d in DESTS)
-    exp_opts = ''.join('<option value="%s">%s</option>' % (html.unescape(n), n) for n in
-                       ['Scuba Diving (first dive)', 'Guided Fun Dive', 'SSI Course', 'Snorkelling', 'Boat Diving',
-                        'Shore Diving', 'Confined Diving', 'Water Sports', 'Underwater Event', 'Outbound Trip'])
+    exp_opts = ''.join('<option value="%s">%s</option>' % (html.unescape(n), n) for n in EXPERIENCE_OPTIONS)
     course_opts = ''.join('<option value="%s">%s</option>' % (html.unescape(c['name']), c['name']) for c in COURSES)
     return '''<section id="enquire" class="mb-10 pt-6">
         <div class="grid lg:grid-cols-5 gap-10 items-start">
@@ -1257,399 +1259,260 @@ def cta_band(title, copy, experience='', destination=''):
 
 
 def main_open():
-    return '<main class="theme-scope flex-grow pt-24 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">'
+    return '<main class="theme-scope site-main flex-grow max-w-7xl mx-auto w-full">'
 
 
 # ---------------------------------------------------------------- pages
 def page_home():
-    dest_tpls = ''.join(
-        '<template id="destTpl-%s"><div class="dp-in">'
-        '<p class="text-brand-ink/85 leading-relaxed mb-3">%s</p>'
-        '<div class="flex flex-wrap items-center justify-center gap-2">%s'
-        '<a href="%s" class="link-glow text-[11px] font-bold uppercase tracking-[0.2em] ml-1">Explore %s &rarr;</a>'
-        '</div></div></template>'
-        % (d['id'], d['blurb'],
-           ''.join('<span class="chip px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em]">%s</span>' % a for a in d['acts'][:4]),
-           d['file'], d['name'])
-        for d in DESTS)
-
-    hero = '''    <header class="relative w-full h-screen min-h-[780px] flex items-center justify-center pt-28 pb-16 overflow-hidden">
-        <video id="heroVideo" autoplay loop muted playsinline preload="none"
-               poster="''' + B('cover-divers') + '''"
-               class="absolute inset-0 w-full h-full object-cover z-0 opacity-60 saturate-[.85]">
-            <!-- Swap in a self-hosted Dive Adda clip here for motion: <source src="assets/video/dive-adda.mp4" type="video/mp4"> -->
-        </video>
-
-        <div class="absolute inset-0 bg-gradient-to-b from-brand-abyss/85 via-brand-deep/55 to-brand-deep z-[5]"></div>
-        <div class="absolute inset-0 z-[6] pointer-events-none" style="background: radial-gradient(80% 55% at 50% 45%, rgba(34,211,238,0.10), transparent 65%);"></div>
+    hero = '''    <header class="home-hero relative w-full overflow-hidden">
+        ''' + photo(B('cover-divers'), '', 'hero-media absolute inset-0 w-full h-full object-cover z-0 saturate-[.85]', '100vw', lazy=False, extra='id="heroVideo"') + '''
+        <div class="absolute inset-0 bg-gradient-to-b from-brand-abyss/90 via-brand-deep/65 to-brand-deep z-[5]"></div>
+        <div class="absolute inset-0 z-[6] pointer-events-none" style="background: radial-gradient(80% 55% at 50% 45%, rgba(34,211,238,0.08), transparent 65%);"></div>
         <div id="heroFish" class="absolute inset-0 z-[7] overflow-hidden pointer-events-none" aria-hidden="true"></div>
 
-        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center reveal active">
+        <div class="hero-inner relative z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center reveal active">
             <span class="float-organic inline-flex items-center gap-2.5 chip-cyan rounded-full px-4 py-1.5 font-semibold tracking-[0.22em] uppercase text-[10px] mb-8">
                 <span class="w-1.5 h-1.5 rounded-full bg-brand-glow shadow-[0_0_10px_#67E8F9]"></span>
-                SSI Certified Scuba Centre &middot; Vizag
+                SSI Certified Scuba Centre &middot; Visakhapatnam
             </span>
-
-            <h1 class="font-display text-6xl md:text-8xl lg:text-[8.5rem] font-bold text-white leading-[0.95] mb-5 heading-glow tracking-tight">
-                DIVE <span class="text-gradient-bio">ADDA</span>
-            </h1>
-            <p class="text-[11px] md:text-sm font-bold uppercase tracking-[0.5em] text-brand-glow/80 mb-7">Discover &mdash; The Deep</p>
-            <p class="text-lg md:text-xl text-brand-ink/80 mb-9 max-w-2xl font-medium leading-relaxed">
-                Scuba diving, SSI courses, guided fun dives and underwater events &mdash; safe, exciting and unforgettable, with expert guidance from your first breath underwater.
-            </p>
-
-            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
-                <button type="button" data-book class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">
-                    Book Your Dive
-                </button>
-                <a href="#experiences" class="btn-ghost liquid ripple-host px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2.5">
-                    Explore Experiences
-                    <svg class="w-5 h-5 text-brand-glow cue-dot" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            <h1 class="hero-title font-display font-bold text-white leading-[0.95] mb-5 heading-glow tracking-tight">DIVE <span class="text-gradient-bio">ADDA</span></h1>
+            <p class="hero-tagline font-bold uppercase text-brand-glow/80 mb-7">Discover &mdash; The Deep</p>
+            <p class="hero-lead text-brand-ink/80 mb-9 max-w-2xl font-medium leading-relaxed">Try scuba for the first time, earn an SSI certification, or ride the waves in Visakhapatnam and Rajahmundry.</p>
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <button type="button" data-book data-experience="Try Scuba (first dive)" data-destination="Visakhapatnam" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Book Try Scuba</button>
+                <a href="#first-time-scuba" class="btn-ghost liquid ripple-host px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2.5">Explore
+                    <svg class="w-5 h-5 text-brand-glow cue-dot" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                 </a>
             </div>
-
-            <div class="w-full max-w-xl">
-                <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-dim/60 mb-4">Choose your destination</p>
-                <div class="dest-select mb-5" role="tablist" aria-label="Destinations" data-dest-select="heroDestPanel">
-                    ''' + ''.join('<button type="button" role="tab" data-dest="%s" aria-selected="%s">%s</button>' % (d['id'], 'true' if i == 0 else 'false', d['name']) for i, d in enumerate(DESTS)) + '''
-                </div>
-                <div class="dest-panel glass-panel rounded-2xl p-5 text-sm" id="heroDestPanel" aria-live="polite"></div>
-            </div>
-
-            <div class="mt-12 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-brand-dim/50">
+            <div class="hero-cue mt-12 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-brand-dim/50" aria-hidden="true">
                 <span>Descend</span>
                 <span class="relative w-[1px] h-10 bg-gradient-to-b from-brand-accent/60 to-transparent"></span>
             </div>
         </div>
     </header>
-''' + dest_tpls
-
+'''
     body = (hero + main_open()
-            + experiences_section() + why_section() + story_section() + scuba_cards_section()
-            + courses_section() + activities_section() + events_section() + destinations_section()
-            + journey_section() + gallery_section() + team_section() + conservation_section()
-            + faq_section() + enquiry_section() + '</main>')
-
-    ld = [
-        {"@type": "WebSite", "@id": DOMAIN + "#website", "url": DOMAIN, "name": "Dive Adda",
-         "inLanguage": "en", "publisher": {"@id": ORG_ID}},
-        {"@type": "WebPage", "@id": DOMAIN + "#webpage", "url": DOMAIN,
-         "name": "Dive Adda | SSI Certified Scuba Diving Centre",
-         "isPartOf": {"@id": DOMAIN + "#website"}, "about": {"@id": CENTRE_ID}},
-        ld_faq(FAQS[:7]),
-    ] + [ld_course(c) for c in COURSES]
-
-    return shell('home', 'home', 18,
-                 'Dive Adda | SSI Certified Scuba Diving Centre in Vizag, Rajahmundry &amp; Goa',
-                 'Dive Adda is an SSI certified scuba diving centre: SSI courses, guided fun dives, snorkelling, boat, shore and confined diving, and underwater events in Vizag, Rajahmundry and Goa.',
-                 '', body, ld, hero_img=B('cover-divers'),
-                 use_map=True, book_modal=True, lightbox=True, profile=True)
-
-
-def page_diving():
-    detail = ''
-    for i, a in enumerate(ACTIVITIES):
-        flip = (i % 2 == 1)
-        detail += ('<section id="%s" class="mb-28 scroll-mt-32">'
-                   '<div class="grid lg:grid-cols-2 gap-10 items-center">'
-                   '<div class="reveal %s"><div class="frame-photo glass-panel p-2 h-[340px] md:h-[440px]">%s</div></div>'
-                   '<div class="reveal delay-100 %s">'
-                   '<p class="eyebrow mb-4">Activity %s</p>'
-                   '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-4 heading-glow">%s</h2>'
-                   '<p class="text-brand-dim text-lg leading-relaxed mb-7">%s</p>'
-                   '<div class="flex flex-wrap gap-3">'
-                   '<button type="button" data-book data-experience="%s" class="btn-bio liquid ripple-host px-6 py-3.5 rounded-full font-bold text-sm">Book %s</button>'
-                   '<a href="contact.html?experience=%s#enquire" class="btn-ghost liquid ripple-host px-6 py-3.5 rounded-full font-semibold text-sm">Ask a question</a>'
-                   '</div></div></div></section>'
-                   % (a['id'], 'lg:order-2' if flip else '',
-                      photo(a['img'], a['name'], 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'),
-                      'lg:order-1' if flip else '', a['n'], a['name'], a['text'], a['name'], a['name'], quote(html.unescape(a['name']))))
-
-    fun = ('<section id="fun-dives" class="mb-28 scroll-mt-32">'
-           '<div class="grid lg:grid-cols-2 gap-10 items-center">'
-           '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[340px] md:h-[460px]">%s</div></div>'
-           '<div class="reveal delay-100">'
-           '<p class="eyebrow mb-4">Guided</p>'
-           '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-4 heading-glow">Guided Fun Dives</h2>'
-           '<p class="text-brand-dim text-lg leading-relaxed mb-6">Experience safe and exciting guided fun dives with expert instructors, exploring breathtaking underwater wonders.</p>'
-           '<ul class="space-y-3 mb-7">%s</ul>'
-           '<button type="button" data-book data-experience="Guided Fun Dive" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Book a fun dive</button>'
-           '</div></div></section>'
-           % (photo(B('guided-fun-dive'), 'Guided fun dive with a Dive Adda instructor', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'),
-              ''.join('<li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">%s</span></li>' % b
-                      for b in ['Expert instructors on every dive', 'Certified divers and first-timers both welcome',
-                                'Breathtaking underwater wonders, at your pace'])))
-
-    scuba = ('<section id="scuba-diving" class="mb-28 scroll-mt-32">'
-             + sec_head('01', 'Scuba Diving', 'Breathe underwater',
-                        'Scuba diving is an underwater adventure that allows you to explore the marine world using a Self-Contained Underwater Breathing Apparatus.')
-             + '<div class="grid sm:grid-cols-2 gap-6">'
-             + ''.join(
-                 '<button type="button" class="info-card glass-panel bio-edge text-left reveal %s" aria-expanded="%s">'
-                 '<span class="ic-num" aria-hidden="true">%s</span><span class="ic-icon mb-5">%s</span>'
-                 '<h3 class="font-display text-xl font-bold text-white mb-2">%s</h3>'
-                 '<p class="text-brand-dim text-sm leading-relaxed">%s</p>'
-                 '<span class="ic-more"><div><div class="text-brand-dim text-sm leading-relaxed pt-4 border-t border-white/[0.08]">%s</div></div></span>'
-                 '<span class="mt-5 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-glow"><span class="ic-toggle">%s</span> Read more</span>'
-                 '</button>'
-                 % (['', 'delay-100', 'delay-200', 'delay-300'][i], 'true' if i == 0 else 'false',
-                    n, svg(ic, 'w-6 h-6'), t, teaser, more, svg('plus', 'w-3.5 h-3.5'))
-                 for i, (n, ic, t, teaser, more) in enumerate(SCUBA_CARDS))
-             + '</div></section>')
-
-    outbound = ('<section id="outbound-trips" class="mb-28 scroll-mt-32">'
-                '<div class="cta-band glass-deep bio-edge reveal">'
-                '<div class="relative grid lg:grid-cols-2 gap-8 items-center">'
-                '<div class="frame-photo h-[280px] md:h-[340px]">%s</div>'
-                '<div><p class="eyebrow mb-4">Also from Dive Adda</p>'
-                '<h2 class="font-display text-3xl font-bold text-white mb-3">Outbound Trips</h2>'
-                '<p class="text-brand-dim text-lg leading-relaxed mb-6">Experience thrilling outbound scuba diving trips to exotic locations, exploring vibrant marine life safely.</p>'
-                '<button type="button" data-book data-experience="Outbound Trip" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Ask about the next trip</button>'
-                '</div></div></div></section>'
-                % photo(B('outbound-trip'), 'A Dive Adda outbound trip group', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'))
-
-    body = (page_hero('Diving', 'Diving with <span class="text-gradient-bio">Dive Adda</span>',
-                      'Scuba diving, guided fun dives, and boat, shore and confined diving &mdash; every one of them run by SSI certified instructors.',
-                      B('guided-fun-dive'), 12,
-                      [('Home', 'index.html'), ('Diving', None)],
-                      ghost='DIVE', ctas=hero_ctas('Book a dive'))
-            + main_open() + scuba + fun + activities_section('02') + detail + outbound
-            + journey_section('03')
-            + cta_band('Ready for your first breath underwater?',
-                       'Tell us your destination and dates &mdash; our team will confirm availability and take care of the rest.')
+            + first_time_teaser('01') + courses_section('02') + locations_section('03') + book_section('04')
             + '</main>')
+    ld = [
+        {"@type": "WebSite", "@id": DOMAIN + "#website", "url": DOMAIN, "name": "Dive Adda", "inLanguage": "en", "publisher": {"@id": ORG_ID}},
+        {"@type": "WebPage", "@id": DOMAIN + "#webpage", "url": DOMAIN, "name": "Dive Adda | SSI Certified Scuba Diving Centre",
+         "isPartOf": {"@id": DOMAIN + "#website"}, "about": {"@id": CENTRE_ID}},
+    ] + [ld_course(c) for c in COURSES]
+    return shell('home', 'home', 18,
+                 'Dive Adda | SSI Certified Scuba Diving in Visakhapatnam &amp; Rajahmundry',
+                 'Dive Adda is an SSI certified scuba diving centre in Visakhapatnam. Try Scuba, SSI courses, snorkeling and water activities in Visakhapatnam and Rajahmundry.',
+                 '', body, ld, hero_img=B('cover-divers'), book_modal=True)
 
-    ld = [ld_breadcrumb([('Home', ''), ('Diving', 'diving.html')]),
-          ld_service('Scuba Diving', 'Guided scuba diving, fun dives, boat diving, shore diving and confined water training with SSI certified instructors.', 'diving.html')]
-    return shell('diving', 'diving', 12,
-                 'Scuba Diving, Fun Dives, Boat &amp; Shore Diving | Dive Adda',
-                 'Scuba diving with Dive Adda: guided fun dives, boat diving, shore diving and confined water training with SSI certified instructors in Vizag, Rajahmundry and Goa.',
-                 'diving.html', body, ld, hero_img=B('guided-fun-dive'))
+
+def page_first_time_scuba():
+    overview = ('<section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center">'
+                '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[320px] md:h-[460px]">'
+                + photo(B('ssi-pool-training'), 'A Try Scuba guest learning with a Dive Adda instructor', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
+                + '</div></div><div class="reveal delay-100">'
+                '<p class="eyebrow mb-4">01 &mdash; Try Scuba</p>'
+                '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-5 heading-glow">Try Scuba Diving with Dive Adda</h2>'
+                '<p class="text-brand-dim text-lg leading-relaxed mb-4">Try Scuba is your introduction to the amazing world of scuba diving and an opportunity to explore the underwater world of Vizag.</p>'
+                '<p class="text-brand-dim leading-relaxed mb-4">Never tried scuba diving before? No problem. Our Try Scuba experience is designed to introduce you to scuba diving with proper equipment training, safety briefing, and guidance from an experienced diving instructor.</p>'
+                '<p class="text-brand-dim leading-relaxed mb-7">Your experience takes you from the initial briefing at our centre to the dive site, where you can explore the underwater landscape and marine life.</p>'
+                + fact_tiles(TRY_FACTS) + '</div></div></section>')
+
+    day = ('<section id="itinerary" class="mb-28">'
+           + sec_head('02', 'Try Scuba Experience Details', 'Your first scuba diving experience',
+                      'Duration: 6:30 AM &ndash; 12:30 PM', center=True)
+           + '<div class="max-w-3xl mx-auto">' + itinerary_timeline() + '</div></section>')
+
+    included = ('<section class="mb-28"><div class="grid lg:grid-cols-2 gap-6">'
+                '<div class="glass-panel rounded-3xl p-6 md:p-8 reveal">'
+                '<p class="eyebrow mb-3">03 &mdash; Included</p>'
+                '<h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-5">What&rsquo;s included?</h2>'
+                '<p class="text-brand-dim mb-5">Your Try Scuba experience includes:</p>'
+                + pill_list(TRY_INCLUDED, cols='') + '</div>'
+                '<div class="glass-panel rounded-3xl p-6 md:p-8 reveal delay-100">'
+                '<p class="eyebrow mb-3">04 &mdash; Requirements</p>'
+                '<h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-5">Requirements for Try Scuba</h2>'
+                '<p class="text-brand-dim mb-5">Before booking your first scuba diving experience, please note:</p>'
+                + pill_list(TRY_REQUIREMENTS, cols='') + '</div>'
+                '</div></section>')
+
+    know = ('<section class="mb-28">'
+            + sec_head('05', 'Before You Come', 'Important things to know', '', center=True)
+            + '<div class="grid sm:grid-cols-2 gap-5">'
+            + ''.join('<div class="trust-card glass-panel bio-edge reveal %s"><span class="ic-icon mb-4">%s</span>'
+                      '<h3 class="font-display text-lg font-bold text-white mb-2">%s</h3>'
+                      '<p class="text-brand-dim text-sm leading-relaxed">%s</p></div>'
+                      % (['', 'delay-100'][i % 2], svg(ic, 'w-5 h-5'), t, d) for i, (ic, t, d) in enumerate(TRY_KNOW))
+            + '</div></section>')
+
+    body = (page_hero('First Time Scuba', 'First-Time Scuba Diving in <span class="text-gradient-bio">Vizag</span>',
+                      'Never tried scuba diving before? No problem. Equipment training, a safety briefing and an experienced instructor beside you.',
+                      B('guided-fun-dive'), 8, [('Home', 'index.html'), ('First Time Scuba', None)], ghost='TRY',
+                      ctas=hero_ctas('Book Try Scuba', experience='Try Scuba (first dive)', destination='Visakhapatnam'))
+            + main_open() + overview + day + included + know
+            + faq_block('06', 'Try Scuba FAQs', 'Questions before your first dive', '', TRY_FAQS)
+            + cta_band('Ready for your first breath underwater?',
+                       'Tell us your preferred date and group size. We confirm availability and send you everything you need to know.',
+                       experience='Try Scuba (first dive)', destination='Visakhapatnam')
+            + '</main>')
+    ld = [ld_breadcrumb([('Home', ''), ('First Time Scuba', 'first-time-scuba.html')]),
+          ld_service('Try Scuba', 'An introduction to scuba diving in Visakhapatnam with equipment training, a safety briefing and an experienced diving instructor. About 40 minutes underwater to a maximum depth of 6-8 metres. Minimum age 8.', 'first-time-scuba.html'),
+          ld_faq(TRY_FAQS)]
+    return shell('first-time-scuba', 'first-time-scuba', 8,
+                 'First-Time Scuba Diving in Vizag | Try Scuba with Dive Adda',
+                 'Try Scuba in Visakhapatnam with Dive Adda: equipment training, safety briefing and an experienced instructor. About 40 minutes underwater, 6-8 m max depth, minimum age 8.',
+                 'first-time-scuba.html', body, ld, hero_img=B('guided-fun-dive'))
 
 
 def page_courses():
-    details = ''
-    for i, c in enumerate(COURSES):
-        flip = (i % 2 == 1)
-        details += ('<section id="%s" class="mb-24 scroll-mt-32">'
-                    '<div class="grid lg:grid-cols-2 gap-10 items-center">'
-                    '<div class="reveal %s"><div class="frame-photo glass-panel p-2 h-[320px] md:h-[420px]">%s</div></div>'
-                    '<div class="reveal delay-100 %s">'
-                    '<div class="flex items-center gap-3 mb-4">'
-                    '<span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">%s</span>'
-                    '<span class="eyebrow">Step %s</span></div>'
-                    '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-2 heading-glow">%s</h2>'
-                    '<p class="text-[11px] uppercase tracking-[0.2em] text-brand-glow mb-5">%s</p>'
-                    '<p class="text-brand-dim text-lg leading-relaxed mb-6">%s</p>'
-                    '<ul class="space-y-2.5 mb-7">%s</ul>'
-                    '<div class="flex flex-wrap gap-3">'
-                    '<button type="button" data-book data-experience="SSI Course" class="btn-bio liquid ripple-host px-6 py-3.5 rounded-full font-bold text-sm">Enquire about this course</button>'
-                    '<a href="contact.html?course=%s&amp;experience=SSI%%20Course#enquire" class="btn-ghost liquid ripple-host px-6 py-3.5 rounded-full font-semibold text-sm">Send an enquiry</a>'
-                    '</div></div></div></section>'
-                    % (c['id'], 'lg:order-2' if flip else '',
-                       photo(c['img'], c['full'], 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'),
-                       'lg:order-1' if flip else '', c['level'], c['step'], c['name'], c['full'], c['long'],
-                       ''.join('<li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">%s</span></li>' % b for b in c['learn']),
-                       quote(html.unescape(c['name']))))
-
+    ssi_intro = ('<section class="mb-24"><div class="cta-band glass-deep bio-edge reveal">'
+                 '<div class="relative grid lg:grid-cols-[auto_1fr] gap-8 items-center">'
+                 '<img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="ssi-badge mx-auto object-contain" width="132" height="107" loading="lazy">'
+                 '<div><h2 class="font-display text-3xl font-bold text-white mb-3">An internationally certified SSI dive centre</h2>'
+                 '<p class="text-brand-dim text-lg leading-relaxed">We are proudly affiliated with SSI (Scuba Schools International), ensuring our training programmes meet the highest global standards. '
+                 'Our team provides professional dive training for all levels &mdash; from beginners taking their first dive to professionals looking to enhance their skills.</p>'
+                 '</div></div></div></section>')
     benefits = ('<section class="mb-28">'
-                + sec_head('02', 'Benefits', 'Why take a scuba course',
-                           'What a course gives you, beyond the certification card.', center=True)
+                + sec_head('02', 'Benefits', 'Why take a scuba course', 'What a course gives you, beyond the certification card.', center=True)
                 + '<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">'
                 + ''.join('<div class="trust-card glass-panel bio-edge reveal"><span class="ic-icon mb-4">%s</span>'
-                          '<h3 class="font-display font-bold text-white text-lg leading-tight">%s</h3></div>'
-                          % (svg(ic, 'w-5 h-5'), b)
+                          '<h3 class="font-display font-bold text-white text-lg leading-tight">%s</h3></div>' % (svg(ic, 'w-5 h-5'), b)
                           for ic, b in [('cap', 'Learn essential diving skills'), ('shield', 'Enhanced safety'),
                                         ('globe', 'Global certification'), ('people', 'Career &amp; volunteering opportunities'),
                                         ('heart', 'Physical &amp; mental health benefits'), ('chat', 'Meet a community of divers'),
                                         ('camera', 'Underwater photography &amp; videography'), ('spark', 'A reason to keep diving')])
                 + '</div></section>')
-
-    ssi_intro = ('<section class="mb-24"><div class="cta-band glass-deep bio-edge reveal">'
-                 '<div class="relative grid lg:grid-cols-[auto_1fr] gap-8 items-center">'
-                 '<img src="assets/img/ssi-dive-center.png" alt="SSI Official Partner Dive Center" class="ssi-badge mx-auto" width="132" height="132">'
-                 '<div><h2 class="font-display text-3xl font-bold text-white mb-3">An internationally certified SSI dive centre</h2>'
-                 '<p class="text-brand-dim text-lg leading-relaxed">We are proudly affiliated with SSI (Scuba Schools International), ensuring our training programmes meet the highest global standards. '
-                 'Our team provides professional dive training for all levels &mdash; from beginners taking their first dive to professionals looking to enhance their skills.</p>'
-                 '</div></div></div></section>')
-
     body = (page_hero('SSI Courses', 'Get <span class="text-gradient-bio">certified</span>',
                       'SSI certified courses from beginner to professional level, taught by instructors with over 15 years of industry experience.',
-                      B('ssi-pool-training'), 9,
-                      [('Home', 'index.html'), ('Courses', None)],
+                      B('ssi-pool-training'), 12, [('Home', 'index.html'), ('Courses', None)],
                       ghost='SSI', ctas=hero_ctas('Start a course', experience='SSI Course'))
-            + main_open() + ssi_intro + courses_section('01') + details + benefits
-            + faq_section('03', [FAQS[3], FAQS[0], FAQS[4], FAQS[7]])
+            + main_open() + ssi_intro
+            + courses_section('01', title='Choose your course', desc='Every course has its own page with what you will learn and who it is for.', link=None)
+            + benefits
+            + faq_block('03', 'FAQ', 'Course questions', '', GENERAL_FAQS[:2])
             + cta_band('Not sure which course fits?',
                        'Tell us where you are starting from and our instructors will point you to the right programme.',
                        experience='SSI Course')
             + '</main>')
-
-    ld = [ld_breadcrumb([('Home', ''), ('Courses', 'courses.html')])] + [ld_course(c) for c in COURSES] + [ld_faq([FAQS[3], FAQS[0], FAQS[4], FAQS[7]])]
-    return shell('courses', 'courses', 9,
-                 'SSI Scuba Diving Courses | Open Water to Dive Master | Dive Adda',
-                 'SSI certified scuba courses with Dive Adda: Open Water, Advanced Adventurer, React Right, Diver Stress & Rescue and Dive Master, from beginner to professional level.',
+    ld = [ld_breadcrumb([('Home', ''), ('Courses', 'courses.html')])] + [ld_course(c) for c in COURSES] + [ld_faq(GENERAL_FAQS[:2])]
+    return shell('courses', 'courses', 12,
+                 'SSI Scuba Diving Courses | Open Water Diver to Dive Master | Dive Adda',
+                 'SSI certified scuba courses with Dive Adda in Visakhapatnam: Open Water Diver, Advanced Adventurer, React Right, Diver Stress & Rescue and Dive Master.',
                  'courses.html', body, ld, hero_img=B('ssi-pool-training'))
 
 
-def page_water_sports():
-    cards = ''.join(
-        '<article class="trust-card glass-panel bio-edge reveal %s">'
-        '<span class="ic-icon mb-5">%s</span>'
-        '<h3 class="font-display text-xl font-bold text-white mb-2">%s</h3>'
-        '<p class="text-brand-dim text-sm leading-relaxed mb-5">%s</p>'
-        '<a href="%s" class="link-glow text-[11px] font-bold uppercase tracking-[0.2em]">%s &rarr;</a>'
-        '</article>'
-        % (['', 'delay-100', 'delay-200'][i % 3], svg(ic, 'w-6 h-6'), t, d, href, cta)
-        for i, (ic, t, d, href, cta) in enumerate([
-            ('wave', 'Snorkelling', 'Explore underwater life effortlessly, floating with a mask, snorkel and fins. No certification needed.', '#snorkelling', 'See snorkelling'),
-            ('bolt', 'Try Scuba', 'Your first breath underwater, with an instructor beside you the whole time.', 'diving.html#scuba-diving', 'About scuba diving'),
-            ('boat', 'Boat Diving', 'Head out from the boat for easy access to deeper dive sites.', 'diving.html#boat-diving', 'About boat diving'),
-        ]))
+def page_course(c):
+    idx = COURSES.index(c)
+    steps = ''.join(
+        '<a href="%s" class="%s"%s><span class="cs-n">%s</span>%s</a>'
+        % (x['file'], 'chip-cyan' if x is c else 'chip', ' aria-current="page"' if x is c else '', x['step'], x['name'])
+        for x in COURSES)
+    prev_c = COURSES[idx - 1] if idx > 0 else None
+    next_c = COURSES[idx + 1] if idx < len(COURSES) - 1 else None
+    nav_links = ''
+    if prev_c:
+        nav_links += '<a href="%s" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">&larr; %s</a>' % (prev_c['file'], prev_c['name'])
+    if next_c:
+        nav_links += '<a href="%s" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Next: %s &rarr;</a>' % (next_c['file'], next_c['name'])
 
-    by_dest = ''.join(
-        '<article class="bento-card on-media group relative rounded-3xl overflow-hidden liquid glow-hover bio-edge reveal %s" style="min-height:320px">'
-        '%s<div class="absolute inset-0 duotone"></div>'
-        '<div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/55 to-transparent"></div>'
-        '<div class="absolute inset-0 p-7 flex flex-col justify-end z-[4]">'
-        '<h3 class="font-display text-2xl font-bold text-white mb-2">%s</h3>'
-        '<p class="text-brand-ink/80 text-sm mb-4">%s</p>'
-        '<div class="flex flex-wrap gap-2 mb-5">%s</div>'
-        '<a href="%s" class="btn-ghost liquid ripple-host px-5 py-2.5 rounded-full text-sm font-semibold w-fit">Explore %s</a>'
-        '</div></article>'
-        % (['', 'delay-100', 'delay-200'][i], photo(d['img'], d['name'], 'absolute inset-0 w-full h-full object-cover bento-image', '(max-width: 767px) 100vw, 33vw'),
-           d['name'], d['blurb'],
-           ''.join('<span class="chip px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em]">%s</span>' % a
-                   for a in (['Snorkelling', 'Scuba Diving'] if d['id'] == 'vizag' else ['Scuba Diving', 'Water Sports'])),
-           d['file'], d['name'])
-        for i, d in enumerate(DESTS))
+    overview = ('<section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center">'
+                '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[300px] md:h-[440px]">'
+                + photo(c['img'], c['full'], 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
+                + '</div></div><div class="reveal delay-100">'
+                '<div class="flex flex-wrap items-center gap-3 mb-4"><span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">%s</span>'
+                '<span class="eyebrow">Step %s of %d</span></div>'
+                '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-5 heading-glow">About the course</h2>'
+                '<p class="text-brand-dim text-lg leading-relaxed mb-6">%s</p>'
+                '<div class="glass-panel rounded-2xl p-5"><p class="field-label mb-1">Who it&rsquo;s for</p><p class="text-brand-ink leading-relaxed">%s</p></div>'
+                '</div></div></section>') % (c['level'], c['step'], len(COURSES), c['long'], c['who'])
 
-    snorkel = ('<section id="snorkelling" class="mb-28 scroll-mt-32">'
-               '<div class="grid lg:grid-cols-2 gap-10 items-center">'
-               '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[340px] md:h-[460px]">%s</div></div>'
-               '<div class="reveal delay-100">'
-               '<p class="eyebrow mb-4">No certification needed</p>'
-               '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-4 heading-glow">Snorkelling</h2>'
-               '<p class="text-brand-dim text-lg leading-relaxed mb-7">Explore underwater life effortlessly, floating with a mask, snorkel and fins. It is the easiest way into the water &mdash; and often the first step towards a dive.</p>'
-               '<div class="flex flex-wrap gap-3">'
-               '<button type="button" data-book data-experience="Snorkelling" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Book snorkelling</button>'
-               '<a href="diving.html#scuba-diving" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold">Or try scuba</a>'
-               '</div></div></div></section>'
-               % photo(B('snorkelling'), 'Snorkelling with Dive Adda', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'))
+    learn = ('<section class="mb-28">' + sec_head('02', 'What You&rsquo;ll Learn', 'Skills this course gives you', '')
+             + '<div class="reveal">' + pill_list(c['learn']) + '</div></section>')
 
-    note = ('<section class="mb-28"><div class="glass-panel rounded-3xl p-7 md:p-9 reveal max-w-3xl mx-auto text-center">'
-            '<span class="ic-icon mx-auto mb-5">%s</span>'
-            '<h3 class="font-display text-2xl font-bold text-white mb-3">What is running on your dates?</h3>'
-            '<p class="text-brand-dim leading-relaxed mb-6">Water sport sessions vary by destination, season and sea conditions. '
-            'Tell us where and when you want to be in the water and the dive desk will confirm exactly what is available.</p>'
-            '<div class="flex flex-col sm:flex-row gap-3 justify-center">'
-            '<button type="button" data-book data-experience="Water Sports" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Check availability</button>'
-            '<a href="%s" target="_blank" rel="noopener" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold">Ask on WhatsApp</a>'
-            '</div></div></section>'
-            % (svg('clock', 'w-6 h-6'), wa_link('Hi Dive Adda! Which water sports are available on my dates?')))
-    # NOTE FOR THE OWNER: list your specific water sports here once confirmed
-    # (e.g. jet ski, banana boat, kayaking). Nothing is listed that we cannot verify.
+    pathway = ('<section class="mb-24">' + sec_head('03', 'Course Pathway', 'Where this course fits',
+                                                     'SSI training builds from your first certification to professional level.')
+               + '<div class="course-steps reveal">' + steps + '</div>'
+               + ('<div class="flex flex-wrap gap-3 mt-8 reveal">' + nav_links + '</div>' if nav_links else '')
+               + '</section>')
 
-    body = (page_hero('Water Sports', 'Scuba <span class="text-gradient-bio">+ water sports</span>',
-                      'Snorkelling, scuba and water sport experiences across our destinations &mdash; for everyone from non-swimmers-turned-floaters to certified divers.',
-                      B('snorkelling'), 4,
-                      [('Home', 'index.html'), ('Water Sports', None)],
-                      ghost='SURF', ctas=hero_ctas('Book water sports', experience='Water Sports'))
-            + main_open()
-            + '<section class="mb-28">' + sec_head('01', 'On the water', 'Ways to get wet with us',
-                                                   'Every experience below is run by the Dive Adda team.')
-            + '<div class="grid sm:grid-cols-3 gap-6">' + cards + '</div></section>'
-            + snorkel
-            + '<section class="mb-28">' + sec_head('02', 'By destination', 'Where water sports run',
-                                                   'Scuba and water sports across Vizag, Rajahmundry and Goa.')
-            + '<div class="grid md:grid-cols-3 gap-6">' + by_dest + '</div></section>'
-            + note
-            + cta_band('Bringing a group?', 'Birthdays, college groups, families and corporate outings &mdash; tell us the numbers and we will plan the day.',
-                       experience='Water Sports')
+    plain = html.unescape(c['name'])
+    body = (page_hero('SSI Course', c['full'], c['short'], c['img'], c['depth'],
+                      [('Home', 'index.html'), ('Courses', 'courses.html'), (c['name'], None)], ghost='SSI',
+                      ctas=hero_ctas('Enquire about this course', experience='SSI Course'))
+            + main_open() + overview + learn + pathway
+            + cta_band('Start %s' % c['name'],
+                       'Tell us when you would like to start and our instructors will confirm dates and what you need to begin.',
+                       experience='SSI Course', destination='Visakhapatnam')
             + '</main>')
-
-    ld = [ld_breadcrumb([('Home', ''), ('Water Sports', 'water-sports.html')]),
-          ld_service('Water Sports', 'Snorkelling, scuba diving and water sport experiences with Dive Adda in Vizag, Rajahmundry and Goa.', 'water-sports.html')]
-    return shell('water-sports', 'water-sports', 4,
-                 'Water Sports &amp; Snorkelling | Dive Adda',
-                 'Snorkelling, scuba and water sport experiences with Dive Adda across Vizag, Rajahmundry and Goa. No certification needed to start.',
-                 'water-sports.html', body, ld, hero_img=B('snorkelling'))
+    ld = [ld_breadcrumb([('Home', ''), ('Courses', 'courses.html'), (plain, c['file'])]), ld_course(c)]
+    return shell(c['id'], 'courses', c['depth'],
+                 '%s Course in Visakhapatnam | Dive Adda' % html.unescape(c['full']).replace('&', '&amp;'),
+                 '%s with Dive Adda, an SSI certified dive centre in Visakhapatnam. %s' % (html.unescape(c['full']), html.unescape(c['short'])),
+                 c['file'], body, ld, hero_img=c['img'])
 
 
 def page_destination(d):
-    others = [x for x in DESTS if x['id'] != d['id']]
+    other = [x for x in DESTS if x is not d][0]
     acts = ''.join(
-        '<div class="benefit-pill glass-panel reveal"><span class="bp-dot"></span>'
-        '<span class="text-brand-ink text-sm font-semibold">%s</span></div>' % a for a in d['acts'])
-
-    gal = [g for g in GALLERY if g[1] in ('diving', 'courses', 'snorkelling', 'events', 'destinations')][:6]
-    gal = [(img, cat, cap, sub, span if i < 2 else '') for i, (img, cat, cap, sub, span) in enumerate(gal)]
-
-    other_cards = ''.join(
-        '<a href="%s" class="group relative rounded-3xl overflow-hidden bento-card on-media liquid glow-hover bio-edge reveal block" style="min-height:260px">'
-        '%s<div class="absolute inset-0 duotone"></div>'
-        '<div class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/50 to-transparent"></div>'
-        '<div class="absolute inset-0 p-6 flex flex-col justify-end z-[4]">'
-        '<h3 class="font-display text-2xl font-bold text-white mb-1">%s</h3>'
-        '<p class="text-brand-ink/75 text-sm">%s</p></div></a>'
-        % (o['file'], photo(o['img'], o['name'], 'absolute inset-0 w-full h-full object-cover bento-image', '(max-width: 767px) 100vw, 50vw'),
-           o['name'], o['sub'])
-        for o in others)
+        '<article id="%s" class="trust-card glass-panel bio-edge reveal %s flex flex-col">'
+        '<span class="ic-icon mb-5">%s</span>'
+        '<h3 class="font-display text-xl font-bold text-white mb-2">%s</h3>'
+        '<p class="text-brand-dim text-sm leading-relaxed mb-6 flex-grow">%s</p>'
+        '<div class="flex flex-wrap gap-3">'
+        '<button type="button" data-book data-destination="%s" data-experience="%s" class="btn-bio liquid ripple-host px-5 py-2.5 rounded-full font-bold text-sm">Book</button>'
+        '%s</div></article>'
+        % (aid, ['', 'delay-100', 'delay-200'][i % 3], svg(icon, 'w-6 h-6'), name, desc, d['name'], html.unescape(name),
+           ('<a href="%s" class="btn-ghost liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-sm">Learn more</a>' % link) if link else '')
+        for i, (aid, name, icon, desc, link) in enumerate(d['acts']))
 
     centre = ''
-    if d['id'] == 'vizag':
+    if d['id'] == 'visakhapatnam':
         centre = ('<section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center">'
-                  '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[380px] md:h-[500px]">%s</div></div>'
-                  '<div class="reveal delay-100">'
-                  '<p class="eyebrow mb-4">The centre</p>'
+                  '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[380px] md:h-[500px]">'
+                  + photo(B('dive-centre-storefront'), 'The Dive Adda scuba dive centre', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
+                  + '</div></div><div class="reveal delay-100">'
+                  '<p class="eyebrow mb-4">02 &mdash; The Centre</p>'
                   '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-4 heading-glow">Our SSI certified scuba centre</h2>'
                   '<p class="text-brand-dim text-lg leading-relaxed mb-6">Dive Adda is an internationally certified dive centre, proudly affiliated with SSI. '
-                  'Training runs from confined water through to guided open water dives, for complete beginners and certified divers alike.</p>'
+                  'Try Scuba, SSI courses and guided dives all start here, for complete beginners and certified divers alike.</p>'
                   '<div class="glass-panel rounded-2xl p-5 flex items-center gap-5 mb-7">'
-                  '<img src="assets/img/ssi-dive-center.png" alt="SSI Official Partner Dive Center" class="w-16 h-16" loading="lazy" width="64" height="64">'
+                  '<img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="w-16 h-16 object-contain" loading="lazy" width="64" height="52">'
                   '<p class="text-sm text-brand-dim leading-relaxed">Our training programmes meet the highest global standards.</p></div>'
-                  '<p class="text-sm text-brand-dim/80">The exact meeting point and timings are confirmed by the dive desk when you book.</p>'
-                  '</div></div></section>'
-                  % photo(B('dive-centre-storefront'), 'The Dive Adda scuba dive centre', 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw'))
+                  '<a href="first-time-scuba.html" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold inline-flex items-center gap-2.5">First time? See Try Scuba ' + svg('arrow', 'w-4 h-4 text-brand-glow') + '</a>'
+                  '</div></div></section>')
+    map_num = '03' if centre else '02'
+    other_num = '04' if centre else '03'
 
-    body = (page_hero('Destination', 'Dive Adda <span class="text-gradient-bio">%s</span>' % d['name'],
-                      d['long'], d['hero'], 10,
-                      [('Home', 'index.html'), ('Destinations', 'index.html#destinations'), (d['name'], None)],
-                      ghost=d['name'].upper()[:9],
-                      ctas=hero_ctas('Book in ' + d['name'], destination=d['name']))
+    body = (page_hero('Location', 'Dive Adda <span class="text-gradient-bio">%s</span>' % d['name'], d['long'], d['hero'], d['depth'],
+                      [('Home', 'index.html'), ('Locations', 'index.html#locations'), (d['name'], None)],
+                      ghost=d['short'].upper(), ctas=hero_ctas('Book in ' + d['name'], destination=d['name']))
             + main_open()
-            + '<section class="mb-24">' + sec_head('01', d['name'], 'What you can do here',
-                                                   'Verified experiences our team runs in %s.' % d['name'])
-            + '<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">' + acts + '</div>'
-            + '<p class="text-sm text-brand-dim/80 mt-6 reveal">Sessions, meeting points and timings are confirmed by the dive desk when you book.</p>'
-            + '</section>'
+            + '<section id="activities" class="mb-28">'
+            + sec_head('01', 'Activities', 'What you can do in %s' % d['name'],
+                       'Timings and availability are confirmed when you book.')
+            + '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 orphan-sm-lg">' + acts + '</div></section>'
             + centre
-            + '<section class="mb-24">' + sec_head('02', 'On the map', 'Find us in %s' % d['name'], '')
+            + '<section class="mb-24">' + sec_head(map_num, 'On the map', 'Find us in %s' % d['name'], '')
             + '<div class="h-[420px] relative rounded-3xl overflow-hidden glass-panel p-2 reveal">'
             + '<div id="diveMap" data-focus="%s"></div></div></section>' % d['id']
-            + '<section class="mb-24">' + sec_head('03', 'Gallery', 'From our dives', '', ('Full gallery', 'gallery.html'))
-            + gallery_grid('gallery' + d['id'].title(), gal, filters=False) + '</section>'
-            + '<section class="mb-24">' + sec_head('04', 'Other destinations', 'Also with Dive Adda', '')
-            + '<div class="grid md:grid-cols-2 gap-6">' + other_cards + '</div></section>'
-            + cta_band('Diving in %s?' % d['name'],
-                       'Tell us your dates and group size &mdash; we will confirm availability with the dive desk.',
+            + '<section class="mb-24">' + sec_head(other_num, 'Also with Dive Adda', other['name'], '')
+            + '<div class="grid md:grid-cols-2 gap-6"><div class="md:col-span-2 lg:col-span-1">' + location_card(other, 0) + '</div></div></section>'
+            + cta_band('Planning a day in %s?' % d['name'],
+                       'Tell us the activity, your date and group size &mdash; we confirm availability with the team.',
                        destination=d['name'])
             + '</main>')
-
-    ld = [ld_breadcrumb([('Home', ''), ('Destinations', 'index.html#destinations'), (d['name'], d['file'])]),
-          ld_service('Scuba diving in ' + d['name'],
-                     html.unescape(d['long']), d['file'])]
-    return shell(d['id'], 'destinations', 10,
-                 'Scuba Diving in %s | Dive Adda' % d['name'],
+    ld = [ld_breadcrumb([('Home', ''), ('Locations', 'index.html#locations'), (d['name'], d['file'])]),
+          ld_service('Water activities in ' + d['name'], html.unescape(d['long']), d['file'])]
+    return shell(d['id'], 'locations', d['depth'],
+                 '%s: %s | Dive Adda' % (d['name'], ', '.join(html.unescape(a[1]) for a in d['acts'][:3])),
                  html.unescape(d['long'])[:180],
-                 d['file'], body, ld, hero_img=d['hero'], use_map=True, lightbox=True)
+                 d['file'], body, ld, hero_img=d['hero'], use_map=True)
 
 
 def page_events():
     details = ''
     for i, e in enumerate(EVENTS):
         flip = (i % 2 == 1)
-        details += ('<section id="%s" class="mb-24 scroll-mt-32">'
+        details += ('<section id="%s" class="mb-24">'
                     '<div class="grid lg:grid-cols-2 gap-10 items-center">'
                     '<div class="reveal %s"><div class="frame-photo glass-panel p-2 h-[320px] md:h-[420px]">%s</div></div>'
                     '<div class="reveal delay-100 %s">'
@@ -1689,7 +1552,7 @@ def page_events():
 
     ld = [ld_breadcrumb([('Home', ''), ('Underwater Events', 'events.html')]),
           ld_service('Underwater Events', 'Underwater birthday parties, marriage proposals, pre-wedding shoots and conservation dives with Dive Adda.', 'events.html')]
-    return shell('events', 'events', 15,
+    return shell('events', 'more', 15,
                  'Underwater Events: Birthdays, Proposals &amp; Pre-Wedding Shoots | Dive Adda',
                  'Underwater birthday parties, marriage proposals, pre-wedding shoots and conservation diving with Dive Adda, planned and run by SSI certified instructors.',
                  'events.html', body, ld, hero_img=B('event-prewedding'))
@@ -1713,7 +1576,7 @@ def page_gallery():
     ld = [ld_breadcrumb([('Home', ''), ('Gallery', 'gallery.html')]),
           {"@type": "ImageGallery", "name": "Dive Adda Gallery", "url": DOMAIN + "gallery.html",
            "about": {"@id": CENTRE_ID}}]
-    return shell('gallery', 'gallery', 20,
+    return shell('gallery', 'more', 20,
                  'Gallery | Dive Adda Scuba Diving Photos',
                  'Photos from Dive Adda: SSI training sessions, guided fun dives, snorkelling, boat diving and underwater events.',
                  'gallery.html', body, ld, hero_img=B('cover-divers'), lightbox=True)
@@ -1742,52 +1605,68 @@ def page_about():
                '<p class="text-brand-dim text-lg leading-relaxed">Join us and discover the wonders of the underwater world with trust, expertise, and passion '
                'at the core of everything we do.</p></div></div></section>')
 
-    body = (page_hero('About', 'Our <span class="text-gradient-bio">story</span>',
+    body = (page_hero('About Us', 'Our <span class="text-gradient-bio">story</span>',
                       'At Dive Adda, we bring the depths of the ocean closer to you.',
                       B('outbound-trip'), 6,
-                      [('Home', 'index.html'), ('About', None)], ghost='STORY',
+                      [('Home', 'index.html'), ('About Us', None)], ghost='STORY',
                       ctas=hero_ctas('Dive with us'))
             + main_open() + story_section() + who
             + scuba_cards_section('03') + passion + team_section('05') + conservation_section('06')
             + cta_band('Come and see for yourself',
-                       'Book a first dive, a course or a fun dive with the team behind the story.')
+                       'Book Try Scuba, an SSI course or a day on the water with the team behind the story.')
             + '</main>')
-
-    ld = [ld_breadcrumb([('Home', ''), ('About', 'about.html')]),
-          {"@type": "AboutPage", "url": DOMAIN + "about.html", "about": {"@id": ORG_ID},
-           "name": "About Dive Adda"}]
+    ld = [ld_breadcrumb([('Home', ''), ('About Us', 'about.html')]),
+          {"@type": "AboutPage", "url": DOMAIN + "about.html", "about": {"@id": ORG_ID}, "name": "About Dive Adda"}]
     return shell('about', 'about', 6,
-                 'About Dive Adda | SSI Certified Dive Centre',
+                 'About Us | Dive Adda SSI Certified Dive Centre',
                  'Dive Adda was founded by a professional with 15 years in the Indian Navy, over a decade in submarines and 10 years in oil & gas. An SSI affiliated dive centre with over 15 years of team experience.',
                  'about.html', body, ld, hero_img=B('outbound-trip'), profile=True)
 
 
 def page_faq():
-    body = (page_hero('FAQ', 'Before you <span class="text-gradient-bio">dive in</span>',
+    body = (page_hero('FAQ&rsquo;s', 'Before you <span class="text-gradient-bio">dive in</span>',
                       'The questions we are asked most, answered by the Dive Adda team.',
-                      B('confined-diving'), 22,
-                      [('Home', 'index.html'), ('FAQ', None)], ghost='FAQ')
+                      B('confined-diving'), 22, [('Home', 'index.html'), ('FAQ&rsquo;s', None)], ghost='FAQ', compact=True)
             + main_open()
-            + faq_section('01', FAQS, head=False)
+            + faq_block('01', 'Try Scuba', 'First-time scuba questions', '', TRY_FAQS, sid='try-scuba-faq', footer=False)
+            + faq_block('02', 'General', 'About Dive Adda', '', GENERAL_FAQS, sid='general-faq')
             + cta_band('Question not answered here?',
                        'Send it over &mdash; our team answers personally, and there is no deposit to enquire.')
             + '</main>')
-    ld = [ld_breadcrumb([('Home', ''), ('FAQ', 'faq.html')]), ld_faq(FAQS)]
-    return shell('faq', 'faq', 22,
-                 'Scuba Diving FAQ | Dive Adda',
-                 'Do you need experience to scuba dive? What happens on a first dive? Which SSI courses are available? Dive Adda answers the most common diving questions.',
+    ld = [ld_breadcrumb([('Home', ''), ("FAQ's", 'faq.html')]), ld_faq(TRY_FAQS + GENERAL_FAQS)]
+    return shell('faq', 'more', 22,
+                 'FAQ&rsquo;s | Try Scuba &amp; Diving Questions | Dive Adda',
+                 'Try Scuba minimum age, dive time, depth, what to bring, weather and cancellation policy, plus SSI courses and locations. Answers from Dive Adda.',
                  'faq.html', body, ld, hero_img=B('confined-diving'))
 
 
+def page_blog():
+    body = (page_hero('Blog', 'The <span class="text-gradient-bio">dive log</span>',
+                      'Stories, guides and news from the Dive Adda team.',
+                      B('guided-fun-dive'), 10, [('Home', 'index.html'), ('Blog', None)], ghost='BLOG', compact=True)
+            + main_open()
+            + '<section class="mb-24"><div class="glass-panel rounded-3xl p-8 md:p-12 text-center max-w-2xl mx-auto reveal">'
+              '<span class="ic-icon mx-auto mb-6">' + svg('spark', 'w-6 h-6') + '</span>'
+              '<h2 class="font-display text-3xl font-bold text-white mb-4 heading-glow">First posts coming soon</h2>'
+              '<p class="text-brand-dim text-lg leading-relaxed mb-8">We&rsquo;re putting together dive guides, first-timer tips and stories from Visakhapatnam and Rajahmundry. Until then, follow our latest dives on Instagram.</p>'
+              '<div class="flex flex-col sm:flex-row gap-3 justify-center">'
+              '<a href="' + IG + '" target="_blank" rel="noopener" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Follow @diveaddaindia</a>'
+              '<a href="first-time-scuba.html" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold">First Time Scuba</a>'
+              '</div></div></section>'
+            + '</main>')
+    ld = [ld_breadcrumb([('Home', ''), ('Blog', 'blog.html')])]
+    return shell('blog', 'more', 10, 'Blog | Dive Adda', 'Dive guides, first-timer tips and stories from Dive Adda in Visakhapatnam and Rajahmundry.',
+                 'blog.html', body, ld, hero_img=B('guided-fun-dive'), noindex=True)
+
+
 def page_contact():
-    body = (page_hero('Contact', 'Talk to the <span class="text-gradient-bio">dive desk</span>',
+    body = (page_hero('Contact Us', 'Talk to the <span class="text-gradient-bio">dive desk</span>',
                       'Call, message on WhatsApp, or send an enquiry. We will confirm availability for your dates.',
-                      B('boat-diving'), 24,
-                      [('Home', 'index.html'), ('Contact', None)], ghost='HELLO')
+                      B('boat-diving'), 24, [('Home', 'index.html'), ('Contact Us', None)], ghost='HELLO')
             + main_open()
             + enquiry_section('01')
-            + '<section class="mb-24 mt-24">' + sec_head('02', 'Destinations', 'Where to find us',
-                                                          'Our SSI certified scuba centre is in Vizag, and we run experiences in Rajahmundry and Goa.')
+            + '<section class="mb-24 mt-24">' + sec_head('02', 'Locations', 'Where to find us',
+                                                          'Our SSI certified scuba centre is in Visakhapatnam, and we run water activities in Rajahmundry.')
             + '<div class="grid lg:grid-cols-3 gap-8 items-stretch">'
             + '<div class="lg:col-span-1 reveal"><ul class="space-y-3">'
             + ''.join('<li><a href="%s" class="glass-panel liquid rounded-2xl p-4 flex items-start gap-4">'
@@ -1797,16 +1676,106 @@ def page_contact():
                       % (d['file'], svg('pin'), d['name'], d['sub']) for d in DESTS)
             + '</ul>'
             + '<div class="glass-panel rounded-2xl p-5 mt-4"><p class="text-sm text-brand-dim leading-relaxed">'
-            'Meeting points and timings are confirmed by the dive desk when you book.</p></div></div>'
+              'Meeting points and timings are confirmed by the team when you book.</p></div></div>'
             + '<div class="lg:col-span-2 h-[460px] relative rounded-3xl overflow-hidden glass-panel p-2 reveal delay-200">'
             + '<div id="diveMap"></div></div></div></section>'
             + '</main>')
-    ld = [ld_breadcrumb([('Home', ''), ('Contact', 'contact.html')]),
+    ld = [ld_breadcrumb([('Home', ''), ('Contact Us', 'contact.html')]),
           {"@type": "ContactPage", "url": DOMAIN + "contact.html", "about": {"@id": CENTRE_ID}}]
     return shell('contact', 'contact', 24,
-                 'Contact Dive Adda | Book a Dive in Vizag, Rajahmundry or Goa',
-                 'Contact Dive Adda to book scuba diving, SSI courses, snorkelling or an underwater event. Call +91 89777 62155 or message us on WhatsApp.',
+                 'Contact Us | Book with Dive Adda in Visakhapatnam or Rajahmundry',
+                 'Contact Dive Adda to book Try Scuba, SSI courses or water activities in Visakhapatnam and Rajahmundry. Call +91 89777 62155 or message us on WhatsApp.',
                  'contact.html', body, ld, hero_img=B('boat-diving'), use_map=True)
+
+
+LEGAL_UPDATED = '17 September 2026'
+CONTACT_LINE = ('Call or WhatsApp <a href="tel:%s">%s</a>, or message <a href="%s" target="_blank" rel="noopener">@diveaddaindia</a> on Instagram.'
+                % (PHONE_TEL, PHONE_TXT, IG))
+
+LEGAL = [
+    dict(file='privacy-policy.html', slug='privacy-policy', name='Privacy Policy',
+         title='Privacy <span class="text-gradient-bio">Policy</span>',
+         intro='How Dive Adda collects, uses and protects your information.',
+         desc='How Dive Adda collects, uses and protects the personal information you share through our website, booking assistant and bookings.',
+         sections=[
+             ('Who we are', '<p>Dive Adda (&ldquo;we&rdquo;, &ldquo;us&rdquo;) operates this website and runs scuba diving, SSI training and water activities in Visakhapatnam and Rajahmundry, Andhra Pradesh, India.</p>'),
+             ('Information we collect',
+              '<ul>'
+              '<li><b>Enquiries and bookings:</b> when you use our enquiry form or booking assistant we collect your name, phone or WhatsApp number, email address (optional), preferred location, experience or course, preferred date, number of guests and any message you write.</li>'
+              '<li><b>When you contact us directly</b> by phone, WhatsApp or Instagram, we receive the information you choose to share.</li>'
+              '<li><b>For your activity:</b> details needed to complete formalities before diving, which may include health information relevant to your safety (for example, a physician&rsquo;s approval for a medical condition).</li>'
+              '<li><b>Photos and videos</b> taken during your experience.</li>'
+              '<li><b>On your device:</b> this site remembers your light or dark theme choice and whether you have already seen the intro animation, using your browser&rsquo;s storage. This stays on your device.</li>'
+              '</ul>'),
+             ('How we use your information',
+              '<ul><li>To respond to enquiries and confirm, manage or change bookings</li>'
+              '<li>To keep you safe before, during and after your activity</li>'
+              '<li>To share the photos and video from your experience with you</li>'
+              '<li>To improve our services</li></ul>'
+              '<p>We do not sell your personal information.</p>'),
+             ('Where it is stored and who we share it with',
+              '<p>Enquiries submitted through this website are stored using Google Firebase. If you choose to continue on WhatsApp, your message is handled by WhatsApp.</p>'
+              '<p>This website loads fonts, maps, script libraries and some images from third-party services (such as Google Fonts, Esri map tiles and public content networks). As with any website, these services receive your IP address when your browser requests their files.</p>'
+              '<p>We may disclose information where required by law.</p>'),
+             ('How long we keep it', '<p>We keep personal information only for as long as it is needed for the purposes above, or as required by law.</p>'),
+             ('Your choices', '<p>You can ask us to access, correct or delete the personal information we hold about you by contacting us using the details below.</p>'),
+             ('Children', '<p>Some of our activities are available from 8 years of age. Bookings for guests under 18 should be made by a parent or guardian.</p>'),
+             ('Changes to this policy', '<p>We may update this policy from time to time. The date at the top of this page shows when it was last updated.</p>'),
+             ('Contact us', '<p>' + CONTACT_LINE + '</p>'),
+         ]),
+    dict(file='terms-and-conditions.html', slug='terms-and-conditions', name='Terms &amp; Conditions',
+         title='Terms &amp; <span class="text-gradient-bio">Conditions</span>',
+         intro='The terms that apply when you use this website or book an experience with Dive Adda.',
+         desc='Terms and conditions for using the Dive Adda website and booking Try Scuba, SSI courses and water activities in Visakhapatnam and Rajahmundry.',
+         sections=[
+             ('About these terms', '<p>These terms apply to your use of this website and to bookings for Dive Adda experiences, including Try Scuba, SSI courses, water activities and underwater events in Visakhapatnam and Rajahmundry.</p>'),
+             ('Bookings', '<p>An enquiry through this website, our booking assistant, WhatsApp or phone is a request. Your booking is confirmed only when Dive Adda confirms availability. Timings and meeting points are shared when you book.</p>'),
+             ('Eligibility and health',
+              '<ul><li>The minimum age for Try Scuba is 8 years.</li>'
+              '<li>Guests with major medical conditions require prior written approval from a physician.</li>'
+              '<li>Please share any health information relevant to your safety honestly before your activity.</li>'
+              '<li>For safety reasons, our instructors may decide not to start, or to stop, an activity.</li></ul>'),
+             ('Safety',
+              '<ul><li>Follow the briefing and your instructor&rsquo;s instructions at all times.</li>'
+              '<li>It is recommended that you do not fly within 18&ndash;24 hours after diving.</li>'
+              '<li>Do not take part in any activity under the influence of alcohol or drugs.</li></ul>'),
+             ('Weather and sea conditions', '<p>The itinerary may change depending on sea and local weather conditions. If conditions are unsuitable, your activity may be postponed according to your availability. If postponement is not possible, the amount will be refunded after deducting the cost of activities already undertaken.</p>'),
+             ('Cancellations and refunds', '<p>Cancellations and refunds are covered by our <a href="refund-policy.html">Refund Policy</a>.</p>'),
+             ('Transport and accommodation', '<p>Guests need to arrange their own transportation and accommodation.</p>'),
+             ('What to bring', '<p>Please bring a cap, change of clothes and towel. We recommend eating light before arriving.</p>'),
+             ('Photos and videos', '<p>Where included in your experience, your photos and video are transferred to you at the centre, or shared online if that is not possible.</p>'),
+             ('Participation', '<p>Scuba diving and water activities involve inherent risks. Taking part is your choice, and following the instructions of the Dive Adda team is a condition of taking part.</p>'),
+             ('Website content', '<p>Information on this website is provided for general guidance. Availability and details are confirmed at the time of booking.</p>'),
+             ('Governing law', '<p>These terms are governed by the laws of India.</p>'),
+             ('Contact us', '<p>' + CONTACT_LINE + '</p>'),
+         ]),
+    dict(file='refund-policy.html', slug='refund-policy', name='Refund Policy',
+         title='Refund <span class="text-gradient-bio">Policy</span>',
+         intro='What happens if you cancel, or if the weather stops your activity going ahead.',
+         desc='Dive Adda refund and cancellation policy: weather postponements, and refunds for cancellations made before your activity.',
+         sections=[
+             ('Weather and sea conditions', '<p>If weather conditions are unsuitable, your activity may be postponed according to your availability. If postponement is not possible, the amount will be refunded after deducting the cost of activities already undertaken.</p>'),
+             ('If you cancel',
+              '<ul><li><b>Cancellation 72 hours before the activity:</b> 50% refund.</li>'
+              '<li><b>Cancellation 24&ndash;48 hours before the activity:</b> no refund.</li></ul>'
+              '<p>For any other situation, please contact us before cancelling.</p>'),
+             ('How to cancel', '<p>Contact us with your name, booking date and activity so we can process your cancellation.</p>'),
+             ('Contact us', '<p>' + CONTACT_LINE + '</p>'),
+         ]),
+]
+
+
+def page_legal(lp):
+    blocks = ''.join('<section class="legal-block"><h2 class="font-display text-xl md:text-2xl font-bold text-white mb-3">%s</h2>%s</section>' % (h, b)
+                     for h, b in lp['sections'])
+    body = (page_hero('Legal', lp['title'], lp['intro'], B('cover-divers'), 2,
+                      [('Home', 'index.html'), (lp['name'], None)], compact=True)
+            + main_open()
+            + '<article class="legal glass-panel rounded-3xl p-6 md:p-10 max-w-3xl mx-auto reveal">'
+            + '<p class="text-xs uppercase tracking-[0.2em] text-brand-glow mb-8">Last updated: ' + LEGAL_UPDATED + '</p>'
+            + blocks + '</article></main>')
+    ld = [ld_breadcrumb([('Home', ''), (html.unescape(lp['name']), lp['file'])])]
+    return shell(lp['slug'], 'legal', 2, '%s | Dive Adda' % lp['name'], lp['desc'], lp['file'], body, ld, hero_img=B('cover-divers'))
 
 
 # ---------------------------------------------------------------- write
@@ -1817,31 +1786,79 @@ def write(name, content):
     print('  %-22s %7.1f KB' % (name, len(content) / 1024.0))
 
 
+_VERSIONS = {}
+
+
+def asset(path):
+    """Asset URL with a content hash, so a deploy never serves stale CSS/JS."""
+    v = _VERSIONS.get(path)
+    return '%s?v=%s' % (path, v) if v else path
+
+
+def hash_assets():
+    for rel in ['assets/css/dive-adda.css', 'assets/css/dive-adda-pages.css', 'assets/css/tailwind.css',
+                'assets/css/dive-adda-responsive.css', 'assets/js/dive-adda.js', 'assets/js/dive-adda-pages.js']:
+        full = os.path.join(ROOT, rel)
+        if os.path.exists(full):
+            _VERSIONS[rel] = hashlib.sha1(open(full, 'rb').read()).hexdigest()[:10]
+
+
+def build_tailwind():
+    """Compile only the utilities the pages use (replaces the in-browser Play CDN)."""
+    npx = shutil.which('npx') or shutil.which('npx.cmd')
+    if not npx:
+        print('  !! npx not found: assets/css/tailwind.css was NOT rebuilt')
+        return
+    cmd = [npx, '--yes', 'tailwindcss@3.4.17', '-c', 'tools/tailwind/tailwind.config.js',
+           '-i', 'tools/tailwind/input.css', '-o', 'assets/css/tailwind.css', '--minify']
+    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    if r.returncode:
+        raise SystemExit('Tailwind build failed:\n' + r.stderr)
+    print('  %-22s %7.1f KB' % ('assets/css/tailwind.css', os.path.getsize(os.path.join(ROOT, 'assets/css/tailwind.css')) / 1024.0))
+
+
 def main():
     print('Building Dive Adda...')
-    write('index.html', page_home())
-    write('diving.html', page_diving())
-    write('courses.html', page_courses())
-    write('water-sports.html', page_water_sports())
-    for d in DESTS:
-        write(d['file'], page_destination(d))
-    write('events.html', page_events())
-    write('gallery.html', page_gallery())
-    write('about.html', page_about())
-    write('faq.html', page_faq())
-    write('contact.html', page_contact())
+    # Pass 1 writes the pages Tailwind scans; pass 2 rewrites them with final asset hashes.
+    write_pages()
+    build_tailwind()
+    hash_assets()
+    write_pages()
+    print('Done.')
 
-    pages = ['', 'diving.html', 'courses.html', 'water-sports.html'] + [d['file'] for d in DESTS] + \
-            ['events.html', 'gallery.html', 'about.html', 'faq.html', 'contact.html']
-    today = '2026-09-16'
+
+OBSOLETE = ['diving.html', 'water-sports.html', 'vizag.html', 'goa.html']
+
+
+def write_pages():
+    pages = [('index.html', page_home), ('about.html', page_about), ('first-time-scuba.html', page_first_time_scuba),
+             ('courses.html', page_courses)]
+    pages += [(c['file'], (lambda c=c: page_course(c))) for c in COURSES]
+    pages += [(d['file'], (lambda d=d: page_destination(d))) for d in DESTS]
+    pages += [('blog.html', page_blog), ('gallery.html', page_gallery), ('events.html', page_events),
+              ('faq.html', page_faq), ('contact.html', page_contact)]
+    pages += [(lp['file'], (lambda lp=lp: page_legal(lp))) for lp in LEGAL]
+    for name, fn in pages:
+        write(name, fn())
+
+    # Pages the site no longer has
+    for old in OBSOLETE:
+        path = os.path.join(ROOT, old)
+        if os.path.exists(path):
+            os.remove(path)
+            print('  removed %s' % old)
+
+    today = '2026-09-17'
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for p in pages:
-        sm.append('  <url>\n    <loc>%s%s</loc>\n    <lastmod>%s</lastmod>\n    <changefreq>monthly</changefreq>\n  </url>' % (DOMAIN, p, today))
+    for name, _ in pages:
+        if name == 'blog.html':
+            continue
+        loc = '' if name == 'index.html' else name
+        sm.append('  <url>\n    <loc>%s%s</loc>\n    <lastmod>%s</lastmod>\n  </url>' % (DOMAIN, loc, today))
     sm.append('</urlset>')
     write('sitemap.xml', '\n'.join(sm) + '\n')
-    write('robots.txt', 'User-agent: *\nAllow: /\n\nSitemap: %ssitemap.xml\n' % DOMAIN)
-    print('Done.')
+    write('robots.txt', 'User-agent: *\nAllow: /\nDisallow: /tools/\n\nSitemap: %ssitemap.xml\n' % DOMAIN)
 
 
 if __name__ == '__main__':

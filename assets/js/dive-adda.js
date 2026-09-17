@@ -189,326 +189,22 @@
         humanizeFloats();
 
         /* ==========================================================
-           3. LIQUID HOVER + WATER CURSOR
-           One pointermove listener and one rAF loop drive the hover
-           bloom, the refraction lens, the wake, the ripples and the
-           bubble motes. The loop parks itself when nothing is moving.
+           3. PRESS RIPPLE — tap feedback inside buttons (no cursor effects)
            ========================================================== */
-        (function waterInteractions() {
-            const fineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-
-            const layer  = document.getElementById('waterCursor');
-            const canvas = document.getElementById('waterCanvas');
-            const lens   = layer ? layer.querySelector('.wc-lens') : null;
-            const dot    = layer ? layer.querySelector('.wc-dot') : null;
-            const ctx    = (canvas && canvas.getContext) ? canvas.getContext('2d') : null;
-
-            // Ripples fire on touch too; the lens and wake need a real pointer.
-            const CANVAS_FX  = !!ctx && !REDUCE_MOTION;
-            const POINTER_FX = CANVAS_FX && fineHover;
-            const TRAIL_MAX  = LOW_POWER ? 12 : 24;
-
-            if (POINTER_FX) {
-                document.documentElement.classList.add('wc-on');
-                if (LOW_POWER) layer.classList.add('wc-nolens');
-            }
-
-            /* ---------- shared pointer state ---------- */
-            let px = -999, py = -999;      // raw pointer
-            let lx = -999, ly = -999;      // spring-lagged lens
-            let vhx = 1, vhy = 0;          // last meaningful heading
-            let idle = 999;                // frames since the pointer last moved
-            let running = false;
-            let bloomTarget = null, bloomDirty = false;
-
-            const trail = [], ripples = [], motes = [];
-            let sinceRipple = 0;           // distance travelled since the last motion ripple
-
-            /* ---------- canvas sizing ---------- */
-            let dpr = 1, W = 0, H = 0;
-            function resize() {
-                if (!ctx) return;
-                dpr = Math.min(window.devicePixelRatio || 1, 2);
-                W = window.innerWidth;
-                H = window.innerHeight;
-                canvas.width = Math.round(W * dpr);
-                canvas.height = Math.round(H * dpr);
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            }
-
-            if (CANVAS_FX) {
-                resize();
-                let queued = false;
-                window.addEventListener('resize', () => {
-                    if (queued) return;
-                    queued = true;
-                    requestAnimationFrame(() => { queued = false; resize(); });
-                }, { passive: true });
-            }
-
-            /* ---------- emitters ---------- */
-            function spawnRipple(x, y, strength, delay) {
-                if (!CANVAS_FX) return;
-                ripples.push({
-                    x: x, y: y,
-                    t: -(delay || 0),
-                    life: 0.75 + strength * 0.55,
-                    r0: 4 + strength * 6,
-                    r1: 46 + strength * 130,
-                    w: 1 + strength * 1.6,
-                    a: 0.20 + strength * 0.42
-                });
-                if (ripples.length > 26) ripples.shift();
-            }
-
-            function spawnMote(x, y) {
-                if (!CANVAS_FX) return;
-                motes.push({
-                    x: x + rand(-14, 14),
-                    y: y + rand(-10, 10),
-                    vx: rand(-0.35, 0.35),
-                    vy: rand(-0.5, -0.05),
-                    r: rand(0.9, 2.8),
-                    t: 0,
-                    life: rand(0.7, 1.7)
-                });
-                if (motes.length > 90) motes.shift();
-            }
-
-            /* ---------- painters ---------- */
-            function drawWake() {
-                const n = trail.length;
-                if (n < 3) return;
-                const from = Math.max(1, n - 5);
-                const speed = trail[n - 1].s;
-                const base = Math.min(2 + speed * 0.22, 13);
-
-                // Two passes - a wide soft body plus a bright core - gives the glow
-                // without shadowBlur, which is the expensive way to do it.
-                for (let pass = 0; pass < 2; pass++) {
-                    ctx.beginPath();
-                    ctx.moveTo(trail[from - 1].x, trail[from - 1].y);
-                    for (let i = from; i < n - 1; i++) {
-                        const mx = (trail[i].x + trail[i + 1].x) / 2;
-                        const my = (trail[i].y + trail[i + 1].y) / 2;
-                        ctx.quadraticCurveTo(trail[i].x, trail[i].y, mx, my);
-                    }
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.lineWidth = pass === 0 ? base : base * 0.36;
-                    ctx.strokeStyle = pass === 0 ? 'rgba(34, 211, 238, 0.085)'
-                                                 : 'rgba(207, 250, 254, 0.16)';
-                    ctx.stroke();
-                }
-            }
-
-            function drawRipples(dt) {
-                for (let i = ripples.length - 1; i >= 0; i--) {
-                    const r = ripples[i];
-                    r.t += dt;
-                    if (r.t < 0) continue;
-                    const p = r.t / r.life;
-                    if (p >= 1) { ripples.splice(i, 1); continue; }
-
-                    const ease = 1 - Math.pow(1 - p, 3);
-                    const rad = r.r0 + (r.r1 - r.r0) * ease;
-                    const a = r.a * (1 - p) * (1 - p);
-
-                    ctx.beginPath();
-                    ctx.arc(r.x, r.y, rad, 0, 6.2832);
-                    ctx.strokeStyle = 'rgba(103, 232, 249, ' + a.toFixed(3) + ')';
-                    ctx.lineWidth = Math.max(0.5, r.w * (1 - p * 0.7));
-                    ctx.stroke();
-
-                    // Inner crest, trailing the leading edge
-                    if (rad > 16) {
-                        ctx.beginPath();
-                        ctx.arc(r.x, r.y, rad * 0.76, 0, 6.2832);
-                        ctx.strokeStyle = 'rgba(207, 250, 254, ' + (a * 0.5).toFixed(3) + ')';
-                        ctx.lineWidth = Math.max(0.4, r.w * 0.55 * (1 - p));
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            function drawMotes(dt) {
-                const f = dt * 60;
-                for (let i = motes.length - 1; i >= 0; i--) {
-                    const m = motes[i];
-                    m.t += dt;
-                    if (m.t >= m.life) { motes.splice(i, 1); continue; }
-                    m.vy -= 0.014 * f;              // buoyancy
-                    m.vx *= 1 - 0.015 * f;
-                    m.x += m.vx * f;
-                    m.y += m.vy * f;
-                    const a = (1 - m.t / m.life) * 0.7;
-                    ctx.beginPath();
-                    ctx.arc(m.x, m.y, m.r, 0, 6.2832);
-                    ctx.fillStyle = 'rgba(207, 250, 254, ' + a.toFixed(3) + ')';
-                    ctx.fill();
-                }
-            }
-
-            /* ---------- the single frame loop ---------- */
-            let prev = 0;
-            function frame(ts) {
-                const dt = prev ? Math.min((ts - prev) / 1000, 0.05) : 0.016;
-                prev = ts;
-
-                // Hover bloom (this used to own a second rAF of its own)
-                if (bloomDirty && bloomTarget) {
-                    const r = bloomTarget.getBoundingClientRect();
-                    bloomTarget.style.setProperty('--mx', ((px - r.left) / r.width * 100).toFixed(2) + '%');
-                    bloomTarget.style.setProperty('--my', ((py - r.top) / r.height * 100).toFixed(2) + '%');
-                    bloomDirty = false;
-                }
-
-                if (POINTER_FX) {
-                    // Spring toward the pointer, then squash-stretch along the heading
-                    const nx = lx + (px - lx) * 0.17;
-                    const ny = ly + (py - ly) * 0.17;
-                    const dx = nx - lx, dy = ny - ly;
-                    lx = nx; ly = ny;
-
-                    const speed = Math.sqrt(dx * dx + dy * dy);
-                    if (speed > 0.35) { vhx = dx; vhy = dy; }
-                    const stretch = Math.min(speed / 30, 0.34);
-
-                    if (lens) {
-                        lens.style.transform =
-                            'translate3d(' + lx.toFixed(2) + 'px,' + ly.toFixed(2) + 'px,0) rotate(' +
-                            Math.atan2(vhy, vhx).toFixed(3) + 'rad) scale(' +
-                            (1 + stretch).toFixed(3) + ',' + (1 - stretch * 0.7).toFixed(3) + ')';
-                    }
-                    if (dot) {
-                        dot.style.transform = 'translate3d(' + px.toFixed(1) + 'px,' + py.toFixed(1) + 'px,0)';
-                    }
-                }
-
-                if (CANVAS_FX) {
-                    // Fade the previous frame rather than clearing it, so the wake
-                    // dissipates into the water instead of snapping off.
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.fillStyle = 'rgba(0,0,0,0.11)';
-                    ctx.fillRect(0, 0, W, H);
-                    ctx.globalCompositeOperation = 'lighter';
-                    if (POINTER_FX) drawWake();
-                    drawRipples(dt);
-                    drawMotes(dt);
-                    ctx.globalCompositeOperation = 'source-over';
-                }
-
-                idle++;
-                const settling = POINTER_FX && (Math.abs(px - lx) > 0.5 || Math.abs(py - ly) > 0.5);
-                const busy = ripples.length > 0 || motes.length > 0 || settling || idle < 70;
-
-                if (busy && document.visibilityState === 'visible') {
-                    requestAnimationFrame(frame);
-                } else {
-                    // Park the loop: an idle tab must not burn frames
-                    running = false;
-                    prev = 0;
-                    trail.length = 0;
-                    if (ctx) ctx.clearRect(0, 0, W, H);
-                }
-            }
-
-            function kick() {
-                if (running || document.visibilityState !== 'visible') return;
-                running = true;
-                requestAnimationFrame(frame);
-            }
-
-            /* ---------- one pointer handler for all of it ---------- */
-            if (fineHover && !REDUCE_MOTION) {
-                document.addEventListener('pointermove', (e) => {
-                    if (e.pointerType === 'touch') return;
-
-                    px = e.clientX;
-                    py = e.clientY;
-                    idle = 0;
-
-                    const host = e.target.closest ? e.target.closest('.glow-hover') : null;
-                    bloomTarget = host;
-                    if (host) bloomDirty = true;
-
-                    if (POINTER_FX) {
-                        if (lx < -900) { lx = px; ly = py; }   // first sighting: no fly-in
-                        layer.classList.add('wc-live');
-
-                        const last = trail[trail.length - 1];
-                        const d = last ? Math.hypot(px - last.x, py - last.y) : 0;
-                        trail.push({ x: px, y: py, s: d });
-                        if (trail.length > TRAIL_MAX) trail.shift();
-
-                        // Motion ripples are gated by DISTANCE travelled, not a timer,
-                        // so slow reading stays calm and fast gestures make waves.
-                        sinceRipple += d;
-                        if (d > 5 && sinceRipple > 150) {
-                            sinceRipple = 0;
-                            spawnRipple(px, py, 0.34);
-                            if (!LOW_POWER) spawnMote(px, py);
-                        }
-                    }
-                    kick();
-                }, { passive: true });
-
-                // Fade the cursor out only when the pointer genuinely leaves the
-                // window. A bare document mouseleave also fires spuriously as the
-                // pointer crosses between elements, which would flicker the lens.
-                document.addEventListener('mouseleave', (e) => {
-                    const gone = e.relatedTarget === null && (
-                        e.clientX <= 0 || e.clientY <= 0 ||
-                        e.clientX >= window.innerWidth || e.clientY >= window.innerHeight
-                    );
-                    if (gone && layer) layer.classList.remove('wc-live');
-                }, { passive: true });
-
-                window.addEventListener('blur', () => {
-                    if (layer) layer.classList.remove('wc-live');
-                }, { passive: true });
-            }
-
-            /* ---------- press: button ripple + page-wide water ripple ---------- */
-            document.addEventListener('pointerdown', (e) => {
-                if (REDUCE_MOTION) return;
-                const host = e.target.closest ? e.target.closest('.ripple-host') : null;
-
-                // Contained ripple inside buttons (unchanged)
-                if (host) {
-                    const r = host.getBoundingClientRect();
-                    const span = document.createElement('span');
-                    const size = Math.max(r.width, r.height) * 2.4;
-                    span.className = 'ripple';
-                    span.style.width = span.style.height = size + 'px';
-                    span.style.left = (e.clientX - r.left) + 'px';
-                    span.style.top = (e.clientY - r.top) + 'px';
-                    host.appendChild(span);
-                    span.addEventListener('animationend', () => span.remove());
-                }
-
-                // Page-wide water ripple, skipped over .ripple-host so the two
-                // never stack into a double circle.
-                if (CANVAS_FX && !host) {
-                    px = e.clientX;
-                    py = e.clientY;
-                    idle = 0;
-                    if (POINTER_FX) {
-                        if (lx < -900) { lx = px; ly = py; }
-                        layer.classList.add('wc-live');
-                    }
-                    spawnRipple(px, py, 1);
-                    spawnRipple(px, py, 0.6, 0.12);
-                    const n = LOW_POWER ? 4 : 8;
-                    for (let i = 0; i < n; i++) spawnMote(px, py);
-                    kick();
-                }
-            }, { passive: true });
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') kick();
-            });
-        })();
+        document.addEventListener('pointerdown', (e) => {
+            if (REDUCE_MOTION) return;
+            const host = e.target.closest ? e.target.closest('.ripple-host') : null;
+            if (!host) return;
+            const r = host.getBoundingClientRect();
+            const span = document.createElement('span');
+            const size = Math.max(r.width, r.height) * 2.4;
+            span.className = 'ripple';
+            span.style.width = span.style.height = size + 'px';
+            span.style.left = (e.clientX - r.left) + 'px';
+            span.style.top = (e.clientY - r.top) + 'px';
+            host.appendChild(span);
+            span.addEventListener('animationend', () => span.remove());
+        }, { passive: true });
 
         /* ==========================================================
            4. DESCENT LOADER — auto-playing submerge transition
@@ -589,10 +285,15 @@
                   // Gate dissolves...
                   .to(gate, { opacity: 0, duration: 0.8, ease: 'power2.inOut' }, 1.05)
 
-                  // ...revealing the site, floating up into focus
+                  // ...revealing the site, floating up into focus. The page is many
+                  // screens tall, so scale around the middle of the screen: around the
+                  // element's own centre the top of the page lurched hundreds of pixels.
+                  // Low-power devices skip the scale (a page-sized texture) and just rise.
                   .fromTo('#siteRoot',
-                          { scale: 1.06, opacity: 0, y: 26 },
-                          { scale: 1, opacity: 1, y: 0, duration: 1.35, ease: 'power2.out',
+                          LOW_POWER
+                              ? { opacity: 0, y: 26 }
+                              : { scale: 1.06, opacity: 0, y: 26, transformOrigin: '50% ' + Math.round((window.scrollY || 0) + window.innerHeight / 2) + 'px' },
+                          { scale: 1, opacity: 1, y: 0, duration: LOW_POWER ? 1.1 : 1.35, ease: 'power2.out',
                             onStart: unlock,
                             onComplete: () => gsap.set('#siteRoot', { clearProps: 'all' }) }, 0.8)
 
@@ -703,35 +404,48 @@
            5. NAVBAR SCROLL EFFECT  (original logic preserved)
            ========================================================== */
         const navbar = document.getElementById('navbar');
-        const navContainer = document.getElementById('navPill') || navbar.firstElementChild;
+        const rootEl = document.documentElement;
 
-        window.addEventListener('scroll', () => {
-            navbar.classList.toggle('nav-scrolled', window.scrollY > 50);
-            if (window.scrollY > 50) {
-                navContainer.classList.add('py-2');
-                navContainer.classList.remove('py-3');
-                navContainer.classList.add('shadow-[0_20px_60px_-24px_rgba(1,6,13,0.95)]');
-            } else {
-                navContainer.classList.add('py-3');
-                navContainer.classList.remove('py-2');
-                navContainer.classList.remove('shadow-[0_20px_60px_-24px_rgba(1,6,13,0.95)]');
+        // One class, flipped only when the state actually changes. Separate
+        // on/off thresholds stop it flickering while hovering near the top, and
+        // the collapse itself is a CSS transform (no padding/height changes).
+        let navCollapsed = false;
+        let navQueued = false;
+        function syncNav() {
+            navQueued = false;
+            if (rootEl.classList.contains('menu-open')) return;
+            const y = window.scrollY;
+            const next = navCollapsed ? y > 24 : y > 72;
+            if (next !== navCollapsed) {
+                navCollapsed = next;
+                navbar.classList.toggle('nav-scrolled', next);
             }
+        }
+        window.addEventListener('scroll', () => {
+            if (!navQueued) { navQueued = true; requestAnimationFrame(syncNav); }
         }, { passive: true });
+        syncNav();
 
         // Mobile Menu Toggle
         const btn = document.getElementById('mobileMenuBtn');
         const menu = document.getElementById('mobileMenu');
 
         function setMenu(open) {
-            menu.classList.toggle('hidden', !open);
-            menu.classList.toggle('flex', open);
+            const wasOpen = menu.classList.contains('is-open');
+            if (open === wasOpen) return;
+            menu.classList.toggle('is-open', open);
+            rootEl.classList.toggle('menu-open', open);
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            if (!open && menu.contains(document.activeElement)) btn.focus({ preventScroll: true });
         }
 
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            setMenu(menu.classList.contains('hidden'));
+            setMenu(!menu.classList.contains('is-open'));
         });
+
+        window.matchMedia('(min-width: 1280px)').addEventListener('change', (e) => { if (e.matches) setMenu(false); });
 
         // The menu used to stay open after tapping a link, covering the section
         // it had just jumped to.
@@ -744,15 +458,15 @@
         });
 
         document.addEventListener('click', (e) => {
-            if (menu.classList.contains('hidden')) return;
+            if (!menu.classList.contains('is-open')) return;
             if (!menu.contains(e.target) && !btn.contains(e.target)) setMenu(false);
         });
 
         /* ==========================================================
            6. CHATBOT — step logic untouched, styling modernised
            ========================================================== */
-        const CHAT_DESTINATIONS = ['Vizag', 'Rajahmundry', 'Goa', 'Not sure yet'];
-        const CHAT_EXPERIENCES = ['Scuba Diving (first dive)', 'Guided Fun Dive', 'SSI Course', 'Snorkelling', 'Boat Diving', 'Shore Diving', 'Confined Diving', 'Water Sports', 'Underwater Event'];
+        const CHAT_DESTINATIONS = ['Visakhapatnam', 'Rajahmundry', 'Not sure yet'];
+        const CHAT_EXPERIENCES = ['Try Scuba (first dive)', 'SSI Course', 'Scuba Diving', 'Snorkeling', 'Jet Ski', 'Leisure Boat', 'ATV Rides', 'Speed Boat Ride', 'Kayaking', 'Dragon, Disco or Bumper Ride', 'Underwater Event'];
         const CHAT_LEVELS = ['Never dived before', 'Snorkelled before', 'Certified diver', 'Dive professional'];
 
         // Each step: the key it fills, the question, and how it is answered
@@ -987,9 +701,8 @@
             // City-level pins only. Exact meeting points are shared by the dive
             // desk on booking - no street address is published until confirmed.
             const DESTINATIONS = [
-                { id: 'vizag',       name: 'Vizag',       sub: 'Visakhapatnam, Andhra Pradesh', ll: [17.6868, 83.2185], pin: '#22D3EE', note: 'SSI Certified Dive Centre', href: 'vizag.html' },
-                { id: 'rajahmundry', name: 'Rajahmundry', sub: 'Andhra Pradesh',               ll: [17.0005, 81.8040], pin: '#A78BFA', note: 'Scuba + water sports',     href: 'rajahmundry.html' },
-                { id: 'goa',         name: 'Goa',         sub: 'West coast of India',          ll: [15.4909, 73.8278], pin: '#FF8A5B', note: 'Scuba + water sports',     href: 'goa.html' }
+                { id: 'visakhapatnam', name: 'Visakhapatnam', sub: 'Vizag, Andhra Pradesh',   ll: [17.6868, 83.2185], pin: '#22D3EE', note: 'SSI Certified Dive Centre', href: 'visakhapatnam.html' },
+                { id: 'rajahmundry',   name: 'Rajahmundry',   sub: 'On the Godavari, Andhra Pradesh', ll: [17.0005, 81.8040], pin: '#A78BFA', note: 'Water rides &amp; activities', href: 'rajahmundry.html' }
             ];
             const focus = mapEl.getAttribute('data-focus');
 
@@ -1048,10 +761,11 @@
            8. BUOYANT SCROLL REVEALS  (+ light hero parallax)
            ========================================================== */
         (function scrollPhysics() {
+            // threshold 0: a section taller than the viewport still reveals
             const observerOptions = {
                 root: null,
-                rootMargin: '0px 0px -8% 0px',
-                threshold: 0.15
+                rootMargin: '0px 0px -10% 0px',
+                threshold: 0
             };
 
             let started = false;
@@ -1060,20 +774,28 @@
                 if (started) return;
                 started = true;
 
-                const observer = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('active');
-                            // Optional: Stop observing once revealed
-                            // observer.unobserve(entry.target);
-                        }
+                const pending = Array.prototype.slice.call(document.querySelectorAll('.reveal:not(.active)'));
+                if (!('IntersectionObserver' in window)) {
+                    pending.forEach((el) => el.classList.add('active'));
+                    return;
+                }
+
+                // Reveal once, then stop watching: nothing re-triggers while scrolling
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return;
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
                     });
                 }, observerOptions);
 
-                document.querySelectorAll('.reveal').forEach((el) => {
-                    // Stagger siblings slightly so groups rise like bubbles, not as a block
-                    if (!el.style.getPropertyValue('--rd') && !el.className.match(/delay-\d00/)) {
-                        el.style.setProperty('--rd', Math.round(rand(0, 140)) + 'ms');
+                pending.forEach((el) => {
+                    // Siblings rise in a steady ripple: identical on every visit, and
+                    // capped so the tail of a long grid never lags behind the scroll
+                    if (!el.style.getPropertyValue('--rd') && !/\bdelay-\d00\b/.test(el.className)) {
+                        const siblings = el.parentElement ? el.parentElement.children : [el];
+                        const i = Array.prototype.indexOf.call(siblings, el);
+                        el.style.setProperty('--rd', Math.min(Math.max(i, 0), 4) * 70 + 'ms');
                     }
                     observer.observe(el);
                 });
@@ -1081,8 +803,11 @@
 
             // Hero parallax — desktop only, transform-only, so it stays cheap
             function initParallax() {
-                if (!HAS_GSAP || REDUCE_MOTION || IS_MOBILE || typeof ScrollTrigger === 'undefined') return;
+                const PARALLAX_OK = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
+                if (!HAS_GSAP || REDUCE_MOTION || !PARALLAX_OK || typeof ScrollTrigger === 'undefined') return;
                 gsap.registerPlugin(ScrollTrigger);
+                // Toolbar show/hide must not recalculate every trigger mid-scroll
+                ScrollTrigger.config({ ignoreMobileResize: true });
                 document.querySelectorAll('.page-hero .ph-img').forEach((img) => {
                     gsap.to(img, { yPercent: 12, scale: 1.05, ease: 'none',
                         scrollTrigger: { trigger: img.closest('.page-hero'), start: 'top top', end: 'bottom top', scrub: 0.6 } });
@@ -1093,19 +818,32 @@
                     ease: 'none',
                     scrollTrigger: { trigger: 'header', start: 'top top', end: 'bottom top', scrub: 0.6 }
                 });
+                // The sway keyframes own `transform` on the rays; tweening a variable
+                // read by the separate `translate` property keeps the two from fighting.
                 gsap.to('#ambient .rays', {
-                    yPercent: -8,
+                    '--ray-y': '-8%',
                     ease: 'none',
                     scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 1.2 }
                 });
+
+                // Trigger positions go stale as fonts and images settle the layout
+                const refresh = () => ScrollTrigger.refresh();
+                if (document.readyState === 'complete') requestAnimationFrame(refresh);
+                else window.addEventListener('load', refresh, { once: true });
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
             }
 
-            window.addEventListener('dive:entered', () => { initReveals(); initParallax(); });
+            let parallaxStarted = false;
+            const startAll = () => {
+                initReveals();
+                if (!parallaxStarted) { parallaxStarted = true; initParallax(); }
+            };
+            window.addEventListener('dive:entered', startAll);
 
             document.addEventListener('DOMContentLoaded', () => {
                 // If the gate is absent (or already dismissed), start immediately
                 const gate = document.getElementById('diveGate');
-                if (!gate || gate.style.display === 'none') { initReveals(); initParallax(); }
+                if (!gate || gate.style.display === 'none') startAll();
             });
         })();
 
