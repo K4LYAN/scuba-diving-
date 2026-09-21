@@ -16,7 +16,7 @@
     content, clipped hero content, text escaping its box, and touch targets.
     Open /tools/qa/responsive-audit.html on a local server; results are also
     exposed as window.__audit for scripted checks.  ?pages=index,faq to limit. */
-const ALL_PAGES = ['index', 'about', 'first-time-scuba', 'courses', 'open-water-diver', 'advanced-adventurer', 'react-right', 'diver-stress-rescue', 'dive-master', 'visakhapatnam', 'rajahmundry', 'blog', 'gallery', 'events', 'faq', 'contact', 'privacy-policy', 'terms-and-conditions', 'refund-policy'];
+const ALL_PAGES = ['index', 'about', 'beginner-level-scuba', 'courses', 'open-water-diver', 'advanced-adventurer', 'react-right', 'diver-stress-rescue', 'dive-master', 'visakhapatnam', 'rajahmundry', 'blog', 'blog-first-dive-what-to-expect', 'gallery', 'events', 'faq', 'contact', 'privacy-policy', 'terms-and-conditions', 'refund-policy'];
 const SIZES = [[360, 740], [375, 667], [390, 844], [414, 896], [430, 932], [480, 854], [768, 1024], [1024, 768], [1280, 720], [1440, 900], [1920, 1080]];
 const params = new URLSearchParams(location.search);
 const PAGES = params.get('pages') ? params.get('pages').split(',') : ALL_PAGES;
