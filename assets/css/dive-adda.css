@@ -664,7 +664,7 @@
         }
 
         /* The descent HUD is frameless - the dial is the whole animation */
-        .dive-hud { will-change: transform, opacity, filter; }
+        .dive-hud { will-change: transform, opacity; }
 
         /* ---------- Depth dial: the loading animation ---------- */
         .hud-label {
@@ -677,8 +677,8 @@
 
         .dial-wrap {
             position: relative;
-            width: 228px;
-            height: 228px;
+            width: clamp(186px, 54vw, 228px);
+            height: clamp(186px, 54vw, 228px);
         }
         @media (min-width: 768px) {
             .dial-wrap { width: 252px; height: 252px; }
@@ -1220,7 +1220,8 @@
         /* The hero and the descent loader stay deep-water in both themes, so they
            keep the dark token values - anything inside them that resolves
            var(--ink) (the ghost button, for one) stays light-on-dark. */
-        html[data-theme="light"] header,
+        html[data-theme="light"] header.home-hero,
+        html[data-theme="light"] header.page-hero,
         html[data-theme="light"] #diveGate {
             --ink: #E8F6FF;
             --ink-dim: #9FBCD0;

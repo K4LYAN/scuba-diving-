@@ -8,6 +8,11 @@
 
         const rand = (min, max) => Math.random() * (max - min) + min;
 
+        // The whole site reads on one depth scale: the surface is 0 m and the
+        // deepest reading anywhere is 40 m. The descent loader and the depth
+        // meter both use it, so the numbers agree.
+        const MAX_DEPTH = 40;
+
         // Single source of truth for the WhatsApp number used by the booking
         // handoff and the enquiry fallback (the floating button carries it in
         // its href so it keeps working without JavaScript).
@@ -237,7 +242,15 @@
             }
 
             function revealChrome() {
-                document.querySelectorAll('.pre-dive').forEach(el => el.classList.remove('pre-dive'));
+                const chrome = document.querySelectorAll('.pre-dive, .post-dive-in');
+                chrome.forEach((el) => el.classList.remove('pre-dive'));
+                // The fade is a 1s transition. If it cannot run (backgrounded tab,
+                // a stalled frame on a slow phone) the floating call and WhatsApp
+                // buttons would stay invisible, so pin the end state shortly after.
+                setTimeout(() => chrome.forEach((el) => {
+                    el.style.transition = 'none';   // land it even if the fade stalled
+                    el.style.opacity = '1';
+                }), 1200);
             }
 
             let finished = false;
@@ -266,12 +279,12 @@
                     return;
                 }
 
-                spawnRush(LOW_POWER ? 18 : 34);
+                spawnRush(LOW_POWER ? 10 : 26);
 
                 const tl = gsap.timeline({ defaults: { ease: 'power3.inOut' }, onComplete: finish });
 
                 // The descent HUD sinks away, blurring as it drops into the deep
-                tl.to('#diveHud', { y: 90, scale: 0.92, opacity: 0, filter: 'blur(16px)', duration: 0.95 }, 0)
+                tl.to('#diveHud', { y: 90, scale: 0.92, opacity: 0, duration: 0.95, force3D: true }, 0)
                   .to('#diveHint', { y: 40, opacity: 0, duration: 0.6 }, 0)
 
                   // The water surface sweeps up past the viewer
@@ -318,9 +331,9 @@
             }
 
             /* ---------- auto-playing descent: no sign-in, no click ---------- */
-            // Every page of the site has its own depth; the dial descends to it.
+            // The dial descends the full 0-40 m scale on every page.
             // After the first page of a visit the loader only runs the submerge.
-            const TARGET_DEPTH = parseInt(document.body.getAttribute('data-depth') || '18', 10) || 18;
+            const TARGET_DEPTH = MAX_DEPTH;
             let QUICK = false;
             try { QUICK = sessionStorage.getItem('da-dived') === '1'; } catch (e) {}
             if (QUICK) gate.classList.add('gate-quick');
@@ -342,9 +355,9 @@
             // Stage captions, keyed to depth so the copy tracks the descent
             const STAGES = [
                 [0,  'Checking regulators'],
-                [4,  'Equalizing pressure'],
-                [9,  'Adjusting buoyancy'],
-                [14, 'Entering the blue']
+                [10, 'Equalizing pressure'],
+                [22, 'Adjusting buoyancy'],
+                [32, 'Entering the blue']
             ];
             let stage = -1;
 
@@ -352,8 +365,10 @@
                 const d = Math.round(v);
                 const p = Math.max(0, Math.min(v / TARGET_DEPTH, 1));
 
-                if (depthEl) depthEl.textContent = d;
-                if (hudBar) hudBar.setAttribute('aria-valuenow', d);
+                if (depthEl && depthEl.textContent !== String(d)) {
+                    depthEl.textContent = d;
+                    if (hudBar) hudBar.setAttribute('aria-valuenow', d);
+                }
                 if (hudArc) hudArc.style.strokeDashoffset = (ARC_LEN * (1 - p)).toFixed(2);
                 if (waterLift) {
                     waterLift.style.transform = 'translate(0px,' + (WATER_TOP - WATER_SPAN * p).toFixed(2) + 'px)';
@@ -880,6 +895,18 @@
 
             if (btn) {
                 btn.addEventListener('click', () => apply(current() === 'light' ? 'dark' : 'light', true));
+            }
+
+            // Until the visitor picks a theme, keep following the device setting
+            if (window.matchMedia) {
+                const mq = window.matchMedia('(prefers-color-scheme: light)');
+                const follow = (e) => {
+                    let saved = null;
+                    try { saved = localStorage.getItem('db-theme'); } catch (err) {}
+                    if (saved !== 'light' && saved !== 'dark') apply(e.matches ? 'light' : 'dark', false);
+                };
+                if (mq.addEventListener) mq.addEventListener('change', follow);
+                else if (mq.addListener) mq.addListener(follow);
             }
 
             // The map is built on DOMContentLoaded, after this runs

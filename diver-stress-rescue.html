@@ -5,15 +5,18 @@
 
     <script>
         /* Applied before the first paint so the page never flashes the wrong
-           theme. Dark is the brand default; light is opt-in and remembered. */
+           theme: a saved choice wins, otherwise the device's preference. */
         (function () {
-            var t = 'dark';
-            try { if (localStorage.getItem('db-theme') === 'light') t = 'light'; } catch (e) {}
+            var t = null;
+            try { t = localStorage.getItem('db-theme'); } catch (e) {}
+            if (t !== 'light' && t !== 'dark') {
+                t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="dark light">
     <title>SSI Diver Stress &amp; Rescue Course in Visakhapatnam | Dive Adda</title>
 
     <meta name="description" content="SSI Diver Stress &amp; Rescue with Dive Adda, an SSI certified dive centre in Visakhapatnam. Learn to spot stress early, prevent problems, and help another diver when something goes wrong.">
@@ -240,10 +243,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="assets/css/dive-adda.css?v=9ab68d5f9a">
-    <link rel="stylesheet" href="assets/css/dive-adda-pages.css?v=22038a679b">
-    <link rel="stylesheet" href="assets/css/tailwind.css?v=46a3c71d0a">
-    <link rel="stylesheet" href="assets/css/dive-adda-responsive.css?v=f4e9036a61">
+    <link rel="stylesheet" href="assets/css/dive-adda.css?v=333e87e997">
+    <link rel="stylesheet" href="assets/css/dive-adda-pages.css?v=c397a66089">
+    <link rel="stylesheet" href="assets/css/tailwind.css?v=56b4716de3">
+    <link rel="stylesheet" href="assets/css/dive-adda-responsive.css?v=7339ba1637">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -558,7 +561,7 @@
 
     <a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21%20I%27d%20like%20to%20ask%20about%20diving%20with%20you."
        target="_blank" rel="noopener"
-       class="pre-dive post-dive-in float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
+       class="float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
        aria-label="Chat with Dive Adda on WhatsApp">
         <span class="absolute inset-0 rounded-full bg-[#25D366]/30 blur-lg bio-pulse" style="--dur:5s" aria-hidden="true"></span>
         <svg class="relative w-7 h-7 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -567,8 +570,8 @@
         <span class="absolute left-[68px] glass-deep text-brand-ink px-3 py-1.5 rounded-xl text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">Chat on WhatsApp</span>
     </a>
 
-    <div id="callRail" class="pre-dive post-dive-in theme-scope" aria-label="Quick contact">
-        <a href="tel:+918977762155" class="call-pill glass-deep" aria-label="Call the Dive Adda dive desk on +91 89777 62155" title="Dive desk: +91 89777 62155">
+    <div id="callRail" class="theme-scope" role="complementary" aria-label="Quick contact">
+        <a href="tel:+918977762155" class="call-pill call-fab glass-deep" aria-label="Call Dive Adda on +91 89777 62155" title="Call +91 89777 62155">
             <span class="call-ic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg></span>
             <span class="call-text">
                 <span class="block text-[9px] uppercase tracking-[0.22em] text-brand-glow">Dive desk</span>
@@ -625,6 +628,10 @@
         </div>
 
         <div id="mobileMenu" class="glass-deep theme-scope absolute top-full mt-3 left-0 right-0 flex-col p-5 sm:p-6 rounded-2xl">
+          <div class="m-contact">
+            <a href="tel:+918977762155" class="m-call"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg><span>+91 89777 62155</span></a>
+            <a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21" target="_blank" rel="noopener" class="m-wa" aria-label="Chat on WhatsApp"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg><span>WhatsApp</span></a>
+          </div>
           <a href="index.html" class="m-link">Home</a>
           <a href="about.html" class="m-link">About Us</a>
           <a href="beginner-level-scuba.html" class="m-link">Beginner Level Scuba</a>
@@ -648,14 +655,14 @@
             <nav class="crumbs mb-7" aria-label="Breadcrumb"><a href="index.html">Home</a> <span class="opacity-40">/</span> <a href="courses.html">Courses</a> <span class="opacity-40">/</span> <span class="text-white/80">Diver Stress &amp; Rescue</span></nav>
             <div class="flex flex-wrap items-center gap-3 mb-5">
                 <span class="chip-cyan rounded-full px-4 py-1.5 font-bold tracking-[0.22em] uppercase text-[10px]">SSI Course</span>
-                <span class="chip depth-chip rounded-full px-3.5 py-1.5 text-[10px] font-bold tracking-[0.18em] uppercase">&minus;20 m</span>
+                <span class="chip depth-chip rounded-full px-3.5 py-1.5 text-[10px] font-bold tracking-[0.18em] uppercase">20 m</span>
             </div>
             <h1 class="ph-title font-display font-bold text-white heading-glow mb-6">SSI Diver Stress &amp; Rescue</h1>
             <p class="text-lg md:text-xl text-brand-ink/85 max-w-2xl leading-relaxed">Learn to spot stress early, prevent problems, and help another diver when something goes wrong.</p>
             <div class="flex flex-col sm:flex-row gap-4 mt-9 w-full sm:w-auto"><button type="button" data-book data-experience="SSI Course" data-destination="" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Enquire about this course</button><a href="contact.html#enquire" class="btn-ghost liquid ripple-host px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2.5">Send an enquiry <svg class="w-4 h-4 text-brand-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a></div>
         </div>
     </header>
-<main class="theme-scope site-main flex-grow max-w-7xl mx-auto w-full"><section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center"><div class="reveal"><div class="frame-photo glass-panel p-2 h-[300px] md:h-[440px]"><img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 1023px) 100vw, 50vw" alt="SSI Diver Stress &amp;amp; Rescue" class="rounded-3xl" loading="lazy"  decoding="async"></div></div><div class="reveal delay-100"><div class="flex flex-wrap items-center gap-3 mb-4"><span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">Continuing education</span><span class="eyebrow">Step 04 of 5</span></div><h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-5 heading-glow">About the course</h2><p class="text-brand-dim text-lg leading-relaxed mb-6">Stress is behind most diving incidents. This programme teaches you to recognise it in yourself and your buddy, prevent problems before they escalate, and manage a rescue if one is needed.</p><div class="glass-panel rounded-2xl p-5"><p class="field-label mb-1">Who it&rsquo;s for</p><p class="text-brand-ink leading-relaxed">Certified divers who want to recognise and manage problems underwater.</p></div></div></div></section><section class="mb-28"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">02 &mdash; What You&rsquo;ll Learn</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Skills this course gives you</h2></div></div><div class="reveal"><ul class="grid sm:grid-cols-2 gap-3"><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Recognising stress in yourself and others</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Preventing problems before they grow</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Rescue skills and techniques</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Diving with greater awareness</span></li></ul></div></section><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">03 &mdash; Course Pathway</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Where this course fits</h2><p class="text-brand-dim max-w-2xl text-lg leading-relaxed">SSI training builds from your first certification to professional level.</p></div></div><div class="course-steps reveal"><a href="open-water-diver.html" class="chip"><span class="cs-n">01</span>Open Water Diver</a><a href="advanced-adventurer.html" class="chip"><span class="cs-n">02</span>Advanced Adventurer</a><a href="react-right.html" class="chip"><span class="cs-n">03</span>React Right</a><a href="diver-stress-rescue.html" class="chip-cyan" aria-current="page"><span class="cs-n">04</span>Diver Stress &amp; Rescue</a><a href="dive-master.html" class="chip"><span class="cs-n">05</span>Dive Master</a></div><div class="flex flex-wrap gap-3 mt-8 reveal"><a href="react-right.html" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">&larr; React Right</a><a href="dive-master.html" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Next: Dive Master &rarr;</a></div></section><section class="mb-24"><div class="cta-band glass-deep bio-edge reveal"><div class="relative grid lg:grid-cols-[2fr_1fr] gap-8 items-center"><div><h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-3 heading-glow">Start Diver Stress &amp; Rescue</h2><p class="text-brand-dim text-lg leading-relaxed max-w-2xl">Tell us when you would like to start and our instructors will confirm dates and what you need to begin.</p></div><div class="flex flex-col gap-3"><button type="button" data-book data-experience="SSI Course" data-destination="Visakhapatnam" class="btn-bio liquid liquid-strong ripple-host px-7 py-4 rounded-full font-display font-bold">Book your dive</button><a href="tel:+918977762155" class="btn-ghost liquid ripple-host px-7 py-4 rounded-full font-semibold text-center">Call +91 89777 62155</a></div></div></div></section></main>
+<main class="theme-scope site-main flex-grow max-w-7xl mx-auto w-full"><section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center"><div class="reveal"><div class="frame-photo glass-panel p-2 h-[300px] md:h-[440px]"><img src="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=480&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=768&auto=format&fit=crop 768w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1530053969600-caed2596d242?q=80&w=1600&auto=format&fit=crop 1600w" sizes="(max-width: 1023px) 100vw, 50vw" alt="SSI Diver Stress &amp; Rescue" class="rounded-3xl" loading="lazy"  decoding="async"></div></div><div class="reveal delay-100"><div class="flex flex-wrap items-center gap-3 mb-4"><span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">Continuing education</span><span class="eyebrow">Step 04 of 5</span></div><h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-5 heading-glow">About the course</h2><p class="text-brand-dim text-lg leading-relaxed mb-6">Stress is behind most diving incidents. This programme teaches you to recognise it in yourself and your buddy, prevent problems before they escalate, and manage a rescue if one is needed.</p><div class="glass-panel rounded-2xl p-5"><p class="field-label mb-1">Who it&rsquo;s for</p><p class="text-brand-ink leading-relaxed">Certified divers who want to recognise and manage problems underwater.</p></div></div></div></section><section class="mb-28"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">02 &mdash; What You&rsquo;ll Learn</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Skills this course gives you</h2></div></div><div class="reveal"><ul class="grid sm:grid-cols-2 gap-3"><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Recognising stress in yourself and others</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Preventing problems before they grow</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Rescue skills and techniques</span></li><li class="benefit-pill glass-panel"><span class="bp-dot"></span><span class="text-brand-ink text-sm">Diving with greater awareness</span></li></ul></div></section><section class="mb-24"><div class="sec-head md:flex justify-between items-end reveal"><div><p class="eyebrow mb-4">03 &mdash; Course Pathway</p><h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4 heading-glow">Where this course fits</h2><p class="text-brand-dim max-w-2xl text-lg leading-relaxed">SSI training builds from your first certification to professional level.</p></div></div><div class="course-steps reveal"><a href="open-water-diver.html" class="chip"><span class="cs-n">01</span>Open Water Diver</a><a href="advanced-adventurer.html" class="chip"><span class="cs-n">02</span>Advanced Adventurer</a><a href="react-right.html" class="chip"><span class="cs-n">03</span>React Right</a><a href="diver-stress-rescue.html" class="chip-cyan" aria-current="page"><span class="cs-n">04</span>Diver Stress &amp; Rescue</a><a href="dive-master.html" class="chip"><span class="cs-n">05</span>Dive Master</a></div><div class="flex flex-wrap gap-3 mt-8 reveal"><a href="react-right.html" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">&larr; React Right</a><a href="dive-master.html" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Next: Dive Master &rarr;</a></div></section><section class="mb-24"><div class="cta-band glass-deep bio-edge reveal"><div class="relative grid lg:grid-cols-[2fr_1fr] gap-8 items-center"><div><h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-3 heading-glow">Start Diver Stress &amp; Rescue</h2><p class="text-brand-dim text-lg leading-relaxed max-w-2xl">Tell us when you would like to start and our instructors will confirm dates and what you need to begin.</p></div><div class="flex flex-col gap-3"><button type="button" data-book data-experience="SSI Course" data-destination="Visakhapatnam" class="btn-bio liquid liquid-strong ripple-host px-7 py-4 rounded-full font-display font-bold">Book your dive</button><a href="tel:+918977762155" class="btn-ghost liquid ripple-host px-7 py-4 rounded-full font-semibold text-center">Call +91 89777 62155</a></div></div></div></section></main>
 
     <footer class="site-footer theme-scope relative py-14 site-gutter border-t border-white/[0.06] bg-brand-abyss/80 backdrop-blur-xl overflow-hidden">
         <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-brand-accent/45 to-transparent" aria-hidden="true"></div>
@@ -742,7 +749,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="assets/js/dive-adda.js?v=7bc507fc92"></script>
-    <script src="assets/js/dive-adda-pages.js?v=5b5225ac3b"></script>
+    <script src="assets/js/dive-adda.js?v=78259acd91"></script>
+    <script src="assets/js/dive-adda-pages.js?v=f93c8161fe"></script>
 </body>
 </html>

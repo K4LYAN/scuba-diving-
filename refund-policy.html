@@ -5,15 +5,18 @@
 
     <script>
         /* Applied before the first paint so the page never flashes the wrong
-           theme. Dark is the brand default; light is opt-in and remembered. */
+           theme: a saved choice wins, otherwise the device's preference. */
         (function () {
-            var t = 'dark';
-            try { if (localStorage.getItem('db-theme') === 'light') t = 'light'; } catch (e) {}
+            var t = null;
+            try { t = localStorage.getItem('db-theme'); } catch (e) {}
+            if (t !== 'light' && t !== 'dark') {
+                t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="dark light">
     <title>Refund Policy | Dive Adda</title>
 
     <meta name="description" content="Dive Adda refund and cancellation policy: weather postponements, and refunds for cancellations made before your activity.">
@@ -211,16 +214,16 @@
 }
     </script>
 
-    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="assets/img/brochure/cover-divers-640.webp 640w, assets/img/brochure/cover-divers-1600.webp 1600w" imagesizes="100vw">
+    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="assets/img/brochure/cover-divers-640.webp 640w, assets/img/brochure/cover-divers-1024.webp 1024w, assets/img/brochure/cover-divers-1600.webp 1600w" imagesizes="100vw">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="assets/css/dive-adda.css?v=9ab68d5f9a">
-    <link rel="stylesheet" href="assets/css/dive-adda-pages.css?v=22038a679b">
-    <link rel="stylesheet" href="assets/css/tailwind.css?v=46a3c71d0a">
-    <link rel="stylesheet" href="assets/css/dive-adda-responsive.css?v=f4e9036a61">
+    <link rel="stylesheet" href="assets/css/dive-adda.css?v=333e87e997">
+    <link rel="stylesheet" href="assets/css/dive-adda-pages.css?v=c397a66089">
+    <link rel="stylesheet" href="assets/css/tailwind.css?v=56b4716de3">
+    <link rel="stylesheet" href="assets/css/dive-adda-responsive.css?v=7339ba1637">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -535,7 +538,7 @@
 
     <a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21%20I%27d%20like%20to%20ask%20about%20diving%20with%20you."
        target="_blank" rel="noopener"
-       class="pre-dive post-dive-in float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
+       class="float-widget fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full text-white flex items-center justify-center group liquid ripple-host animate-float bg-[#128C4A]/90 border border-[#4ade80]/35 shadow-[0_14px_36px_-10px_rgba(37,211,102,0.55)] hover:shadow-[0_18px_46px_-8px_rgba(37,211,102,0.85)] backdrop-blur-md"
        aria-label="Chat with Dive Adda on WhatsApp">
         <span class="absolute inset-0 rounded-full bg-[#25D366]/30 blur-lg bio-pulse" style="--dur:5s" aria-hidden="true"></span>
         <svg class="relative w-7 h-7 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -544,8 +547,8 @@
         <span class="absolute left-[68px] glass-deep text-brand-ink px-3 py-1.5 rounded-xl text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">Chat on WhatsApp</span>
     </a>
 
-    <div id="callRail" class="pre-dive post-dive-in theme-scope" aria-label="Quick contact">
-        <a href="tel:+918977762155" class="call-pill glass-deep" aria-label="Call the Dive Adda dive desk on +91 89777 62155" title="Dive desk: +91 89777 62155">
+    <div id="callRail" class="theme-scope" role="complementary" aria-label="Quick contact">
+        <a href="tel:+918977762155" class="call-pill call-fab glass-deep" aria-label="Call Dive Adda on +91 89777 62155" title="Call +91 89777 62155">
             <span class="call-ic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg></span>
             <span class="call-text">
                 <span class="block text-[9px] uppercase tracking-[0.22em] text-brand-glow">Dive desk</span>
@@ -602,6 +605,10 @@
         </div>
 
         <div id="mobileMenu" class="glass-deep theme-scope absolute top-full mt-3 left-0 right-0 flex-col p-5 sm:p-6 rounded-2xl">
+          <div class="m-contact">
+            <a href="tel:+918977762155" class="m-call"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg><span>+91 89777 62155</span></a>
+            <a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21" target="_blank" rel="noopener" class="m-wa" aria-label="Chat on WhatsApp"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg><span>WhatsApp</span></a>
+          </div>
           <a href="index.html" class="m-link">Home</a>
           <a href="about.html" class="m-link">About Us</a>
           <a href="beginner-level-scuba.html" class="m-link">Beginner Level Scuba</a>
@@ -617,7 +624,7 @@
 <div id="siteRoot" class="relative z-[1] flex flex-col flex-grow">
 
     <header class="page-hero is-compact">
-        <picture><source type="image/webp" srcset="assets/img/brochure/cover-divers-640.webp 640w, assets/img/brochure/cover-divers-1600.webp 1600w" sizes="100vw"><img src="assets/img/brochure/cover-divers.jpg" alt="" class="ph-img" width="1600" height="712" fetchpriority="high"  decoding="async"></picture>
+        <picture><source type="image/webp" srcset="assets/img/brochure/cover-divers-640.webp 640w, assets/img/brochure/cover-divers-1024.webp 1024w, assets/img/brochure/cover-divers-1600.webp 1600w" sizes="100vw"><img src="assets/img/brochure/cover-divers.jpg" alt="" class="ph-img" width="1600" height="712" fetchpriority="high"  decoding="async"></picture>
         <div class="ph-shade"></div>
         <div class="ph-glow"></div>
         
@@ -625,7 +632,7 @@
             <nav class="crumbs mb-7" aria-label="Breadcrumb"><a href="index.html">Home</a> <span class="opacity-40">/</span> <span class="text-white/80">Refund Policy</span></nav>
             <div class="flex flex-wrap items-center gap-3 mb-5">
                 <span class="chip-cyan rounded-full px-4 py-1.5 font-bold tracking-[0.22em] uppercase text-[10px]">Legal</span>
-                <span class="chip depth-chip rounded-full px-3.5 py-1.5 text-[10px] font-bold tracking-[0.18em] uppercase">&minus;2 m</span>
+                <span class="chip depth-chip rounded-full px-3.5 py-1.5 text-[10px] font-bold tracking-[0.18em] uppercase">2 m</span>
             </div>
             <h1 class="ph-title font-display font-bold text-white heading-glow mb-6">Refund <span class="text-gradient-bio">Policy</span></h1>
             <p class="text-lg md:text-xl text-brand-ink/85 max-w-2xl leading-relaxed">What happens if you cancel, or if the weather stops your activity going ahead.</p>
@@ -719,7 +726,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="assets/js/dive-adda.js?v=7bc507fc92"></script>
-    <script src="assets/js/dive-adda-pages.js?v=5b5225ac3b"></script>
+    <script src="assets/js/dive-adda.js?v=78259acd91"></script>
+    <script src="assets/js/dive-adda-pages.js?v=f93c8161fe"></script>
 </body>
 </html>

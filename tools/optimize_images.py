@@ -29,23 +29,27 @@ def kb(path):
     return os.path.getsize(path) / 1024.0
 
 
-def brochure():
+PHOTO_DIRS = [BROCHURE, os.path.join(IMG, 'activities')]
+
+
+def optimize_dir(folder):
+    """WebP renditions (phone, mid, native width) next to each JPEG, plus a manifest."""
     manifest = {}
-    for name in sorted(os.listdir(BROCHURE)):
+    for name in sorted(os.listdir(folder)):
         if not name.endswith('.jpg'):
             continue
         stem = name[:-4]
-        src = os.path.join(BROCHURE, name)
+        src = os.path.join(folder, name)
         im = Image.open(src).convert('RGB')
-        widths = sorted({min(PHONE_W, im.width), im.width})
+        widths = sorted({min(PHONE_W, im.width), min(1024, im.width), im.width})
         for w in widths:
             h = round(im.height * w / im.width)
-            out = os.path.join(BROCHURE, '%s-%d.webp' % (stem, w))
+            out = os.path.join(folder, '%s-%d.webp' % (stem, w))
             (im if w == im.width else im.resize((w, h), Image.LANCZOS)).save(out, 'WEBP', quality=QUALITY, method=6)
         manifest[stem] = {'w': im.width, 'h': im.height, 'widths': widths}
-        largest = os.path.join(BROCHURE, '%s-%d.webp' % (stem, im.width))
+        largest = os.path.join(folder, '%s-%d.webp' % (stem, im.width))
         print('  %-26s jpg %6.1f KB -> webp %6.1f KB  (%s)' % (name, kb(src), kb(largest), ', '.join(map(str, widths))))
-    with open(os.path.join(BROCHURE, 'manifest.json'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(folder, 'manifest.json'), 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=1, sort_keys=True)
 
 
@@ -73,8 +77,9 @@ def icon(size, out_name, background=None):
 
 
 def main():
-    print('Brochure photos')
-    brochure()
+    for folder in PHOTO_DIRS:
+        print('Photos in', os.path.relpath(folder, ROOT))
+        optimize_dir(folder)
     print('Logos (retina sizes of how they are displayed)')
     resized_png('logo-mark-light.png', 'logo-mark-light-2x.png', 168)   # nav: 38px tall
     resized_png('logo-mark.png', 'logo-mark-2x.png', 168)

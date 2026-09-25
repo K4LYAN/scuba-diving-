@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Dive Adda screenshot frame</title>
+<style>html, body { margin: 0; background: #000; } iframe { border: 0; display: block; }</style>
+<script>
+/*  Dev-only: renders a page in its settled state (intro finished, reveals
+    shown) so a headless browser can photograph it.
+    Usage: /tools/qa/shot.html?page=index&w=1440&h=7400&theme=dark  */
+const q = new URLSearchParams(location.search);
+const W = +(q.get('w') || 1440), H = +(q.get('h') || 7400), VH = +(q.get('vh') || (W < 768 ? 812 : 900));
+try {
+  sessionStorage.setItem('da-dived', '1');
+  sessionStorage.setItem('da-modal', '1');
+  localStorage.setItem('db-theme', q.get('theme') === 'light' ? 'light' : 'dark');
+} catch (e) {}
+addEventListener('DOMContentLoaded', () => {
+  const f = document.createElement('iframe');
+  f.width = W; f.height = H;
+  f.src = '../../' + (q.get('page') || 'index') + '.html';
+  // Settle as soon as the page is parsed, and keep settling briefly: the
+  // frame's load event waits on fonts and remote images, and the intro
+  // timeline can re-apply its start state once after that.
+  let n = 0;
+  const timer = setInterval(() => {
+    const w = f.contentWindow, d = f.contentDocument;
+    if (!d || d.readyState === 'loading' || !d.getElementById('siteRoot')) return;
+    if (!d.getElementById('qa-settle')) {
+      const st = d.createElement('style');
+      st.id = 'qa-settle';
+      st.textContent = '*,*::before,*::after{transition:none!important;animation-play-state:paused!important}#diveGate{display:none!important}#siteRoot{opacity:1!important;transform:none!important}'
+        // the frame is page-tall; size heroes as they would be in a real viewport
+        + '.home-hero{min-height:' + VH + 'px!important}.page-hero{min-height:' + Math.round(VH * 0.72) + 'px!important}';
+      d.head.appendChild(st);
+    }
+    d.documentElement.classList.remove('gate-open', 'modal-open');
+    d.body.classList.remove('gate-open');
+    if (w.gsap) { w.gsap.killTweensOf('#siteRoot'); w.gsap.set('#siteRoot', { clearProps: 'all' }); }
+    d.querySelectorAll('.pre-dive').forEach((e) => e.classList.remove('pre-dive'));
+    d.querySelectorAll('.reveal').forEach((e) => e.classList.add('active'));
+    d.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
+    const m = d.getElementById('bookNowModal'); if (m) m.classList.remove('open', 'in');
+    if (++n > 20) clearInterval(timer);
+  }, 250);
+  document.body.appendChild(f);
+});
+</script>

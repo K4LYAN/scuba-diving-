@@ -70,17 +70,16 @@
     if (meter) {
         const fill = $('.dm-fill', meter);
         const read = $('.dm-read', meter);
-        // Every page reads the same scale: 0 m at the top of the page, 40 m at the bottom
+        // Every page reads the same scale: 0 m at the top, MAX_DEPTH at the bottom
         const base = 0;
-        const span = 40;
+        const span = (typeof MAX_DEPTH === 'number') ? MAX_DEPTH : 40;
         let ticking = false;
         const paint = () => {
             ticking = false;
             const max = document.documentElement.scrollHeight - innerHeight;
             const p = max > 0 ? Math.min(Math.max(scrollY / max, 0), 1) : 0;
             fill.style.transform = 'scaleY(' + p.toFixed(3) + ')';
-            const m = Math.round(base + span * p);
-            read.textContent = (m ? '-' : '') + m + 'm';
+            read.textContent = Math.round(base + span * p) + 'm';
         };
         addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }, { passive: true });
         paint();
@@ -323,6 +322,64 @@
         items.forEach((d) => d.addEventListener('toggle', () => {
             if (d.open) items.forEach((o) => { if (o !== d) o.open = false; });
         }));
+    });
+
+    /* ---------- 12b. Review carousels: arrows, keys, swipe, gentle autoplay ---------- */
+    $$('[data-rv]').forEach((root) => {
+        const track = $('.rv-track', root);
+        const cards = $$('.rv-card', root);
+        const prev = $('[data-rv-prev]', root);
+        const next = $('[data-rv-next]', root);
+        if (!track || !cards.length) return;
+
+        const behavior = REDUCE_MOTION ? 'auto' : 'smooth';
+        const maxScroll = () => track.scrollWidth - track.clientWidth;
+        const step = () => cards[0].getBoundingClientRect().width + (parseFloat(getComputedStyle(track).columnGap) || 0);
+
+        function update() {
+            const max = maxScroll();
+            const scrollable = max > 4;
+            root.classList.toggle('is-static', !scrollable);
+            if (prev) prev.disabled = !scrollable || track.scrollLeft <= 4;
+            if (next) next.disabled = !scrollable || track.scrollLeft >= max - 4;
+        }
+        const go = (dir) => track.scrollBy({ left: dir * step(), behavior });
+
+        // Autoplay only while on screen, never under reduced motion, and it
+        // steps aside whenever the visitor is reading or steering.
+        let timer = null, onScreen = false, heldUntil = 0;
+        const stop = () => { if (timer) clearInterval(timer); timer = null; };
+        const start = () => {
+            stop();
+            if (REDUCE_MOTION || !onScreen || maxScroll() <= 4) return;
+            timer = setInterval(() => {
+                if (Date.now() < heldUntil) return;
+                if (track.scrollLeft >= maxScroll() - 4) track.scrollTo({ left: 0, behavior });
+                else go(1);
+            }, 6000);
+        };
+        const hold = (ms) => { heldUntil = Date.now() + ms; };
+
+        if (prev) prev.addEventListener('click', () => { go(-1); hold(12000); });
+        if (next) next.addEventListener('click', () => { go(1); hold(12000); });
+        track.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); go(1); hold(12000); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); hold(12000); }
+        });
+        root.addEventListener('pointerenter', () => hold(1e9));
+        root.addEventListener('pointerleave', () => hold(2000));
+        root.addEventListener('focusin', () => hold(1e9));
+        root.addEventListener('focusout', () => hold(2000));
+        track.addEventListener('touchstart', () => hold(12000), { passive: true });
+
+        let settle = null;
+        track.addEventListener('scroll', () => { clearTimeout(settle); settle = setTimeout(update, 80); }, { passive: true });
+        addEventListener('resize', update, { passive: true });
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver((es) => es.forEach((en) => { onScreen = en.isIntersecting; onScreen ? start() : stop(); }), { threshold: 0.3 }).observe(root);
+        }
+        update();
+        addEventListener('load', update, { once: true });
     });
 
     /* ---------- 13. Footer year ---------- */
