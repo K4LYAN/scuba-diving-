@@ -29,7 +29,7 @@ def kb(path):
     return os.path.getsize(path) / 1024.0
 
 
-PHOTO_DIRS = [BROCHURE, os.path.join(IMG, 'activities')]
+PHOTO_DIRS = [BROCHURE, os.path.join(IMG, 'activities'), os.path.join(IMG, 'courses')]
 
 
 def optimize_dir(folder):
@@ -41,7 +41,7 @@ def optimize_dir(folder):
         stem = name[:-4]
         src = os.path.join(folder, name)
         im = Image.open(src).convert('RGB')
-        widths = sorted({min(PHONE_W, im.width), min(1024, im.width), im.width})
+        widths = sorted({min(w, im.width) for w in (480, PHONE_W, 768, 1024)} | {im.width})
         for w in widths:
             h = round(im.height * w / im.width)
             out = os.path.join(folder, '%s-%d.webp' % (stem, w))

@@ -323,12 +323,10 @@
                 }, 6000);
             }
 
-            // Keep the site hidden underneath until the dive begins
-            if (HAS_GSAP && !REDUCE_MOTION) {
-                gsap.set('#siteRoot', { opacity: 0 });
-            } else {
-                revealChrome();
-            }
+            // The opaque gate covers the site, so the page paints underneath it
+            // straight away (that first paint is what LCP measures); the timeline
+            // above still floats it up into view when the gate dissolves.
+            if (!HAS_GSAP || REDUCE_MOTION) revealChrome();
 
             /* ---------- auto-playing descent: no sign-in, no click ---------- */
             // The dial descends the full 0-40 m scale on every page.
@@ -709,7 +707,33 @@
         /* ==========================================================
            7. LEAFLET MAP — dark matter tiles + glowing pins
            ========================================================== */
+        // Leaflet (~180 KB with its stylesheet) and the map tiles load only when
+        // the map is about to scroll into view, not with the page.
         document.addEventListener('DOMContentLoaded', () => {
+            const mapEl = document.getElementById('diveMap');
+            if (!mapEl) return;
+            const load = () => {
+                const css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                css.crossOrigin = '';
+                document.head.appendChild(css);
+                const js = document.createElement('script');
+                js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                js.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                js.crossOrigin = '';
+                js.onload = initDiveMap;
+                document.head.appendChild(js);
+            };
+            if (!('IntersectionObserver' in window)) { load(); return; }
+            const io = new IntersectionObserver((entries) => {
+                if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); }
+            }, { rootMargin: '400px 0px' });
+            io.observe(mapEl);
+        });
+
+        function initDiveMap() {
             const mapEl = document.getElementById('diveMap');
             if (!mapEl || typeof L === 'undefined') return;
 
@@ -770,7 +794,7 @@
             window.addEventListener('dive:entered', () => {
                 setTimeout(() => { map.invalidateSize(); fit(); }, 120);
             });
-        });
+        }
 
         /* ==========================================================
            8. BUOYANT SCROLL REVEALS  (+ light hero parallax)

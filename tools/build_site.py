@@ -41,7 +41,32 @@ def _orig(a, b):
     return '\n'.join(lines[a - 1:b])
 
 
-FIREBASE = _orig(195, 250)
+FIREBASE = """    <script>
+        /* Booking storage (Firebase). Loaded on the first booking, not on page
+           load: the SDK is ~180 KB and most visitors never submit a form. With
+           no Firebase config the booking still goes through WhatsApp. */
+        window.saveBookingToDB = async function (bookingData) {
+            var cfg = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (!cfg || !cfg.projectId) return false;
+            try {
+                var V = 'https://www.gstatic.com/firebasejs/11.6.1/';
+                var [appM, authM, fsM] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+                var app = appM.getApps().length ? appM.getApp() : appM.initializeApp(cfg);
+                var auth = authM.getAuth(app), db = fsM.getFirestore(app);
+                if (!auth.currentUser) {
+                    if (typeof __initial_auth_token !== 'undefined') await authM.signInWithCustomToken(auth, __initial_auth_token);
+                    else await authM.signInAnonymously(auth);
+                }
+                var appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                await fsM.addDoc(fsM.collection(db, 'artifacts', appId, 'public', 'data', 'bookings'),
+                    Object.assign({}, bookingData, { userId: auth.currentUser.uid, timestamp: new Date().toISOString(), status: 'pending_whatsapp' }));
+                return true;
+            } catch (e) {
+                console.warn('Booking not stored:', e);
+                return false;
+            }
+        };
+    </script>"""
 TWCONFIG = _orig(253, 284)
 # The demo config's hero-pattern pointed at a stock photo; keep the utility,
 # point it at our own cover image so no page references a stock URL.
@@ -66,7 +91,7 @@ def B(name):
     return 'assets/img/brochure/%s.jpg' % name
 
 
-PHOTO_DIRS = ('assets/img/brochure/', 'assets/img/activities/')
+PHOTO_DIRS = ('assets/img/brochure/', 'assets/img/activities/', 'assets/img/courses/')
 _MANIFESTS = {}
 
 
@@ -543,7 +568,7 @@ def nav(page, section):
     return '''    <nav id="navbar" class="pre-dive post-dive-in fixed inset-x-0 top-0 z-50" aria-label="Main">
       <div id="navPill" class="glass-deep theme-scope relative max-w-7xl mx-auto flex justify-between items-center gap-3 rounded-2xl">
 
-        <a href="index.html" class="nav-brand flex items-center group min-w-0" aria-label="Dive Adda — home">
+        <a href="index.html" class="nav-brand flex items-center group min-w-0">
           <img src="assets/img/logo-mark-light-2x.png" alt="" class="brand-mark logo-light" width="69" height="38">
           <img src="assets/img/logo-mark-2x.png" alt="" class="brand-mark logo-dark" width="69" height="38">
           <span class="brand-text leading-none min-w-0">
@@ -651,19 +676,19 @@ def footer():
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links(explore) + '''</ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Locations</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Locations</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links([(d['name'], d['file']) for d in DESTS]) + '''</ul>
-                <h4 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h4>
+                <h2 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80">''' + links([(c['name'], c['file']) for c in COURSES]) + '''</ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Contact</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Contact</h2>
                 <ul class="space-y-3 text-sm text-brand-dim/80">
                     <li><a href="tel:''' + PHONE_TEL + '''" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors">''' + svg('phone', 'w-4 h-4') + PHONE_TXT + '''</a></li>
                     <li><a href="''' + wa_link('Hi Dive Adda!') + '''" target="_blank" rel="noopener" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors">''' + svg('chat', 'w-4 h-4') + '''WhatsApp</a></li>
@@ -847,11 +872,13 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": graph}, indent=2, ensure_ascii=False)
     preload = ''
     if hero_img:
-        ss = webp_srcset(hero_img)
+        # The preload must offer the same candidates as the <img>, or phones fetch
+        # the 1600px file here and then a second, smaller one for the image itself.
+        ss = uset(hero_img[4:]) if hero_img.startswith('uns:') else webp_srcset(hero_img)
         preload = ('    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="100vw">\n' % ss
                    if ss else '    <link rel="preload" as="image" fetchpriority="high" href="%s">\n' % src_of(hero_img))
-    leaflet_css = '    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>\n' if use_map else ''
-    leaflet_js = '    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>\n' if use_map else ''
+    leaflet_css = ''   # Leaflet loads on demand, near the map (dive-adda.js section 7)
+    leaflet_js = ''
     og_img = DOMAIN + B('cover-divers')
 
     return '''<!DOCTYPE html>
@@ -906,12 +933,11 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 ''' + preload + '''
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="''' + FONTS_CSS + '''">
+    <link rel="stylesheet" href="''' + FONTS_CSS + '''" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="''' + FONTS_CSS + '''"></noscript>
 
-''' + leaflet_css + '''    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda.css') + '''">
-    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda-pages.css') + '''">
-    <link rel="stylesheet" href="''' + asset('assets/css/tailwind.css') + '''">
-    <link rel="stylesheet" href="''' + asset('assets/css/dive-adda-responsive.css') + '''">
+''' + leaflet_css + '''    <link rel="stylesheet" href="''' + asset(CSS_BUNDLE) + '''">
 
 ''' + FIREBASE + '''
 
@@ -933,10 +959,10 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 </div><!-- /#siteRoot -->
 
 ''' + (BOOK_MODAL if book_modal else '') + (PROFILE_MODAL if profile else '') + (LIGHTBOX if lightbox else '') + CHATBOT + '''
-''' + leaflet_js + '''    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="''' + asset('assets/js/dive-adda.js') + '''"></script>
-    <script src="''' + asset('assets/js/dive-adda-pages.js') + '''"></script>
+''' + leaflet_js + '''    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script defer src="''' + asset(JS_MAIN) + '''"></script>
+    <script defer src="''' + asset(JS_PAGES) + '''"></script>
 </body>
 </html>
 '''
@@ -1009,7 +1035,7 @@ def story_section():
                 <div class="glass-panel rounded-2xl p-5 flex items-center gap-5 mb-7">
                     <img src="assets/img/ssi-dive-center-2x.png" alt="SSI Official Partner Dive Center" class="ssi-badge w-20 h-20 object-contain" loading="lazy" width="80" height="65">
                     <div>
-                        <h4 class="font-display font-bold text-white text-lg">Internationally certified</h4>
+                        <h3 class="font-display font-bold text-white text-lg">Internationally certified</h3>
                         <p class="text-sm text-brand-dim leading-relaxed">We are proudly affiliated with SSI, ensuring our training programmes meet the highest global standards.</p>
                     </div>
                 </div>
@@ -1045,7 +1071,7 @@ def scuba_cards_section(num='04'):
 
 def course_card(c, i):
     return ('<article class="course-card bento-card bio-edge glow-hover liquid reveal %s group">'
-            '<div class="cc-media on-media">%s'
+            '<div class="cc-media on-media%s">%s'
             '<span class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/35 to-transparent"></span>'
             '<span class="cc-step font-display" aria-hidden="true">%s</span>'
             '<span class="cc-level chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">%s</span>'
@@ -1056,6 +1082,7 @@ def course_card(c, i):
             '<a href="%s" class="mt-5 btn-ghost liquid ripple-host px-5 py-2.5 rounded-full text-sm font-semibold inline-flex items-center justify-center gap-2">View course %s</a>'
             '</div></article>'
             % (['', 'delay-100', 'delay-200'][i % 3],
+               ' cc-art' if course_photo(c['id']) else '',
                photo(course_photo(c['id'], c['img']), c['full'], 'bento-image', '(max-width: 767px) 100vw, 33vw'),
                c['step'], c['level'], c['name'], c['short'], c['file'],
                svg('arrow', 'w-3.5 h-3.5 text-brand-glow')))
@@ -1209,7 +1236,7 @@ def water_sports_section(num='04'):
     tiles = ''.join(
         '<li><a class="ws-tile on-media group" href="%s#%s">%s'
         '<span class="ws-shade"></span><span class="ws-name">%s</span></a></li>'
-        % (d['file'], aid, photo(activity_photo(aid), name, 'xp-img', '(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw'), name)
+        % (d['file'], aid, photo(activity_photo(aid), '', 'xp-img', '(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw'), name)
         for aid, name, icon, desc, link in d['acts'] if activity_photo(aid))
     return ('<section id="water-sports" class="xp xp-river mb-32" aria-labelledby="water-sports-title">'
             + xp_head(num, 'Water Sports', 'Water Sports', 'Rajahmundry', 'On the Godavari, Andhra Pradesh', 'xp-head-river').replace('<h2 ', '<h2 id="water-sports-title" ', 1)
@@ -1354,7 +1381,7 @@ def gallery_section(num='10'):
 
 def team_section(num='11'):
     cards = ''.join(
-        '<article class="team-card glass-panel reveal %s cursor-pointer" tabindex="0" role="button" data-profile '
+        '<div class="team-card glass-panel reveal %s cursor-pointer" tabindex="0" role="button" data-profile '
         'data-name="%s" data-role="%s" data-cert="%s" data-exp="%s" data-spec="%s" data-bio="%s">'
         '<div class="team-avatar"><span class="team-mono">%s</span></div>'
         '<h3 class="font-display text-lg font-bold text-white">%s</h3>'
@@ -1362,7 +1389,7 @@ def team_section(num='11'):
         '<span class="chip-cyan inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.12em] mt-4">%s</span>'
         '<p class="text-sm text-brand-dim leading-relaxed mt-4">%s</p>'
         '<span class="mt-5 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-glow">View profile</span>'
-        '</article>'
+        '</div>'
         % (['', 'delay-100'][i % 2], E(html.unescape(t['name'])), E(html.unescape(t['role'])),
            E(html.unescape(t['cert'])), E(html.unescape(t['exp'])), E(html.unescape(t['spec'])),
            E(html.unescape(t['bio'])), t['mono'], t['name'], t['role'], t['spec'], t['bio'])
@@ -1653,7 +1680,7 @@ def specialties_section(num='03'):
         '<button type="button" data-book data-experience="SSI Course" class="btn-ghost liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-sm">Enquire</button>'
         '</div></article>'
         % (sp['id'], ['', 'delay-100', 'delay-200', 'delay-300'][i % 4],
-           ('<div class="spec-media on-media">%s<span class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/30 to-transparent"></span></div>'
+           ('<div class="spec-media on-media cc-art">%s<span class="absolute inset-0 bg-gradient-to-t from-brand-abyss via-brand-abyss/30 to-transparent"></span></div>'
             % photo(course_photo(sp['id']), sp['name'], 'bento-image absolute inset-0 w-full h-full object-cover', '(max-width: 767px) 100vw, 25vw'))
            if course_photo(sp['id']) else
            ('<div class="spec-icon">%s</div>' % svg(sp['icon'], 'w-6 h-6')),
@@ -1771,7 +1798,7 @@ def page_destination(d):
                svg(icon, 'w-5 h-5')))
            if activity_photo(aid) else ('<div class="act-media act-media-empty"><span class="ic-icon">%s</span></div>' % svg(icon, 'w-6 h-6')),
            name, desc, d['name'], html.unescape(name),
-           ('<a href="%s" class="btn-ghost liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-sm">Learn more</a>' % link) if link else '')
+           ('<a href="%s" class="btn-ghost liquid ripple-host px-5 py-2.5 rounded-full font-semibold text-sm">Learn more<span class="sr-only"> about %s</span></a>' % (link, name)) if link else '')
         for i, (aid, name, icon, desc, link) in enumerate(d['acts']))
 
     centre = ''
@@ -1958,7 +1985,7 @@ def post_card(p, featured=False):
             '<div class="flex flex-wrap items-center gap-3 mb-3 text-[11px] uppercase tracking-[0.18em]">'
             '<span class="chip-cyan px-3 py-1 rounded-full font-bold">%s</span>'
             '<span class="text-brand-dim">%s</span><span class="text-brand-dim/60">%s</span></div>'
-            '<h3 class="font-display font-bold text-white mb-3 %s"><a href="%s">%s</a></h3>'
+            '<h2 class="font-display font-bold text-white mb-3 %s"><a href="%s">%s</a></h2>'
             '<p class="text-brand-dim leading-relaxed mb-5">%s</p>'
             '<a href="%s" class="link-glow font-semibold text-sm inline-flex items-center gap-2">Read the post %s</a>'
             '</div></article>'
@@ -2171,6 +2198,28 @@ def write(name, content):
 
 
 _VERSIONS = {}
+FONTS_CSS = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap'
+CSS_SOURCES = ['assets/css/dive-adda.css', 'assets/css/dive-adda-pages.css', 'assets/css/tailwind.css',
+               'assets/css/dive-adda-responsive.css']
+CSS_BUNDLE = 'assets/css/site.min.css'
+JS_MAIN, JS_PAGES = 'assets/js/dive-adda.min.js', 'assets/js/dive-adda-pages.min.js'
+
+
+def build_bundles():
+    """One minified stylesheet (one render-blocking request instead of four) and minified scripts.
+    The readable sources stay the files to edit."""
+    npx = shutil.which('npx') or shutil.which('npx.cmd')
+    css = '\n'.join(open(os.path.join(ROOT, p), encoding='utf-8').read() for p in CSS_SOURCES)
+    jobs = [(css, 'css', CSS_BUNDLE)] + [(open(os.path.join(ROOT, src), encoding='utf-8').read(), 'js', out)
+                                         for src, out in (('assets/js/dive-adda.js', JS_MAIN), ('assets/js/dive-adda-pages.js', JS_PAGES))]
+    for text, loader, out in jobs:
+        r = subprocess.run([npx, '--yes', 'esbuild@0.24.0', '--minify', '--loader=' + loader, '--target=es2018,chrome80,safari13,firefox78'],
+                           input=text, cwd=ROOT, capture_output=True, text=True, encoding='utf-8')
+        if r.returncode:
+            raise SystemExit('esbuild failed for %s:\n%s' % (out, r.stderr))
+        with open(os.path.join(ROOT, out), 'w', encoding='utf-8', newline='\n') as f:
+            f.write(r.stdout)
+        print('  %-30s %7.1f KB' % (out, len(r.stdout.encode()) / 1024.0))
 
 
 def asset(path):
@@ -2180,8 +2229,7 @@ def asset(path):
 
 
 def hash_assets():
-    for rel in ['assets/css/dive-adda.css', 'assets/css/dive-adda-pages.css', 'assets/css/tailwind.css',
-                'assets/css/dive-adda-responsive.css', 'assets/js/dive-adda.js', 'assets/js/dive-adda-pages.js']:
+    for rel in [CSS_BUNDLE, JS_MAIN, JS_PAGES]:
         full = os.path.join(ROOT, rel)
         if os.path.exists(full):
             _VERSIONS[rel] = hashlib.sha1(open(full, 'rb').read()).hexdigest()[:10]
@@ -2207,6 +2255,7 @@ def main():
     # Pass 1 writes the pages Tailwind scans; pass 2 rewrites them with final asset hashes.
     write_pages()
     build_tailwind()
+    build_bundles()
     hash_assets()
     write_pages()
     print('Done.')

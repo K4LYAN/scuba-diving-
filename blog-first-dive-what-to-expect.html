@@ -236,72 +236,41 @@
 }
     </script>
 
-    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="assets/img/brochure/guided-fun-dive-640.webp 640w, assets/img/brochure/guided-fun-dive-1024.webp 1024w, assets/img/brochure/guided-fun-dive-1167.webp 1167w" imagesizes="100vw">
+    <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="assets/img/brochure/guided-fun-dive-480.webp 480w, assets/img/brochure/guided-fun-dive-640.webp 640w, assets/img/brochure/guided-fun-dive-768.webp 768w, assets/img/brochure/guided-fun-dive-1024.webp 1024w, assets/img/brochure/guided-fun-dive-1167.webp 1167w" imagesizes="100vw">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap"></noscript>
 
-    <link rel="stylesheet" href="assets/css/dive-adda.css?v=333e87e997">
-    <link rel="stylesheet" href="assets/css/dive-adda-pages.css?v=c397a66089">
-    <link rel="stylesheet" href="assets/css/tailwind.css?v=56b4716de3">
-    <link rel="stylesheet" href="assets/css/dive-adda-responsive.css?v=7339ba1637">
+    <link rel="stylesheet" href="assets/css/site.min.css?v=e7942cd42e">
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Environment variables for artifact runtime
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-
-        let db, auth, user;
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
-            // Critical Rule 3: Auth Before Queries
-            const initAuth = async () => {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined') {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    user = auth.currentUser;
-                } catch (e) {
-                    console.error("Authentication error:", e);
-                }
-            };
-            initAuth();
-        } catch (e) {
-            console.error("Firebase initialization skipped or failed:", e);
-        }
-
-        // Attach to window so our regular script tags can use it
-        window.saveBookingToDB = async function(bookingData) {
-            if (!user || !db) {
-                console.warn("DB not ready or user not authenticated.");
-                return false;
-            }
+    <script>
+        /* Booking storage (Firebase). Loaded on the first booking, not on page
+           load: the SDK is ~180 KB and most visitors never submit a form. With
+           no Firebase config the booking still goes through WhatsApp. */
+        window.saveBookingToDB = async function (bookingData) {
+            var cfg = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (!cfg || !cfg.projectId) return false;
             try {
-                // Critical Rule 1: Strict Paths required for permission checks
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
-                await addDoc(colRef, {
-                    ...bookingData,
-                    userId: user.uid,
-                    timestamp: new Date().toISOString(),
-                    status: 'pending_whatsapp'
-                });
+                var V = 'https://www.gstatic.com/firebasejs/11.6.1/';
+                var [appM, authM, fsM] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+                var app = appM.getApps().length ? appM.getApp() : appM.initializeApp(cfg);
+                var auth = authM.getAuth(app), db = fsM.getFirestore(app);
+                if (!auth.currentUser) {
+                    if (typeof __initial_auth_token !== 'undefined') await authM.signInWithCustomToken(auth, __initial_auth_token);
+                    else await authM.signInAnonymously(auth);
+                }
+                var appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                await fsM.addDoc(fsM.collection(db, 'artifacts', appId, 'public', 'data', 'bookings'),
+                    Object.assign({}, bookingData, { userId: auth.currentUser.uid, timestamp: new Date().toISOString(), status: 'pending_whatsapp' }));
                 return true;
             } catch (e) {
-                console.error("Error saving booking to Firestore:", e);
+                console.warn('Booking not stored:', e);
                 return false;
             }
-        }
+        };
     </script>
 
     <noscript>
@@ -593,7 +562,7 @@
     <nav id="navbar" class="pre-dive post-dive-in fixed inset-x-0 top-0 z-50" aria-label="Main">
       <div id="navPill" class="glass-deep theme-scope relative max-w-7xl mx-auto flex justify-between items-center gap-3 rounded-2xl">
 
-        <a href="index.html" class="nav-brand flex items-center group min-w-0" aria-label="Dive Adda — home">
+        <a href="index.html" class="nav-brand flex items-center group min-w-0">
           <img src="assets/img/logo-mark-light-2x.png" alt="" class="brand-mark logo-light" width="69" height="38">
           <img src="assets/img/logo-mark-2x.png" alt="" class="brand-mark logo-dark" width="69" height="38">
           <span class="brand-text leading-none min-w-0">
@@ -646,7 +615,7 @@
 <div id="siteRoot" class="relative z-[1] flex flex-col flex-grow">
 
     <header class="page-hero is-compact">
-        <picture><source type="image/webp" srcset="assets/img/brochure/guided-fun-dive-640.webp 640w, assets/img/brochure/guided-fun-dive-1024.webp 1024w, assets/img/brochure/guided-fun-dive-1167.webp 1167w" sizes="100vw"><img src="assets/img/brochure/guided-fun-dive.jpg" alt="" class="ph-img" width="1167" height="800" fetchpriority="high"  decoding="async"></picture>
+        <picture><source type="image/webp" srcset="assets/img/brochure/guided-fun-dive-480.webp 480w, assets/img/brochure/guided-fun-dive-640.webp 640w, assets/img/brochure/guided-fun-dive-768.webp 768w, assets/img/brochure/guided-fun-dive-1024.webp 1024w, assets/img/brochure/guided-fun-dive-1167.webp 1167w" sizes="100vw"><img src="assets/img/brochure/guided-fun-dive.jpg" alt="" class="ph-img" width="1167" height="800" fetchpriority="high"  decoding="async"></picture>
         <div class="ph-shade"></div>
         <div class="ph-glow"></div>
         
@@ -689,19 +658,19 @@
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Explore</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80"><li><a href="about.html" class="hover:text-brand-glow transition-colors">About Us</a></li><li><a href="beginner-level-scuba.html" class="hover:text-brand-glow transition-colors">Beginner Level Scuba</a></li><li><a href="courses.html" class="hover:text-brand-glow transition-colors">SSI Courses</a></li><li><a href="events.html" class="hover:text-brand-glow transition-colors">Events</a></li><li><a href="gallery.html" class="hover:text-brand-glow transition-colors">Gallery</a></li><li><a href="blog.html" class="hover:text-brand-glow transition-colors">Blog</a></li><li><a href="faq.html" class="hover:text-brand-glow transition-colors">FAQ&rsquo;s</a></li><li><a href="contact.html" class="hover:text-brand-glow transition-colors">Contact Us</a></li></ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Locations</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Locations</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80"><li><a href="visakhapatnam.html" class="hover:text-brand-glow transition-colors">Visakhapatnam</a></li><li><a href="rajahmundry.html" class="hover:text-brand-glow transition-colors">Rajahmundry</a></li></ul>
-                <h4 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h4>
+                <h2 class="font-bold text-white mb-3 mt-7 text-sm uppercase tracking-[0.16em]">Courses</h2>
                 <ul class="space-y-2.5 text-sm text-brand-dim/80"><li><a href="open-water-diver.html" class="hover:text-brand-glow transition-colors">Open Water Diver</a></li><li><a href="advanced-adventurer.html" class="hover:text-brand-glow transition-colors">Advanced Adventurer</a></li><li><a href="react-right.html" class="hover:text-brand-glow transition-colors">React Right</a></li><li><a href="diver-stress-rescue.html" class="hover:text-brand-glow transition-colors">Diver Stress &amp; Rescue</a></li><li><a href="dive-master.html" class="hover:text-brand-glow transition-colors">Dive Master</a></li></ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Contact</h4>
+                <h2 class="font-bold text-white mb-4 text-sm uppercase tracking-[0.16em]">Contact</h2>
                 <ul class="space-y-3 text-sm text-brand-dim/80">
                     <li><a href="tel:+918977762155" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"></path></svg>+91 89777 62155</a></li>
                     <li><a href="https://wa.me/918977762155?text=Hi%20Dive%20Adda%21" target="_blank" rel="noopener" class="inline-flex items-center gap-2 hover:text-brand-glow transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>WhatsApp</a></li>
@@ -746,9 +715,9 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="assets/js/dive-adda.js?v=78259acd91"></script>
-    <script src="assets/js/dive-adda-pages.js?v=f93c8161fe"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script defer src="assets/js/dive-adda.min.js?v=76f042ceae"></script>
+    <script defer src="assets/js/dive-adda-pages.min.js?v=b45abbf504"></script>
 </body>
 </html>

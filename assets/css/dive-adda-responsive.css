@@ -503,3 +503,8 @@ html[data-theme="light"] .course-card.bento-card:hover {
 }
 /* Softer scrim over the photo so it meets the white card body cleanly */
 html[data-theme="light"] .course-card .cc-media > span.absolute { opacity: 0.45; }
+
+/* SSI course artwork: the image carries its own title and logo, so show it whole and uncovered */
+html .cc-media.cc-art, html .spec-media.cc-art { aspect-ratio: 1280 / 813; height: auto; min-height: 0; }
+html .cc-art > img { width: 100%; height: 100%; object-fit: cover; }
+html .cc-art > span.absolute, html .cc-art .cc-step { display: none; }
