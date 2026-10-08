@@ -16,6 +16,7 @@ import hashlib
 import html
 import json
 import os
+import re
 import shutil
 import subprocess
 from urllib.parse import quote
@@ -80,7 +81,8 @@ GATE = open(os.path.join(PARTIALS, 'gate.html'), encoding='utf-8').read()
 
 # ---------------------------------------------------------------- helpers
 def U(pid, w=1200):
-    return 'https://images.unsplash.com/photo-%s?q=80&w=%d&auto=format&fit=crop' % (pid, w)
+    # A fixed 3:2 crop, so the <img> can declare its size and reserve its box (no layout shift)
+    return 'https://images.unsplash.com/photo-%s?q=80&w=%d&h=%d&auto=format&fit=crop' % (pid, w, w * 2 // 3)
 
 
 def uset(pid):
@@ -126,7 +128,7 @@ def photo(src, alt, cls='', sizes='100vw', lazy=True, extra=''):
     alt = html.unescape(alt)
     if src.startswith('uns:'):
         pid = src[4:]
-        return ('<img src="%s" srcset="%s" sizes="%s" alt="%s" class="%s" %s %s decoding="async">'
+        return ('<img src="%s" srcset="%s" sizes="%s" alt="%s" class="%s" width="1200" height="800" %s %s decoding="async">'
                 % (U(pid), uset(pid), sizes, E(alt), cls, load, extra))
     _, _, m = _img_meta(src)
     dims = 'width="%d" height="%d"' % (m['w'], m['h']) if m else ''
@@ -352,7 +354,8 @@ def _live_reviews(path=os.path.join(os.path.dirname(os.path.dirname(os.path.absp
             if cut:
                 text = text[:170].rsplit(' ', 1)[0] + '…'
             reviews.append(dict(name=r['name'], when=E(r.get('when', '')), rating=r.get('rating') or 5,
-                                title=E(r['title']) if r.get('title') else '', text=E(text), more=cut))
+                                title=E(r['title']) if r.get('title') else '', text=E(text), more=cut,
+                                url=r.get('url', '')))
         rating = d.get('rating') or 0
         src.update(demo=False, reviews=reviews, url=d.get('url') or src['url'], rating=round(rating),
                    count=d.get('count'), label='Excellent' if rating >= 4.5 else 'Very good' if rating >= 4 else 'Rated %.1f' % rating)
@@ -1283,18 +1286,23 @@ def avatar_hue(name):
 
 
 def review_card(src, r, i):
-    more = ('<a class="rv-more" href="%s" target="_blank" rel="noopener">Read more<span class="sr-only"> of %s&rsquo;s review on %s</span></a>'
-            % (src['url'], E(r['name']), src['name'])) if r.get('more') and src.get('url') else ''
+    # Live reviews carry their own link from the API (Google review / Tripadvisor
+    # review page); sample reviews have none, so they open the listing instead.
+    href = r.get('url') or src.get('url', '')
+    more = ('<span class="rv-more" aria-hidden="true">Read more</span>') if r.get('more') and href else ''
+    link = ('<a class="rv-link" href="%s" target="_blank" rel="noopener">'
+            '<span class="sr-only">Read %s&rsquo;s review on %s (opens in a new tab)</span></a>'
+            % (E(href), E(r['name']), src['name'])) if href else ''
     title = ('<h3 class="rv-title">%s</h3>' % r['title']) if r.get('title') else ''
     return ('<article class="rv-card" aria-label="%s review by %s" data-index="%d">'
             '<header class="rv-card-head">'
             '<span class="rv-avatar" style="--av:%d" aria-hidden="true">%s</span>'
             '<span class="min-w-0"><span class="rv-name">%s</span><span class="rv-when">%s</span></span>'
             '<span class="rv-src" title="%s review">%s</span></header>'
-            '%s%s<p class="rv-text">%s</p>%s</article>'
+            '%s%s<p class="rv-text">%s</p>%s%s</article>'
             % (src['name'], E(r['name']), i, avatar_hue(r['name']), E(r['name'][:1].upper()),
                E(r['name']), r.get('when', ''), src['name'], GOOGLE_G if src['id'] == 'google' else TA_OWL,
-               rating_marks(src['id'], r.get('rating', 5)), title, r['text'], more))
+               rating_marks(src['id'], r.get('rating', 5)), title, r['text'], more, link))
 
 
 def review_row(src):
@@ -1324,11 +1332,23 @@ def review_row(src):
 def testimonials_section(num='05'):
     head = sec_head(num, 'Testimonials', 'What our guests say',
                     'Here&rsquo;s what guests say about their dives on Google and Tripadvisor.', center=True)
-    demo = any(src.get('demo') for src in REVIEW_SOURCES)
-    note = ('<p class="rv-demo-note" role="note">Sample reviews shown from the design reference &mdash; '
-            'replace them with Dive Adda&rsquo;s verified reviews before launch.</p>') if demo else ''
-    rows = ''.join(review_row(src) for src in REVIEW_SOURCES if src['reviews'])
-    return '<section id="testimonials" class="mb-32">' + head + note + '<div class="rv-rows">' + rows + '</div></section>'
+    # Only real reviews are shown (assets/data/reviews.json, fetched from the
+    # official APIs by tools/fetch_reviews.py). Until a source has them, its row
+    # links straight to Dive Adda's page on that site instead.
+    rows = ''.join(review_row(src) if not src.get('demo') else review_link_row(src) for src in REVIEW_SOURCES)
+    return '<section id="testimonials" class="mb-32">' + head + '<div class="rv-rows">' + rows + '</div></section>'
+
+
+def review_link_row(src):
+    logo = ('<span class="rv-wordmark rv-wordmark-g" aria-hidden="true">'
+            '<b style="color:#4285F4">G</b><b style="color:#EA4335">o</b><b style="color:#FBBC05">o</b>'
+            '<b style="color:#4285F4">g</b><b style="color:#34A853">l</b><b style="color:#EA4335">e</b></span>'
+            if src['id'] == 'google' else
+            '<span class="rv-wordmark rv-wordmark-ta" aria-hidden="true">%s<span>Tripadvisor</span></span>' % TA_OWL)
+    return ('<div class="rv-row rv-row-link reveal"><div class="rv-linkcard glass-panel">%s'
+            '<p class="text-brand-dim">Read what our divers say about Dive Adda on %s.</p>'
+            '<a class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold inline-flex items-center gap-2" href="%s" target="_blank" rel="noopener">'
+            'Read our %s reviews %s</a></div></div>' % (logo, src['name'], E(src['url']), src['name'], svg('arrow', 'w-3.5 h-3.5')))
 
 
 def book_section(num='06'):
@@ -2190,7 +2210,13 @@ def page_legal(lp):
 
 
 # ---------------------------------------------------------------- write
+_WEBP_BADGES = re.compile(r'<img src="(assets/img/(?:logo-full(?:-light)?-2x|ssi-dive-center-2x))\.png"([^>]*)>')
+
+
 def write(name, content):
+    # Footer logo and SSI badge: WebP with the PNG as fallback (about a third of the bytes)
+    if name.endswith('.html'):
+        content = _WEBP_BADGES.sub(lambda m: '<picture><source srcset="%s.webp" type="image/webp"><img src="%s.png"%s></picture>' % (m.group(1), m.group(1), m.group(2)), content)
     path = os.path.join(ROOT, name)
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(content)

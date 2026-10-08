@@ -86,6 +86,10 @@ def main():
     resized_png('logo-full-light.png', 'logo-full-light-2x.png', 336)   # footer: 168px wide
     resized_png('logo-full.png', 'logo-full-2x.png', 336)
     resized_png('ssi-dive-center.png', 'ssi-dive-center-2x.png', 264)   # badge: up to 132px
+    print('WebP copies of the footer logo and SSI badge')
+    for n in ('logo-full-2x', 'logo-full-light-2x', 'ssi-dive-center-2x'):
+        Image.open(os.path.join(IMG, n + '.png')).save(os.path.join(IMG, n + '.webp'), 'WEBP', quality=88, method=6)
+        print('  %-26s %6.1f KB -> %6.1f KB' % (n, kb(os.path.join(IMG, n + '.png')), kb(os.path.join(IMG, n + '.webp'))))
     print('Icons')
     icon(64, 'favicon-64.png')
     icon(180, 'apple-touch-icon.png', background=(4, 18, 31, 255))

@@ -838,20 +838,7 @@ html[data-theme="light"] .courses-cta { background: #FFFFFF; border-color: rgba(
 /* ================================================================
    TESTIMONIALS — Google + Tripadvisor review carousels
    ================================================================ */
-.rv-demo-note {
-    max-width: 38rem;
-    margin: -1rem auto 2.25rem;
-    padding: 8px 14px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: #FDE68A;
-    background: rgba(251, 191, 36, 0.08);
-    border: 1px dashed rgba(251, 191, 36, 0.4);
-}
-html[data-theme="light"] .rv-demo-note { color: #92400E; background: #FFFBEB; border-color: rgba(180, 83, 9, 0.35); }
-
+html[data-theme="light"] 
 .rv-rows { display: grid; gap: clamp(32px, 4vw, 52px); }
 .rv-row { display: grid; gap: 16px; align-items: center; }
 @media (min-width: 1024px) { .rv-row { grid-template-columns: 220px minmax(0, 1fr); gap: 28px; } }
@@ -986,3 +973,15 @@ html[data-theme="light"] .rv-nav { color: #0A2233; background: #FFFFFF; border-c
     .ws-tile:hover, .xp-stat:hover, .rv-card:hover, .rv-nav:hover { transform: none !important; }
     .rv-track { scroll-behavior: auto; }
 }
+
+/* Each review card is one link to the review on Google / Tripadvisor */
+.rv-card .rv-link { position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+.rv-card .rv-link:focus-visible { outline: 2px solid #22D3EE; outline-offset: 3px; }
+.rv-card:has(.rv-link) { cursor: pointer; transition: transform .25s ease, border-color .25s ease; }
+.rv-card:has(.rv-link:hover) { transform: translateY(-3px); border-color: rgba(34, 211, 238, .45); }
+.rv-card .rv-more { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Review source with no fetched reviews yet: a link to Dive Adda's page there */
+.rv-row-link { display: block; }
+.rv-linkcard { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; padding: 22px 26px; border-radius: 22px; }
+.rv-linkcard p { flex: 1 1 240px; margin: 0; }
