@@ -1,5 +1,89 @@
+# Dive Adda - https://diveaddaindia.com/
+# Search engines and AI assistants may crawl and cite every public page.
+# Plain-text business summary for language models: https://diveaddaindia.com/llms.txt
+
+User-agent: Googlebot
+Allow: /
+Disallow: /tools/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /tools/
+
+User-agent: Applebot
+Allow: /
+Disallow: /tools/
+
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /tools/
+
+User-agent: YandexBot
+Allow: /
+Disallow: /tools/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /tools/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /tools/
+
+User-agent: GPTBot
+Allow: /
+Disallow: /tools/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /tools/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /tools/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /tools/
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /tools/
+
+User-agent: Claude-User
+Allow: /
+Disallow: /tools/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /tools/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /tools/
+
+User-agent: meta-externalagent
+Allow: /
+Disallow: /tools/
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /tools/
+
+User-agent: DuckAssistBot
+Allow: /
+Disallow: /tools/
+
+User-agent: MistralAI-User
+Allow: /
+Disallow: /tools/
+
+User-agent: CCBot
+Allow: /
+Disallow: /tools/
+
 User-agent: *
 Allow: /
 Disallow: /tools/
 
-Sitemap: https://www.diveaddaindia.com/sitemap.xml
+Sitemap: https://diveaddaindia.com/sitemap.xml

@@ -8,6 +8,11 @@
 
         const rand = (min, max) => Math.random() * (max - min) + min;
 
+        // The scripts load just after the first paint (see the loader at the end
+        // of each page), which can be after DOMContentLoaded has already fired.
+        const onReady = (fn) => (document.readyState === 'loading'
+            ? document.addEventListener('DOMContentLoaded', fn, { once: true }) : fn());
+
         // The whole site reads on one depth scale: the surface is 0 m and the
         // deepest reading anywhere is 40 m. The descent loader and the depth
         // meter both use it, so the numbers agree.
@@ -697,7 +702,7 @@
         }
 
         // Bind enter key for standard text entry submission
-        document.addEventListener('DOMContentLoaded', () => {
+        onReady(() => {
             document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleChatInput();
             });
@@ -709,7 +714,7 @@
            ========================================================== */
         // Leaflet (~180 KB with its stylesheet) and the map tiles load only when
         // the map is about to scroll into view, not with the page.
-        document.addEventListener('DOMContentLoaded', () => {
+        onReady(() => {
             const mapEl = document.getElementById('diveMap');
             if (!mapEl) return;
             const load = () => {
@@ -879,7 +884,7 @@
             };
             window.addEventListener('dive:entered', startAll);
 
-            document.addEventListener('DOMContentLoaded', () => {
+            onReady(() => {
                 // If the gate is absent (or already dismissed), start immediately
                 const gate = document.getElementById('diveGate');
                 if (!gate || gate.style.display === 'none') startAll();
@@ -934,7 +939,7 @@
             }
 
             // The map is built on DOMContentLoaded, after this runs
-            document.addEventListener('DOMContentLoaded', () => syncMap(current()));
+            onReady(() => syncMap(current()));
             window.__setTheme = (t) => apply(t === 'light' ? 'light' : 'dark', true);
         })();
 
@@ -1161,7 +1166,7 @@
             window.addEventListener('dive:entered', () => setTimeout(once, 1100));
 
             // And if the loader is ever removed, still greet the visitor
-            document.addEventListener('DOMContentLoaded', () => {
+            onReady(() => {
                 if (!document.getElementById('diveGate')) setTimeout(once, 1600);
             });
 

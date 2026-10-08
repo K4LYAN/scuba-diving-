@@ -508,3 +508,44 @@ html[data-theme="light"] .course-card .cc-media > span.absolute { opacity: 0.45;
 html .cc-media.cc-art, html .spec-media.cc-art { aspect-ratio: 1280 / 813; height: auto; min-height: 0; }
 html .cc-art > img { width: 100%; height: 100%; object-fit: cover; }
 html .cc-art > span.absolute, html .cc-art .cc-step { display: none; }
+
+/* ==========================================================================
+   RENDERING BUDGET (Lighthouse 95+)
+   ========================================================================== */
+/* Sections below the first screen skip style, layout and paint until they are
+   about to scroll into view. "auto" remembers each section's real height once
+   it has rendered, so the scrollbar and anchor links stay steady. */
+html .site-main > section:nth-of-type(n+2),
+html #siteRoot > footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+}
+
+@media (max-width: 767px) {
+    /* A live backdrop blur behind every card is the costliest paint on phones;
+       over the dark water a near-opaque fill reads the same. */
+    html .glass-panel, html .glass-dark, html .glass-deep {
+        -webkit-backdrop-filter: none; backdrop-filter: none;
+        background-color: rgba(6, 27, 43, 0.9);
+    }
+    html[data-theme="light"] .glass-panel, html[data-theme="light"] .glass-dark, html[data-theme="light"] .glass-deep {
+        background-color: rgba(255, 255, 255, 0.92);
+    }
+    /* Huge blurred layers repaint on every animation frame: hold them still on phones */
+    html .caustics, html .rays { animation: none; }
+}
+
+/* Same budget for any device that asks for less motion */
+@media (prefers-reduced-motion: reduce) {
+    html .caustics, html .rays, html .fish, html .fish-bob, html .fish-tail, html .fish-fin { animation: none; }
+}
+
+/* The caustic light is built from radial gradients that already fade softly;
+   blurring them by 60-90px over an area 1.5x the screen changed little on screen
+   but was the most expensive thing in the first frame. */
+html .caustics, html .caustics.layer-2 { filter: none; }
+html .dial-glow { filter: none; }
+
+/* The intro covers the whole screen with an opaque overlay, so the background
+   layers are not painted until it lifts. */
+html.gate-open #ambient { visibility: hidden; }

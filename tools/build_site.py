@@ -15,7 +15,9 @@ a street address or a dive site, because none of those are verified.
 import hashlib
 import html
 import json
+import datetime
 import os
+import sys
 import re
 import shutil
 import subprocess
@@ -25,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ORIG = os.path.join(ROOT, 'tools', 'index.original.html')
 PARTIALS = os.path.join(ROOT, 'tools', 'partials')
 
-DOMAIN = 'https://www.diveaddaindia.com/'
+DOMAIN = 'https://diveaddaindia.com/'   # the GitHub Pages domain (CNAME); www redirects here
 PHONE_TXT = '+91 89777 62155'
 PHONE_TEL = '+918977762155'
 WA = '918977762155'
@@ -936,7 +938,6 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 ''' + preload + '''
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="''' + FONTS_CSS + '''">
     <link rel="stylesheet" href="''' + FONTS_CSS + '''" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="''' + FONTS_CSS + '''"></noscript>
 
@@ -962,10 +963,32 @@ def shell(page, section, depth, title, desc, path, body, ld, hero_img=None,
 </div><!-- /#siteRoot -->
 
 ''' + (BOOK_MODAL if book_modal else '') + (PROFILE_MODAL if profile else '') + (LIGHTBOX if lightbox else '') + CHATBOT + '''
-''' + leaflet_js + '''    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script defer src="''' + asset(JS_MAIN) + '''"></script>
-    <script defer src="''' + asset(JS_PAGES) + '''"></script>
+''' + leaflet_js + '''    <script>
+        /* Scripts start right after the first frame is painted. As plain defer
+           scripts, Chrome held the first paint until GSAP, ScrollTrigger and the
+           site scripts had all run. async=false keeps their order. */
+        (function () {
+            var urls = ['https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js',
+                        \'''' + asset(JS_MAIN) + '''\', \'''' + asset(JS_PAGES) + '''\'];
+            var started = false;
+            function load() {
+                if (started) return;
+                started = true;
+                urls.forEach(function (u) {
+                    var s = document.createElement('script');
+                    s.src = u;
+                    s.async = false;
+                    document.body.appendChild(s);
+                });
+            }
+            // A background tab never paints, so it must not wait for a frame
+            if (document.visibilityState === 'hidden' || !window.requestAnimationFrame) load();
+            // two frames: the first callback runs before the first paint, the second after it
+            else requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(load, 0); }); });
+            setTimeout(load, 1500);
+        })();
+    </script>
 </body>
 </html>
 '''
@@ -2310,7 +2333,7 @@ def write_pages():
             os.remove(path)
             print('  removed %s' % old)
 
-    today = '2026-09-17'
+    today = datetime.date.today().isoformat()
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for name, _ in pages:
@@ -2318,7 +2341,9 @@ def write_pages():
         sm.append('  <url>\n    <loc>%s%s</loc>\n    <lastmod>%s</lastmod>\n  </url>' % (DOMAIN, loc, today))
     sm.append('</urlset>')
     write('sitemap.xml', '\n'.join(sm) + '\n')
-    write('robots.txt', 'User-agent: *\nAllow: /\nDisallow: /tools/\n\nSitemap: %ssitemap.xml\n' % DOMAIN)
+    import seo_files
+    write('robots.txt', seo_files.robots_txt(sys.modules[__name__]))
+    write('llms.txt', seo_files.llms_txt(sys.modules[__name__], pages))
 
 
 if __name__ == '__main__':
