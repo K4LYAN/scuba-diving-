@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ORIG = os.path.join(ROOT, 'tools', 'index.original.html')
 PARTIALS = os.path.join(ROOT, 'tools', 'partials')
 
-DOMAIN = 'https://diveaddaindia.com/'   # the GitHub Pages domain (CNAME); www redirects here
+DOMAIN = 'https://www.diveaddaindia.com/'   # Vercel serves www; the bare domain 308-redirects here
 PHONE_TXT = '+91 89777 62155'
 PHONE_TEL = '+918977762155'
 WA = '918977762155'

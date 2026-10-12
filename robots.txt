@@ -1,6 +1,6 @@
-# Dive Adda - https://diveaddaindia.com/
+# Dive Adda - https://www.diveaddaindia.com/
 # Search engines and AI assistants may crawl and cite every public page.
-# Plain-text business summary for language models: https://diveaddaindia.com/llms.txt
+# Plain-text business summary for language models: https://www.diveaddaindia.com/llms.txt
 
 User-agent: Googlebot
 Allow: /
@@ -86,4 +86,4 @@ User-agent: *
 Allow: /
 Disallow: /tools/
 
-Sitemap: https://diveaddaindia.com/sitemap.xml
+Sitemap: https://www.diveaddaindia.com/sitemap.xml
