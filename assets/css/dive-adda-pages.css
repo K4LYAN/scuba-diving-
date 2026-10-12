@@ -1021,3 +1021,8 @@ html[data-theme="light"] .rv-nav { color: #0A2233; background: #FFFFFF; border-c
 /* Course page: SSI course artwork shown whole, at its own 1280x813 shape */
 .frame-photo.frame-art { height: auto; }
 .frame-photo.frame-art picture, .frame-photo.frame-art img { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 813; object-fit: cover; }
+
+/* Vizag photo badge carries the SSI logo, like the hero badge */
+.xp-badge.xp-badge-ssi { display: inline-flex; align-items: center; gap: 10px; }
+.xp-badge.xp-badge-ssi picture { position: static; inset: auto; display: block; flex: none; }
+.xp-badge.xp-badge-ssi img { position: static; width: 26px; height: auto; transform: none; }

@@ -1242,7 +1242,9 @@ def scuba_vizag_section(num='03'):
             + '<div class="xp-media reveal">'
             + '<figure class="xp-feature on-media">'
             + photo(B('cover-divers'), 'Divers exploring the reef with a Dive Adda instructor', 'xp-img', '(max-width: 1023px) 100vw, 58vw')
-            + '<figcaption class="xp-badge">SSI certified dive centre &middot; Vizag</figcaption></figure>'
+            + '<figcaption class="xp-badge xp-badge-ssi"><picture><source srcset="assets/img/ssi-logo-icon.webp" type="image/webp">'
+            + '<img src="assets/img/ssi-logo-icon.png" alt="SSI" class="ssi-chip-logo" width="26" height="14" loading="lazy"></picture>'
+            + 'SSI certified dive centre &middot; Vizag</figcaption></figure>'
             + '<div class="xp-thumbs">'
             + '<figure class="xp-thumb on-media">' + photo(B('ssi-pool-training'), 'A beginner practising skills with an SSI instructor', 'xp-img', '(max-width: 1023px) 50vw, 29vw') + '</figure>'
             + '<figure class="xp-thumb on-media">' + photo(B('boat-diving'), 'A diver rolling back off the boat into the sea', 'xp-img', '(max-width: 1023px) 50vw, 29vw') + '</figure>'
@@ -1651,7 +1653,7 @@ def page_home():
         <div class="hero-inner relative z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center reveal active">
             <span class="float-organic inline-flex items-center gap-2.5 chip-cyan rounded-full px-4 py-1.5 font-semibold tracking-[0.22em] uppercase text-[10px] mb-8">
                 <picture><source srcset="assets/img/ssi-logo-icon.webp" type="image/webp"><img src="assets/img/ssi-logo-icon.png" alt="SSI" class="ssi-chip-logo" width="26" height="14" fetchpriority="low"></picture>
-                SSI Certified Scuba Centre &middot; Visakhapatnam
+                SSI Certified Scuba Dive Centre &middot; Visakhapatnam
             </span>
             <h1 class="hero-title font-display font-bold text-white leading-[0.95] mb-5 heading-glow tracking-tight">DIVE <span class="text-gradient-bio">ADDA</span></h1>
             <p class="hero-tagline font-bold uppercase text-brand-glow/80 mb-7">Discover &mdash; The Deep</p>
