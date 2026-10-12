@@ -1,0 +1,10 @@
+# Raw media and local files: not part of the website
+static post/
+*.zip
+*.mp4
+*.mov
+node_modules/
+__pycache__/
+.claude/
+Thumbs.db
+.DS_Store

@@ -5,11 +5,12 @@ param(
     [int]$Width = 1440,
     [int]$Height = 7400,
     [string]$Theme = 'dark',
+    [string]$At = '',
     [string]$Out = "$env:TEMP\dive-adda-$Page-$Theme-$Width.png"
 )
 $edge = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
 $profile = Join-Path $env:TEMP "dive-adda-shot-$Theme-$Width"
-$url = "http://localhost:8123/tools/qa/shot.html?page=$Page&w=$Width&h=$Height&theme=$Theme"
+$url = "http://localhost:8123/tools/qa/shot.html?page=$Page&w=$Width&h=$Height&theme=$Theme&at=$At"
 $args = @('--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
           "--user-data-dir=$profile", "--window-size=$Width,$Height", '--virtual-time-budget=25000',
           "--screenshot=$Out", $url)

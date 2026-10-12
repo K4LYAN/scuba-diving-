@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>carousel test</title>
+<body><pre id="out">pending</pre><script>
+/* Dev-only: clicks the water sports carousel controls and reports where it lands. */
+try { sessionStorage.setItem('da-dived', '1'); sessionStorage.setItem('da-modal', '1'); } catch (e) {}
+const f = document.createElement('iframe'); f.width = 1280; f.height = 900; f.src = '../../index.html'; document.body.appendChild(f);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+f.onload = async () => {
+  await wait(7000);
+  const d = f.contentDocument, root = d.querySelector('[data-ws]'), tr = root.querySelector('.ws-track');
+  root.scrollIntoView();
+  // Headless virtual time does not run smooth-scroll animations: land them instantly
+  const st0 = d.createElement('style'); st0.textContent = '.ws-track{scroll-behavior:auto!important}'; d.head.appendChild(st0);
+  const real = tr.scrollTo.bind(tr); tr.scrollTo = (o) => real(Object.assign({}, o, { behavior: 'instant' }));
+  const st = () => [Math.round(tr.scrollLeft / tr.clientWidth), Array.from(root.querySelectorAll('[data-ws-dot]')).findIndex((x) => x.getAttribute('aria-current')), root.querySelector('[data-ws-prev]').disabled, root.querySelector('[data-ws-next]').disabled].join(',');
+  const log = ['start ' + st()];
+  root.querySelector('[data-ws-next]').click(); await wait(1500); log.push('next ' + st());
+  root.querySelectorAll('[data-ws-dot]')[4].click(); await wait(1500); log.push('dot5 ' + st());
+  root.querySelector('[data-ws-prev]').click(); await wait(1500); log.push('prev ' + st());
+  document.getElementById('out').textContent = log.join(' | ');
+};
+</script>

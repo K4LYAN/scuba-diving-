@@ -40,6 +40,8 @@ addEventListener('DOMContentLoaded', () => {
     d.querySelectorAll('.reveal').forEach((e) => e.classList.add('active'));
     d.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
     const m = d.getElementById('bookNowModal'); if (m) m.classList.remove('open', 'in');
+    const at = q.get('at');           // &at=<id>: a viewport-sized frame scrolled to that section
+    if (at && d.getElementById(at)) { d.documentElement.style.scrollBehavior = 'auto'; w.scrollTo({ top: d.getElementById(at).getBoundingClientRect().top + w.scrollY - 90, behavior: 'instant' }); }
     if (++n > 20) clearInterval(timer);
   }, 250);
   document.body.appendChild(f);

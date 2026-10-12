@@ -1231,7 +1231,8 @@ def scuba_vizag_section(num='03'):
     highlights = [('clock', '&asymp; 40 min', 'underwater per person'),
                   ('wave', '6&ndash;8 m', 'maximum depth for first-timers'),
                   ('people', 'Age 8+', 'no experience needed'),
-                  ('camera', 'Photos &amp; video', 'of your dive, included')]
+                  ('camera', 'Photos &amp; video', 'of your dive, included'),
+                  ('shield', 'No swimming required', 'your instructor stays beside you')]
     tiles = ''.join(
         '<li class="xp-stat"><span class="xp-stat-ic">%s</span><span><b>%s</b><span>%s</span></span></li>'
         % (svg(ic, 'w-5 h-5'), v, l) for ic, v, l in highlights)
@@ -1257,29 +1258,65 @@ def scuba_vizag_section(num='03'):
             + '</div></div></div></section>')
 
 
+WS_SLIDES = [
+    ('assets/img/activities/godavari-bridge.jpg', 'The Godavari arch bridge at Rajahmundry', 'Pushkar Ghat &middot; Rajahmundry'),
+    ('assets/img/activities/river-sunset.jpg', 'Sunset over the Godavari river', 'The Godavari &middot; Rajahmundry'),
+    ('assets/img/activities/jet-ski.jpg', 'A jet ski ride on the sea', 'IT-SEZ Beach &middot; Visakhapatnam'),
+    ('assets/img/activities/leisure-boat.jpg', 'A leisure boat out on the water', 'IT-SEZ Beach &middot; Visakhapatnam'),
+    ('assets/img/activities/speed-boat-ride.jpg', 'A speed boat ride across the river', 'Pushkar Ghat &middot; Rajahmundry'),
+]
+
+# Tiles under the section: the river rides, with ATV rides (Vizag) in the last slot
+WS_TILES = [('rajahmundry.html', 'speed-boat-ride', 'Speed Boat Ride'), ('rajahmundry.html', 'jet-ski-ride', 'Jet Ski Ride'),
+            ('rajahmundry.html', 'kayaking', 'Kayaking'), ('rajahmundry.html', 'dragon-ride', 'Dragon Ride'),
+            ('rajahmundry.html', 'disco-ride', 'Disco Ride'), ('visakhapatnam.html', 'atv-rides', 'ATV Rides')]
+
+
+def ws_carousel():
+    n = len(WS_SLIDES)
+    slides = ''.join(
+        '<div class="ws-slide on-media" role="group" aria-roledescription="slide" aria-label="%d of %d: %s">%s'
+        '<span class="xp-badge xp-badge-river">%s</span></div>'
+        % (i + 1, n, E(html.unescape(cap)), photo(src, alt, 'xp-img', '(max-width: 1023px) 100vw, 58vw', lazy=i > 0), cap)
+        for i, (src, alt, cap) in enumerate(WS_SLIDES))
+    dots = ''.join('<button type="button" class="ws-dot" data-ws-dot="%d" aria-label="Show photo %d"%s></button>'
+                   % (i, i + 1, ' aria-current="true"' if i == 0 else '') for i in range(n))
+    arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="%s"/></svg>'
+    return ('<div class="ws-carousel" data-ws role="region" aria-roledescription="carousel" aria-label="Water sports locations">'
+            '<div class="ws-track" tabindex="0" aria-label="Photos, use arrow keys to scroll">' + slides + '</div>'
+            '<button type="button" class="ws-nav ws-prev" data-ws-prev aria-label="Previous photo">' + arrow % 'M15 19l-7-7 7-7' + '</button>'
+            '<button type="button" class="ws-nav ws-next" data-ws-next aria-label="Next photo">' + arrow % 'M9 5l7 7-7 7' + '</button>'
+            '<div class="ws-dots">' + dots + '</div></div>')
+
+
 def water_sports_section(num='04'):
-    d = next(x for x in DESTS if x['id'] == 'rajahmundry')
     tiles = ''.join(
         '<li><a class="ws-tile on-media group" href="%s#%s">%s'
         '<span class="ws-shade"></span><span class="ws-name">%s</span></a></li>'
-        % (d['file'], aid, photo(activity_photo(aid), '', 'xp-img', '(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw'), name)
-        for aid, name, icon, desc, link in d['acts'] if activity_photo(aid))
+        % (f, aid, photo(activity_photo(aid), '', 'xp-img', '(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw'), name)
+        for f, aid, name in WS_TILES if activity_photo(aid))
+    pin = svg('pin', 'w-4 h-4')
+    head = ('<div class="xp-head reveal xp-head-river">'
+            '<p class="eyebrow mb-4">%s &mdash; Water Sports</p>'
+            '<h2 id="water-sports-title" class="xp-title font-display font-bold text-white heading-glow">'
+            '<span class="block">Adventure Water Sports</span>'
+            '<span class="xp-city">Rajahmundry, Visakhapatnam'
+            '<span class="xp-place xp-places"><span>%s Pushkar Ghat</span><span>%s IT-SEZ Beach</span></span></span></h2>'
+            '</div>' % (num, pin, pin))
     return ('<section id="water-sports" class="xp xp-river mb-32" aria-labelledby="water-sports-title">'
-            + xp_head(num, 'Water Sports', 'Water Sports', 'Rajahmundry', 'On the Godavari, Andhra Pradesh', 'xp-head-river').replace('<h2 ', '<h2 id="water-sports-title" ', 1)
+            + head
             + '<div class="xp-grid xp-grid-flip">'
-            + '<div class="xp-media reveal">'
-            + '<figure class="xp-feature on-media">'
-            + photo('assets/img/activities/godavari-bridge.jpg', 'The Godavari arch bridge across the river at Rajahmundry', 'xp-img', '(max-width: 1023px) 100vw, 58vw')
-            + '<figcaption class="xp-badge xp-badge-river">The Godavari &middot; Rajahmundry</figcaption></figure></div>'
+            + '<div class="xp-media reveal">' + ws_carousel() + '</div>'
             + '<div class="xp-copy reveal delay-100">'
-            + '<p class="xp-lead">Swap the sea for the Godavari.</p>'
+            + '<p class="xp-lead">Adventure on the river and the sea.</p>'
             + '<p class="text-brand-dim leading-relaxed mb-4">At Rajahmundry the Godavari runs wide beneath its landmark bridges, and it is where the Dive Adda team runs an afternoon&rsquo;s worth of river adventure: speed boat rides, jet skis and kayaks for anyone who wants the thrill of the water without going under it.</p>'
-            + '<p class="text-brand-dim leading-relaxed mb-7">Bringing friends or family? The dragon, disco and bumper rides are towed rides made for groups and plenty of laughs. Every ride is run by our team, and timings are confirmed when you book.</p>'
+            + '<p class="text-brand-dim leading-relaxed mb-4">Bringing friends or family? The dragon, disco and bumper rides are towed rides made for groups and plenty of laughs. Every ride is run by our team, and timings are confirmed when you book.</p>'
+            + '<p class="text-brand-dim leading-relaxed mb-7">In Visakhapatnam, IT-SEZ Beach is the place for jet ski rides, leisure boat rides and ATV rides.</p>'
             + '<div class="flex flex-col sm:flex-row gap-3">'
             + '<button type="button" data-book data-destination="Rajahmundry" class="btn-bio liquid ripple-host px-7 py-3.5 rounded-full font-bold">Book water sports</button>'
             + '<a href="rajahmundry.html" class="btn-ghost liquid ripple-host px-7 py-3.5 rounded-full font-semibold text-center">Explore water sports</a>'
             + '</div></div></div>'
-            + '<ul class="ws-grid reveal" aria-label="Water sports in Rajahmundry">' + tiles + '</ul>'
+            + '<ul class="ws-grid reveal" aria-label="Adventure water sports">' + tiles + '</ul>'
             + '</section>')
 
 
@@ -1613,12 +1650,12 @@ def page_home():
 
         <div class="hero-inner relative z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center reveal active">
             <span class="float-organic inline-flex items-center gap-2.5 chip-cyan rounded-full px-4 py-1.5 font-semibold tracking-[0.22em] uppercase text-[10px] mb-8">
-                <span class="w-1.5 h-1.5 rounded-full bg-brand-glow shadow-[0_0_10px_#67E8F9]"></span>
+                <picture><source srcset="assets/img/ssi-logo-icon.webp" type="image/webp"><img src="assets/img/ssi-logo-icon.png" alt="SSI" class="ssi-chip-logo" width="26" height="14" fetchpriority="low"></picture>
                 SSI Certified Scuba Centre &middot; Visakhapatnam
             </span>
             <h1 class="hero-title font-display font-bold text-white leading-[0.95] mb-5 heading-glow tracking-tight">DIVE <span class="text-gradient-bio">ADDA</span></h1>
             <p class="hero-tagline font-bold uppercase text-brand-glow/80 mb-7">Discover &mdash; The Deep</p>
-            <p class="hero-lead text-brand-ink/80 mb-9 max-w-2xl font-medium leading-relaxed">Scuba diving in Vizag, SSI certification courses, and water sports on the Godavari in Rajahmundry.</p>
+            <p class="hero-lead text-brand-ink/80 mb-9 max-w-2xl font-medium leading-relaxed">Professional Scuba Diving Centre in Vizag with SSI Certified Dive Courses and Adventure Water Sports Operator.</p>
             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <button type="button" data-book data-experience="Try Scuba (first dive)" data-destination="Visakhapatnam" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Book your dive</button>
                 <a href="#about" class="btn-ghost liquid ripple-host px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2.5">Explore
@@ -1663,7 +1700,7 @@ def page_first_time_scuba():
                 + '</div></div><div class="reveal delay-100">'
                 '<p class="eyebrow mb-4">01 &mdash; Try Scuba</p>'
                 '<h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-5 heading-glow">Try Scuba Diving with Dive Adda</h2>'
-                '<p class="text-brand-dim text-lg leading-relaxed mb-4">Try Scuba is your introduction to the amazing world of scuba diving and an opportunity to explore the underwater world of Vizag.</p>'
+                '<p class="text-brand-dim text-lg leading-relaxed mb-4">Try Scuba is your introduction to the amazing world of scuba diving and an opportunity to explore the underwater world of Vizag &mdash; with pool and ocean dives.</p>'
                 '<p class="text-brand-dim leading-relaxed mb-4">Never tried scuba diving before? No problem. Our Try Scuba experience is designed to introduce you to scuba diving with proper equipment training, safety briefing, and guidance from an experienced diving instructor.</p>'
                 '<p class="text-brand-dim leading-relaxed mb-7">Your experience takes you from the initial briefing at our centre to the dive site, where you can explore the underwater landscape and marine life.</p>'
                 + fact_tiles(TRY_FACTS) + '</div></div></section>')
@@ -1788,8 +1825,10 @@ def page_course(c):
         nav_links += '<a href="%s" class="btn-ghost liquid ripple-host px-6 py-3 rounded-full font-semibold text-sm">Next: %s &rarr;</a>' % (next_c['file'], next_c['name'])
 
     overview = ('<section class="mb-28"><div class="grid lg:grid-cols-2 gap-10 items-center">'
-                '<div class="reveal"><div class="frame-photo glass-panel p-2 h-[300px] md:h-[440px]">'
-                + photo(c['img'], c['full'], 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
+                # The same SSI course image as the homepage card, framed at its own
+                # shape so the title and logo printed on it are never cropped
+                '<div class="reveal"><div class="frame-photo frame-art glass-panel p-2">'
+                + photo(course_photo(c['id'], c['img']), c['full'], 'rounded-3xl', '(max-width: 1023px) 100vw, 50vw')
                 + '</div></div><div class="reveal delay-100">'
                 '<div class="flex flex-wrap items-center gap-3 mb-4"><span class="chip-cyan px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.14em]">%s</span>'
                 '<span class="eyebrow">Step %s of %d</span></div>'

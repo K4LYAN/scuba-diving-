@@ -6,6 +6,7 @@
 (function () {
     const $ = (s, r) => (r || document).querySelector(s);
     const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+    const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* ---------- 1. Book controls: open the assistant with context ---------- */
     document.addEventListener('click', (e) => {
@@ -380,6 +381,43 @@
         }
         update();
         addEventListener('load', update, { once: true });
+    });
+
+    /* ---------- 12c. Water sports photo carousel ---------- */
+    // Native scroll-snap does the sliding (and swipe on touch); this adds the
+    // arrows, the dots and keyboard support, and keeps them in step.
+    $$('[data-ws]').forEach((root) => {
+        const track = root.querySelector('.ws-track');
+        const slides = Array.prototype.slice.call(track.children);
+        const dots = $$('[data-ws-dot]', root);
+        const prev = root.querySelector('[data-ws-prev]');
+        const next = root.querySelector('[data-ws-next]');
+        const index = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+        let current = 0;
+        const show = (i) => {
+            current = i;
+            dots.forEach((d, k) => (k === i ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
+            prev.disabled = i === 0;
+            next.disabled = i === slides.length - 1;
+        };
+        // Controls update at once; the scroll listener below catches swipes
+        const go = (i) => {
+            i = Math.max(0, Math.min(slides.length - 1, i));
+            show(i);
+            track.scrollTo({ left: i * track.clientWidth, behavior: REDUCE ? 'auto' : 'smooth' });
+        };
+        const sync = () => show(index());
+        prev.addEventListener('click', () => go(current - 1));
+        next.addEventListener('click', () => go(current + 1));
+        dots.forEach((d) => d.addEventListener('click', () => go(+d.getAttribute('data-ws-dot'))));
+        track.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+            if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+        });
+        let t;
+        track.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(sync, 60); }, { passive: true });
+        addEventListener('resize', () => go(current), { passive: true });
+        sync();
     });
 
     /* ---------- 13. Footer year ---------- */
