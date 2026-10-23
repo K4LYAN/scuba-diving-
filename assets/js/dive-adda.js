@@ -1,5 +1,36 @@
-        /* ==========================================================
+/* ##########################################################################
+   dive-adda.js — MAIN SCRIPT
+   ==========================
+   Intro screen, background fish, navbar, booking chat, map, theme switch,
+   contact form, booking pop-up. Numbered sections 0-11 below.
+
+   HOW TO EDIT
+     1. Ctrl+F the section number/name, e.g. "7. LEAFLET MAP".
+     2. Read its  EDIT:  line. Change texts and numbers; keep brackets, quotes
+        and semicolons. WhatsApp number: search [J01].
+     3. Rebuild:  python tools/build_site.py  (creates dive-adda.min.js).
+     4. Preview, then open DevTools (F12) > Console: there must be no red errors.
+     Never edit dive-adda.min.js; it is regenerated on every build.
+
+   SECTIONS IN THIS FILE (Ctrl+F the name)
+     - MOTION ENVIRONMENT
+     - AMBIENT PARTICLES
+     - MARINE LIFE
+     - ORGANIC FLOAT
+     - PRESS RIPPLE
+     - DESCENT LOADER
+     - NAVBAR SCROLL EFFECT
+     - CHATBOT
+     - LEAFLET MAP
+     - BUOYANT SCROLL REVEALS
+     - THEME SWITCH
+     - INQUIRY FORM
+     - AUTO "BOOK NOW" MODAL
+   ########################################################################## */
+
+/* ==========================================================
            0. MOTION ENVIRONMENT
+           EDIT: Detects reduced motion, phones and slow devices. Also holds MAX_DEPTH (the 0-40 m scale) and the WhatsApp number [J01].
            ========================================================== */
         const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const HAS_GSAP = typeof window.gsap !== 'undefined';
@@ -21,10 +52,12 @@
         // Single source of truth for the WhatsApp number used by the booking
         // handoff and the enquiry fallback (the floating button carries it in
         // its href so it keeps working without JavaScript).
+        // EDIT HERE [J01] WhatsApp number for the booking form (country code + number, no + or spaces). Keep it the same as WA in build_site.py [E01].
         const WA_NUMBER = '918977762155';   // Dive Adda: +91 89777 62155
 
         /* ==========================================================
            1. AMBIENT PARTICLES (plankton / micro-bubbles)
+           EDIT: Floating plankton/bubbles. Change the count to show more or fewer.
            ========================================================== */
         function seedParticles(host, count, opts = {}) {
             if (!host || REDUCE_MOTION) return;
@@ -49,6 +82,7 @@
 
         /* ==========================================================
            1b. MARINE LIFE — fish crossing the background
+           EDIT: Fish swimming across the background: which fish, how many, speed. Fewer fish = faster phones.
            ========================================================== */
         const DEPTHS = {
             far:  { cls: 'd-far',  dur: [70, 120], size: [26, 42], bob: [3, 6],  wag: [1.15, 1.5] },
@@ -184,6 +218,7 @@
 
         /* ==========================================================
            2. ORGANIC FLOAT — randomize timing so nothing bobs in sync
+           EDIT: Randomises float timing so elements do not bob in sync. Rarely needs editing.
            ========================================================== */
         function humanizeFloats() {
             document.querySelectorAll('.animate-float, .animate-float-delayed, .float-organic, .bio-pulse').forEach(el => {
@@ -200,6 +235,7 @@
 
         /* ==========================================================
            3. PRESS RIPPLE — tap feedback inside buttons (no cursor effects)
+           EDIT: Ripple effect when a button is tapped.
            ========================================================== */
         document.addEventListener('pointerdown', (e) => {
             if (REDUCE_MOTION) return;
@@ -218,6 +254,7 @@
 
         /* ==========================================================
            4. DESCENT LOADER — auto-playing submerge transition
+           EDIT: Intro screen timing: MIN_SHOW_MS (how long it shows), HARD_CAP_MS (maximum), STAGES (captions per depth).
            ========================================================== */
         (function diveGate() {
             const gate = document.getElementById('diveGate');
@@ -420,6 +457,7 @@
 
         /* ==========================================================
            5. NAVBAR SCROLL EFFECT  (original logic preserved)
+           EDIT: Navbar shrinking/tinting when you scroll and the mobile menu open/close.
            ========================================================== */
         const navbar = document.getElementById('navbar');
         const rootEl = document.documentElement;
@@ -482,6 +520,7 @@
 
         /* ==========================================================
            6. CHATBOT — step logic untouched, styling modernised
+           EDIT: Booking assistant steps and questions. Edit the question texts inside; keep the step order logic.
            ========================================================== */
         const CHAT_DESTINATIONS = ['Visakhapatnam', 'Rajahmundry', 'Not sure yet'];
         const CHAT_EXPERIENCES = ['Try Scuba (first dive)', 'SSI Course', 'Scuba Diving', 'Snorkeling', 'Jet Ski', 'Leisure Boat', 'ATV Rides', 'Speed Boat Ride', 'Kayaking', 'Dragon, Disco or Bumper Ride', 'Underwater Event'];
@@ -711,6 +750,7 @@
 
         /* ==========================================================
            7. LEAFLET MAP — dark matter tiles + glowing pins
+           EDIT: Map pins: DESTINATIONS list (name, coordinates ll: [lat, lng], colour, note, link). Tiles load only when the map scrolls into view.
            ========================================================== */
         // Leaflet (~180 KB with its stylesheet) and the map tiles load only when
         // the map is about to scroll into view, not with the page.
@@ -803,6 +843,7 @@
 
         /* ==========================================================
            8. BUOYANT SCROLL REVEALS  (+ light hero parallax)
+           EDIT: Starts the fade-in of sections while scrolling and the hero parallax.
            ========================================================== */
         (function scrollPhysics() {
             // threshold 0: a section taller than the viewport still reveals
@@ -893,6 +934,7 @@
 
         /* ==========================================================
            9. THEME SWITCH (dark / light)
+           EDIT: Dark/light switch: remembers the visitor choice in localStorage (db-theme).
            The attribute is set by the bootstrap in <head> before first
            paint; this only wires the control and keeps the map in step.
            ========================================================== */
@@ -945,6 +987,7 @@
 
         /* ==========================================================
            10. INQUIRY FORM — validation, submit, success state
+           EDIT: Contact form checks (required fields, phone format) and the WhatsApp message text that is sent.
            ========================================================== */
         (function inquiryForm() {
             const form = document.getElementById('inquiryForm');
@@ -1096,6 +1139,7 @@
 
         /* ==========================================================
            11. AUTO "BOOK NOW" MODAL
+           EDIT: When the booking pop-up opens by itself (once per visit) and what it pre-fills.
            Opens once the dive transition has landed, not before.
            ========================================================== */
         (function bookNowModal() {

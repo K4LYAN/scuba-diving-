@@ -35,6 +35,7 @@ def robots_txt(site):
     return '\n'.join(out)
 
 
+# EDIT HERE [E23] llms.txt text (what AI assistants read about Dive Adda). Facts come from build_site.py.
 def llms_txt(site, pages):
     """llms.txt (llmstxt.org): what Dive Adda is, and which page answers what."""
     D = site.DOMAIN

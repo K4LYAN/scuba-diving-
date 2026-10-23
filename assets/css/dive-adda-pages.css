@@ -1,15 +1,62 @@
+/* ##########################################################################
+   dive-adda-pages.css — PAGE COMPONENTS
+   =====================================
+   Components for the inner pages and homepage sections: menus, heroes,
+   course cards, FAQ, gallery, reviews, the water-sports carousel.
+
+   HOW TO EDIT
+     1. Ctrl+F the component name (e.g. "Course cards", "TESTIMONIALS").
+     2. Read its  EDIT:  line, change the rule, keep ; and { } intact.
+     3. Light-mode versions usually start with html[data-theme="light"].
+     4. Rebuild:  python tools/build_site.py   Preview:  python tools/serve.py
+
+   SECTIONS IN THIS FILE (Ctrl+F the name)
+     - Dive gate
+     - Brand lockup
+     - Desktop navigation
+     - Mobile menu groups
+     - Depth meter
+     - Sub-page hero
+     - Section heading
+     - Destination selector
+     - Carousel (destinations)
+     - Interactive info cards
+     - Course cards
+     - Activity switcher
+     - First dive journey
+     - Gallery filters
+     - FAQ accordion
+     - Generic modal
+     - Dive / Discover / Protect
+     - Trust / SSI
+     - Photo frame
+     - Stat line
+     - CTA band
+     - Touch + motion
+     - LOCATIONS FLYOUT
+     - NEW PAGE COMPONENTS
+     - ACTIVITY / SPECIALTY / REVIEW / POST CARDS
+     - Reviews
+     - Blog
+     - HOMEPAGE EXPERIENCE SECTIONS
+     - TESTIMONIALS
+   ########################################################################## */
+
 /* ================================================================
    DIVE ADDA — MULTI-PAGE EXTENSIONS
+   EDIT: Components used by the inner pages. Each block below is one component; search its name to jump there.
    Everything here builds on dive-adda.css (the master design system:
    glass, bioluminescence, liquid motion). It only adds the components
    the multi-page site needs; no base token is redefined.
    ================================================================ */
 
 /* ---------- Dive gate: after the first page of a visit, only the submerge runs ---------- */
+/* EDIT: Short intro shown after the first page of a visit. */
 #diveGate.gate-quick #diveHud,
 #diveGate.gate-quick #diveHint { opacity: 0 !important; }
 
 /* ---------- Brand lockup ---------- */
+/* EDIT: Logo + "DIVE ADDA" wordmark in the navbar: sizes and spacing. */
 .brand-mark { height: 38px; width: auto; filter: drop-shadow(0 6px 16px rgba(34, 211, 238, 0.35)); transition: transform 0.6s var(--ease-liquid); }
 a:hover > .brand-mark, .group:hover .brand-mark { transform: rotate(-6deg) translateY(-1px); }
 .brand-word { font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: 0.04em; line-height: 1; }
@@ -20,6 +67,7 @@ html[data-theme="light"] .theme-scope .logo-dark { display: inline-block; }
 html[data-theme="light"] .brand-tag { color: #0A7A91; }
 
 /* ---------- Desktop navigation with dropdowns ---------- */
+/* EDIT: Top menu links and drop-down panels on desktop. Menu items themselves: build_site.py [E14]. */
 .nav-item { position: relative; }
 .nav-item > .nav-link { display: inline-flex; align-items: center; gap: 4px; padding: 8px 0; background: none; border: 0; font: inherit; }
 .nav-item > .nav-link .caret { width: 10px; height: 10px; transition: transform 0.45s var(--ease-liquid); opacity: 0.7; }
@@ -71,6 +119,7 @@ html[data-theme="light"] .nav-drop a:hover { color: #064E5E; background: rgba(34
 html[data-theme="light"] .nav-drop .drop-title { color: #0A7A91; }
 
 /* ---------- Mobile menu groups ---------- */
+/* EDIT: The phone menu (hamburger) groups and spacing. */
 #mobileMenu { max-height: calc(100svh - 120px); overflow-y: auto; overscroll-behavior: contain; }
 .m-group { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
 .m-group summary {
@@ -95,6 +144,7 @@ html[data-theme="light"] .m-group summary, html[data-theme="light"] .m-link { co
 html[data-theme="light"] .m-group .m-links a { color: #47677E; }
 
 /* ---------- Depth meter (left edge): the site reads as a descent ---------- */
+/* EDIT: The thin "DEPTH 0m" scale on the left edge. Logic: dive-adda-pages.js section 4. */
 #depthMeter {
     position: fixed;
     left: 18px;
@@ -117,6 +167,7 @@ html[data-theme="light"] #depthMeter .dm-track { background: rgba(10, 34, 51, 0.
 html[data-theme="light"] #depthMeter .dm-label { color: #0A7A91; }
 
 /* ---------- Sub-page hero ---------- */
+/* EDIT: Big header at the top of every inner page (background photo, title, breadcrumb). */
 .page-hero {
     position: relative;
     min-height: 74vh;
@@ -155,10 +206,12 @@ html[data-theme="light"] .page-hero { --ink: #E8F6FF; --ink-dim: #9FBCD0; }
 }
 
 /* ---------- Section heading ---------- */
+/* EDIT: The small "01 — SECTION" eyebrow + heading style used across pages. */
 .sec-head { margin-bottom: 3rem; }
 .sec-num { font-family: 'Outfit', sans-serif; font-weight: 700; }
 
 /* ---------- Destination selector (hero) ---------- */
+/* EDIT: Location picker inside the hero (where used). */
 .dest-select {
     display: inline-flex;
     padding: 5px;
@@ -190,6 +243,7 @@ html[data-theme="light"] .page-hero { --ink: #E8F6FF; --ink-dim: #9FBCD0; }
 .dest-panel .dp-in { animation: stageIn 0.55s var(--ease-buoy) both; }
 
 /* ---------- Carousel (destinations) ---------- */
+/* EDIT: Location carousel cards and arrows. */
 .carousel { position: relative; }
 .carousel-track {
     display: grid;
@@ -229,6 +283,7 @@ html[data-theme="light"] .car-dots button { background: rgba(10, 34, 51, 0.15); 
 }
 
 /* ---------- Interactive info cards (What is scuba) ---------- */
+/* EDIT: "What is scuba" expanding cards on the beginner page. Text: build_site.py [E10]. */
 .info-card {
     position: relative;
     text-align: left;
@@ -267,6 +322,7 @@ html[data-theme="light"] .info-card .ic-num { color: rgba(10, 122, 145, 0.08); }
 .benefit-pill .bp-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
 
 /* ---------- Course cards ---------- */
+/* EDIT: SSI course cards (homepage + courses page): image height, step number, level chip. */
 .course-card { position: relative; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; }
 .course-card .cc-media { position: relative; height: 210px; overflow: hidden; }
 .course-card .cc-media img { width: 100%; height: 100%; object-fit: cover; }
@@ -282,6 +338,7 @@ html[data-theme="light"] .info-card .ic-num { color: rgba(10, 122, 145, 0.08); }
 .course-path .cp-arrow { width: 22px; height: 1px; background: linear-gradient(90deg, rgba(103, 232, 249, 0.6), transparent); }
 
 /* ---------- Activity switcher (boat / shore / confined) ---------- */
+/* EDIT: Boat / shore / confined tabs. */
 .act-tabs { display: flex; flex-wrap: wrap; gap: 10px; }
 .act-tab {
     display: flex; align-items: center; gap: 12px;
@@ -304,6 +361,7 @@ html[data-theme="light"] .act-tab[aria-selected="true"] { color: #04313A; }
 .act-slide.is-on .as-copy { transform: none; opacity: 1; }
 
 /* ---------- First dive journey ---------- */
+/* EDIT: The timeline of the beginner morning (lights up while scrolling). Text: build_site.py [E04] TRY_STEPS. */
 .journey { position: relative; display: grid; gap: 22px; }
 .journey-line { position: absolute; left: 27px; top: 10px; bottom: 10px; width: 2px; background: rgba(255, 255, 255, 0.07); border-radius: 2px; overflow: hidden; }
 .journey-line span { position: absolute; inset: 0; transform-origin: top; transform: scaleY(var(--jp, 0)); background: linear-gradient(180deg, #67E8F9, #22D3EE 55%, #A78BFA); box-shadow: 0 0 16px #22D3EE; transition: transform 0.25s linear; }
@@ -331,6 +389,7 @@ html[data-theme="light"] .j-node { background: #FFFFFF; color: #47677E; border-c
 html[data-theme="light"] .journey-line { background: rgba(10, 34, 51, 0.1); }
 
 /* ---------- Gallery filters + lightbox ---------- */
+/* EDIT: Gallery filter buttons and the full-screen photo viewer. */
 .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; }
 .filter-btn {
     padding: 9px 16px;
@@ -371,6 +430,7 @@ html[data-theme="light"] .filter-btn[aria-pressed="true"] { color: #02131B; }
 #lightbox .lb-count { position: absolute; z-index: 3; left: 50%; top: 3vh; transform: translateX(-50%); font-size: 11px; letter-spacing: 0.3em; color: rgba(165, 243, 252, 0.8); }
 
 /* ---------- FAQ accordion ---------- */
+/* EDIT: FAQ question rows, open/close arrow and answer spacing. Questions: build_site.py [E13]. */
 .faq-item { border-radius: 20px; overflow: hidden; transition: border-color 0.45s ease, box-shadow 0.5s ease; }
 .faq-item[open] { border-color: rgba(103, 232, 249, 0.3); box-shadow: 0 0 44px -18px rgba(34, 211, 238, 0.5); }
 .faq-item summary {
@@ -392,6 +452,7 @@ html[data-theme="light"] .faq-item summary { color: #07202F; }
 html[data-theme="light"] .faq-item .fq-icon { color: #0A7A91; }
 
 /* ---------- Generic modal (team profiles) ---------- */
+/* EDIT: Pop-up used for team profiles. */
 .da-modal { position: fixed; inset: 0; z-index: 320; display: none; }
 .da-modal.open { display: grid; place-items: center; padding: 1.25rem; }
 .da-modal .modal-card { width: min(620px, 100%); max-height: 90vh; overflow-y: auto; }
@@ -399,6 +460,7 @@ html[data-theme="light"] .faq-item .fq-icon { color: #0A7A91; }
 .da-modal.in .modal-card { opacity: 1; transform: none; }
 
 /* ---------- Dive / Discover / Protect ---------- */
+/* EDIT: Three-pillar block on the About page. */
 .ddp-card { position: relative; border-radius: 28px; padding: 30px; overflow: hidden; }
 .ddp-word {
     font-family: 'Outfit', sans-serif; font-weight: 800;
@@ -408,23 +470,28 @@ html[data-theme="light"] .faq-item .fq-icon { color: #0A7A91; }
 .ddp-card .ddp-ring { position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; border: 1px solid rgba(103, 232, 249, 0.18); box-shadow: inset 0 0 60px -20px rgba(34, 211, 238, 0.4); }
 
 /* ---------- Trust / SSI ---------- */
+/* EDIT: SSI partner badge block. */
 .ssi-badge { width: 132px; height: 132px; filter: drop-shadow(0 18px 40px rgba(1, 6, 13, 0.8)) drop-shadow(0 0 30px rgba(255, 90, 60, 0.18)); }
 .trust-card { border-radius: 24px; padding: 26px; transition: transform 0.6s var(--ease-liquid), border-color 0.45s ease, box-shadow 0.5s ease; }
 .trust-card:hover { transform: translate3d(0, -8px, 0); border-color: rgba(103, 232, 249, 0.3); box-shadow: 0 34px 70px -30px rgba(1, 6, 13, 0.95), 0 0 44px -16px rgba(34, 211, 238, 0.3); }
 .trust-ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; }
 
 /* ---------- Photo frame (story) ---------- */
+/* EDIT: Framed photo used beside text (story sections, course pages). */
 .frame-photo { position: relative; border-radius: 28px; overflow: hidden; }
 .frame-photo img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ---------- Stat line (verified numbers only) ---------- */
+/* EDIT: Small facts row. Only verified numbers belong here. */
 .fact-num { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: clamp(2.4rem, 5vw, 3.4rem); line-height: 1; }
 
 /* ---------- CTA band ---------- */
+/* EDIT: The "Ready to discover the deep?" call-to-action band. */
 .cta-band { position: relative; border-radius: 32px; overflow: hidden; padding: clamp(28px, 5vw, 56px); }
 .cta-band::before { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 120% at 10% 110%, rgba(34, 211, 238, 0.28), transparent 60%), radial-gradient(50% 120% at 95% -10%, rgba(167, 139, 250, 0.25), transparent 60%); pointer-events: none; }
 
 /* ---------- Touch + motion ---------- */
+/* EDIT: Touch-device and reduced-motion adjustments for the components above. */
 @media (hover: none) {
     .info-card:active, .trust-card:active, .course-card:active, .act-tab:active, .filter-btn:active, .city-chip:active { transform: scale(0.98) !important; transition-duration: 0.12s !important; }
 }
@@ -440,6 +507,7 @@ html[data-theme="light"] .faq-item .fq-icon { color: #0A7A91; }
 
 /* ================================================================
    LOCATIONS FLYOUT (desktop) + NESTED LOCATIONS (mobile menu)
+   EDIT: The "Locations" menu panel (desktop) and nested list (mobile).
    ================================================================ */
 .nav-drop.loc-drop {
     display: grid;
@@ -507,6 +575,7 @@ html[data-theme="light"] .m-sub-links a.m-sub-all { color: #0A7A91; }
 
 /* ================================================================
    NEW PAGE COMPONENTS
+   EDIT: Shared blocks for Events, Gallery, FAQ and Contact pages.
    ================================================================ */
 /* Itinerary: always a vertical timeline, even on wide screens */
 @media (min-width: 1280px) {
@@ -550,6 +619,7 @@ html[data-theme="light"] .legal-block + .legal-block { border-color: rgba(10, 34
 
 /* ================================================================
    ACTIVITY / SPECIALTY / REVIEW / POST CARDS
+   EDIT: Cards on the location pages (activities), courses page (specialties), and blog.
    Shared motion recipe: a compositor-only lift plus a slow image
    push-in on hover. Nothing here animates layout.
    ================================================================ */
@@ -619,6 +689,7 @@ html[data-theme="light"] .act-badge { color: #0A7A91; background: rgba(255, 255,
 html[data-theme="light"] .spec-icon { color: #0A7A91; background: rgba(34, 211, 238, 0.1); }
 
 /* ---------- Reviews ---------- */
+/* EDIT: Small review blocks used outside the homepage carousel. */
 .review-stars { display: inline-flex; gap: 2px; color: #FBBF24; }
 .review-src { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); }
 .review-card blockquote { margin: 0; }
@@ -636,6 +707,7 @@ html[data-theme="light"] .spec-icon { color: #0A7A91; background: rgba(34, 211, 
 }
 
 /* ---------- Blog ---------- */
+/* EDIT: Blog list cards and article text styling. */
 .post-grid {
     display: grid;
     gap: clamp(20px, 3vw, 28px);
@@ -685,6 +757,7 @@ html[data-theme="light"] .read-ic { color: #0A7A91; }
 
 /* ================================================================
    HOMEPAGE EXPERIENCE SECTIONS — Scuba Diving · Vizag / Water Sports · Rajahmundry
+   EDIT: Homepage sections 03 Scuba Diving Vizag and 04 Adventure Water Sports: headings, photos, highlight boxes, ride tiles, water-sports carousel (.ws-*). Content: build_site.py [E18] [E19].
    ================================================================ */
 .xp-head { margin-bottom: clamp(1.75rem, 4vw, 3rem); }
 .xp-title { font-size: clamp(2.3rem, 1.2rem + 4vw, 4.4rem); line-height: 1; letter-spacing: -0.01em; }
@@ -837,6 +910,7 @@ html[data-theme="light"] .courses-cta { background: #FFFFFF; border-color: rgba(
 
 /* ================================================================
    TESTIMONIALS — Google + Tripadvisor review carousels
+   EDIT: Homepage section 05: rating summary, review cards, arrows (.rv-*). Data comes from the review bot [E06].
    ================================================================ */
 html[data-theme="light"] 
 .rv-rows { display: grid; gap: clamp(32px, 4vw, 52px); }

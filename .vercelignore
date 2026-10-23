@@ -1,0 +1,6 @@
+# Not part of the public website (kept in GitHub, not deployed)
+docs/
+tools/
+static post/
+.github/
+*.md

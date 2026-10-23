@@ -1,6 +1,46 @@
-        /* ============================================================
+/* ##########################################################################
+   dive-adda.css — MASTER DESIGN SYSTEM
+   ====================================
+   This file sets the look of the whole site: colours, glass cards, buttons,
+   animations, intro screen, chat, forms, and all LIGHT THEME colours.
+
+   HOW TO EDIT
+     1. Find the section below (Ctrl+F the section name, e.g. "BENTO CARDS").
+     2. Each section starts with an  EDIT:  line explaining what it controls.
+     3. Change values (colours, sizes, times). Keep every ; and { } pair.
+     4. Run  python tools/build_site.py  (it bundles all CSS into site.min.css).
+     5. Preview with  python tools/serve.py  and check dark AND light theme.
+     Never edit site.min.css; it is regenerated on every build.
+
+   SECTIONS IN THIS FILE (Ctrl+F the name)
+     - DESIGN TOKENS
+     - AMBIENT UNDERWATER BACKGROUND
+     - MARINE LIFE
+     - PREMIUM DARK GLASSMORPHISM
+     - LIQUID INTERACTIONS
+     - ORGANIC FLOAT
+     - BUOYANT SCROLL REVEALS
+     - BENTO CARDS
+     - LEAFLET
+     - CHATBOT
+     - THE "DIVE IN" GATE
+     - MISC
+     - GALLERY
+     - TEAM
+     - INQUIRY FORM
+     - QUICK-CALL RAIL
+     - AUTO "BOOK NOW" MODAL
+     - THEME TOGGLE
+     - LIGHT THEME
+     - DEVICE TUNING
+     - PERFORMANCE / MOBILE TUNING
+   ########################################################################## */
+
+/* ============================================================
            DESIGN TOKENS
+           EDIT: Brand colours, fonts and easing for the whole site live in :root below. Change a value (e.g. --ink) and every page follows. [S01]
            ============================================================ */
+        /* EDIT HERE [S01] Brand colours for the whole site (dark theme). Light-theme colours: search 'data-theme="light"'. */
         :root {
             --abyss:   #01060D;
             --deep:    #04121F;
@@ -42,6 +82,7 @@
 
         /* ============================================================
            AMBIENT UNDERWATER BACKGROUND (caustics • rays • particles)
+           EDIT: The moving light (caustics) and sun rays behind every page. Change opacity to make them stronger/weaker; animation durations (34s, 46s) set the speed.
            All animations are transform/opacity only -> GPU composited.
            ============================================================ */
         #ambient {
@@ -150,6 +191,7 @@
 
         /* ============================================================
            MARINE LIFE — fish drifting through the background.
+           EDIT: The fish swimming in the background. .fish.d-far/.d-mid/.d-near = how visible each depth layer is (opacity). Fish are created in dive-adda.js section 1b.
            Each shoal or fish is one transform-animated wrapper; the
            artwork inside stays static so blurred layers rasterise once.
            ============================================================ */
@@ -232,6 +274,7 @@
 
         /* ============================================================
            PREMIUM DARK GLASSMORPHISM
+           EDIT: The frosted-glass cards (.glass-panel, .glass-dark, .glass-deep). Change background rgba() for darker/lighter cards, blur() for more/less frost.
            ============================================================ */
         .glass-panel,
         .glass-dark {
@@ -279,6 +322,7 @@
 
         /* ============================================================
            LIQUID INTERACTIONS
+           EDIT: Button styles: .btn-bio = main cyan button, .btn-ghost = outline button, plus hover effects. Change colours/padding here for every button on the site.
            ============================================================ */
         /* Elastic, water-like lift */
         .liquid {
@@ -389,6 +433,7 @@
 
         /* ============================================================
            ORGANIC FLOAT (randomized per element via CSS vars in JS)
+           EDIT: Gentle bobbing animation of floating elements. Change the keyframe distance (translateY) or duration to calm it down.
            ============================================================ */
         @keyframes drift {
             0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
@@ -417,6 +462,7 @@
 
         /* ============================================================
            BUOYANT SCROLL REVEALS
+           EDIT: How sections fade/rise into view while scrolling (.reveal -> .reveal.active). Change transform distance or transition time.
            ============================================================ */
         /* Transform + opacity only, so every reveal stays on the compositor.
            No blur (re-rasterises the section each frame), no scale (soft text
@@ -446,6 +492,7 @@
 
         /* ============================================================
            BENTO CARDS
+           EDIT: Card containers used for courses and features (.bento-card). Edit radius, border and hover lift here.
            ============================================================ */
         .bento-image {
             transition: transform 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.7s ease, filter 0.8s ease;
@@ -503,6 +550,7 @@
 
         /* ============================================================
            LEAFLET — DARK THEME OVERRIDES
+           EDIT: Look of the map on Contact and location pages (zoom buttons, popups, pins). Map data itself is in dive-adda.js section 7.
            ============================================================ */
         #diveMap {
             height: 100%;
@@ -582,6 +630,7 @@
 
         /* ============================================================
            CHATBOT — DARK GLASS + HIGH-CONTRAST TEXT
+           EDIT: The booking assistant chat window (bottom corner). Colours and sizes of messages and buttons.
            ============================================================ */
         #chatbotWidget { color: var(--ink); }
         #chatBody {
@@ -638,6 +687,7 @@
 
         /* ============================================================
            THE "DIVE IN" GATE
+           EDIT: The intro loading screen with the 0-40 m depth dial. Colours of the overlay, dial and captions. Timing is in dive-adda.js section 4.
            ============================================================ */
         #diveGate {
             position: fixed;
@@ -819,6 +869,7 @@
 
         /* ============================================================
            MISC
+           EDIT: Small shared helpers (selection colour, scrollbars, utility classes).
            ============================================================ */
         .text-gradient-bio {
             background: linear-gradient(105deg, #67E8F9 0%, #22D3EE 35%, #A78BFA 78%, #C4B5FD 100%);
@@ -882,6 +933,7 @@
 
         /* ============================================================
            GALLERY
+           EDIT: Gallery grid tiles and hover zoom. Tile sizes g-wide / g-tall are set here; the photo list is in build_site.py [E11].
            ============================================================ */
         .gallery-grid {
             display: grid;
@@ -940,6 +992,7 @@
 
         /* ============================================================
            TEAM
+           EDIT: Team cards on the About page. Text content is in build_site.py [E12].
            ============================================================ */
         .team-card {
             position: relative;
@@ -1025,6 +1078,7 @@
 
         /* ============================================================
            INQUIRY FORM
+           EDIT: The enquiry form on Contact (inputs, labels, error and success states).
            ============================================================ */
         .field-label {
             display: block;
@@ -1072,6 +1126,7 @@
 
         /* ============================================================
            QUICK-CALL RAIL (right edge)
+           EDIT: The call / WhatsApp / "Booking open" buttons fixed on the right edge. Phone button colours on mobile are overridden in dive-adda-responsive.css (PHONE FAB).
            ============================================================ */
         #callRail {
             position: fixed;
@@ -1125,6 +1180,7 @@
 
         /* ============================================================
            AUTO "BOOK NOW" MODAL
+           EDIT: The booking pop-up window (layout, fields, close button). Its text is in build_site.py (BOOK_MODAL).
            ============================================================ */
         #bookNowModal { position: fixed; inset: 0; z-index: 300; display: none; }
         #bookNowModal.open { display: grid; place-items: center; padding: 1.25rem; }
@@ -1166,6 +1222,7 @@
 
         /* ============================================================
            THEME TOGGLE
+           EDIT: The sun/moon switch in the navigation bar.
            ============================================================ */
         .theme-toggle {
             position: relative;
@@ -1205,6 +1262,7 @@
 
         /* ============================================================
            LIGHT THEME
+           EDIT: Every light-mode colour. Rules start with html[data-theme="light"]. Fix light-mode colours here, not in the dark rules above.
            The descent loader and the hero keep their deep-water look in
            both themes - white type sits on photography there. Everything
            inside a .theme-scope container inverts; .on-media surfaces
@@ -1431,6 +1489,7 @@
 
         /* ============================================================
            DEVICE TUNING
+           EDIT: Tweaks for touch screens, small phones and high-resolution displays.
            ============================================================ */
 
         /* iOS Safari counts its toolbar in 100vh, which makes the hero taller
@@ -1490,6 +1549,7 @@
 
         /* ============================================================
            PERFORMANCE / MOBILE TUNING
+           EDIT: Lighter effects on phones (less blur, fewer layers) to keep the page fast. Remove a rule only if you accept a slower phone experience.
            ============================================================ */
         @media (max-width: 767px) {
             .glass-panel, .glass-dark { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }

@@ -1,10 +1,45 @@
+/* ##########################################################################
+   dive-adda-responsive.css — SCREEN SIZES + OVERRIDES
+   ===================================================
+   Loaded LAST: anything here wins over the other two CSS files.
+   Use it for phone/tablet/desktop sizing and for your own overrides.
+
+   HOW TO EDIT
+     1. Phones = @media (max-width: 767px), tablets = 768-1023px, desktop = 1024px+.
+     2. Ctrl+F a section (e.g. "NAVBAR", "PHONE FAB"); read its  EDIT:  line.
+     3. NEW rules: add them at the very END of this file (search [S02]).
+     4. Rebuild:  python tools/build_site.py   and test at phone width.
+
+   SECTIONS IN THIS FILE (Ctrl+F the name)
+     - Layout tokens
+     - NAVBAR
+     - Mobile menu
+     - HEROES
+     - MAIN FLOW
+     - Touch targets
+     - Footer
+     - Floating chrome
+     - RENDERING PERFORMANCE
+     - DEEPER WATER
+     - REDUCED MOTION
+     - LOADING ANIMATION
+     - MOBILE CONTACT + LOGO SIZING
+     - PHONE FAB — always
+     - COURSE GRID + REVIEW CAROUSEL
+     - PHONE FAB (phones)
+     - LIGHT THEME — course cards
+     - RENDERING BUDGET
+   ########################################################################## */
+
 /* ================================================================
    DIVE ADDA — RESPONSIVE + RENDERING LAYER
+   EDIT: Loaded LAST, so rules here win over the other files. Sizes, spacing and fixes per screen width. Add your own overrides at the very end [S02].
    Loaded last (after the compiled Tailwind utilities). Nothing here
    restyles the brand; it sizes, spaces and de-janks what exists.
    ================================================================ */
 
 /* ---------- Layout tokens ----------
+/* EDIT: Page side padding and section spacing per screen width. */
    The navbar height is built from explicit parts, so every offset that must
    clear it (hero padding, anchor landing) is exact instead of guessed.     */
 :root {
@@ -34,6 +69,7 @@ img, video { max-width: 100%; }
 
 /* ================================================================
    NAVBAR
+   EDIT: Navbar height, logo size and menu breakpoints.
    ================================================================ */
 #navbar {
     padding: var(--nav-pad) var(--gutter);
@@ -84,6 +120,7 @@ html[data-theme="light"] #navbar.nav-scrolled #navPill {
 }
 
 /* ---------- Mobile menu: animated, scrollable, above everything ---------- */
+/* EDIT: Phone menu animation, scrolling and stacking. */
 #mobileMenu {
     display: flex !important;
     flex-direction: column;
@@ -139,6 +176,7 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 
 /* ================================================================
    HEROES — sized by their content, always clear of the navbar
+   EDIT: Hero heights and text sizes per screen width (homepage + inner pages).
    ================================================================ */
 .home-hero {
     display: flex;
@@ -170,6 +208,7 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 
 /* ================================================================
    MAIN FLOW — spacing, type scale, grids
+   EDIT: Section spacing, heading sizes and grid columns on phones/tablets/desktop.
    ================================================================ */
 .site-main { padding: clamp(56px, 9vw, 96px) var(--gutter) clamp(40px, 6vw, 80px); }
 .site-main > section.mb-32 { margin-bottom: clamp(80px, 11vw, 128px); }
@@ -229,6 +268,7 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 }
 
 /* ---------- Touch targets ---------- */
+/* EDIT: Minimum tap sizes for buttons and links on touch screens. */
 .filter-btn { min-height: 40px; }
 .car-dots button { position: relative; }
 .car-dots button::after { content: ''; position: absolute; inset: -12px -2px; }
@@ -240,9 +280,11 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 }
 
 /* ---------- Footer ---------- */
+/* EDIT: Footer layout on small screens. */
 .site-footer li { overflow-wrap: anywhere; }
 
 /* ---------- Floating chrome ---------- */
+/* EDIT: Position of the floating WhatsApp / call buttons so they never cover content. */
 #chatbotWidget { max-height: calc(100vh - 7rem); max-height: calc(100svh - 7rem); }
 #chatBody { height: auto; flex: 1 1 auto; min-height: 160px; max-height: 350px; }
 #bookNowModal .modal-card,
@@ -280,6 +322,7 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 
 /* ================================================================
    RENDERING PERFORMANCE
+   EDIT: Speed tweaks (containment, will-change). Do not remove; they protect the Lighthouse score.
    ================================================================ */
 
 /* Rays parallax runs on the independent `translate` property, so it no
@@ -322,6 +365,7 @@ html[data-theme="light"] #siteRoot::after { background: rgba(10, 34, 51, 0.28); 
 
 /* ================================================================
    DEEPER WATER — a darker ground in the dark theme
+   EDIT: Background colours of the dark theme.
    ================================================================ */
 html { background-color: #02080F; }
 body::before {
@@ -363,6 +407,7 @@ html[data-theme="light"] #mobileMenu.glass-deep {
 
 /* ================================================================
    REDUCED MOTION
+   EDIT: Turns animations off for visitors who ask their device for less motion.
    ================================================================ */
 @media (prefers-reduced-motion: reduce) {
     #navbar, #navPill, #mobileMenu, #siteRoot::after, .nav-burger .ic, .city-bar { transition: none !important; }
@@ -378,6 +423,7 @@ html[data-theme="light"] #mobileMenu.glass-deep {
 
 /* ================================================================
    LOADING ANIMATION — same look, less work per frame on small and
+   EDIT: Lighter intro animation on small/slow devices.
    low-power devices, so the descent plays smoothly everywhere.
    ================================================================ */
 #diveGate { contain: layout paint; }
@@ -396,6 +442,7 @@ html[data-theme="light"] #mobileMenu.glass-deep {
 
 /* ================================================================
    MOBILE CONTACT + LOGO SIZING
+   EDIT: Contact rows in the phone menu and logo sizes.
    ================================================================ */
 /* A phone number that is always reachable on a phone, not only through
    the floating button */
@@ -429,6 +476,7 @@ img[src*="ssi-dive-center"] { height: auto; object-fit: contain; }
 
 /* ================================================================
    PHONE FAB — always rendered, clear of every other floating control
+   EDIT: Round phone button: stacking order and hover/tap states.
    ================================================================ */
 @media (max-width: 767px) {
     html #callRail { z-index: 95; }
@@ -444,6 +492,7 @@ img[src*="ssi-dive-center"] { height: auto; object-fit: contain; }
 
 /* ================================================================
    COURSE GRID + REVIEW CAROUSEL REFINEMENTS
+   EDIT: Course grid centring and review arrows on phones.
    ================================================================ */
 /* Three across on desktop, with a short last row centred instead of
    leaving an empty slot */
@@ -465,6 +514,7 @@ img[src*="ssi-dive-center"] { height: auto; object-fit: contain; }
 
 /* ================================================================
    PHONE FAB (phones) — one solid, always-legible button
+   EDIT: Look of the round phone button on phones (colour, icon size).
    The desktop pill holds an icon plus a hidden label; centring both in a
    56px circle pushed the icon out of view. On phones the label goes, and
    the icon fills a solid brand disc that reads in either theme.
@@ -491,6 +541,7 @@ img[src*="ssi-dive-center"] { height: auto; object-fit: contain; }
 
 /* ================================================================
    LIGHT THEME — course cards were the one surface left dark
+   EDIT: White course cards in light mode.
    ================================================================ */
 html[data-theme="light"] .course-card.bento-card {
     background: #FFFFFF;
@@ -511,6 +562,7 @@ html .cc-art > span.absolute, html .cc-art .cc-step { display: none; }
 
 /* ==========================================================================
    RENDERING BUDGET (Lighthouse 95+)
+   EDIT: Mobile speed settings (skip off-screen sections, no blur behind cards on phones). Keep for a 90+ Lighthouse score.
    ========================================================================== */
 /* Sections below the first screen skip style, layout and paint until they are
    about to scroll into view. "auto" remembers each section's real height once
@@ -549,3 +601,9 @@ html .dial-glow { filter: none; }
 /* The intro covers the whole screen with an opaque overlay, so the background
    layers are not painted until it lifts. */
 html.gate-open #ambient { visibility: hidden; }
+
+
+/* ==========================================================================
+   EDIT HERE [S02] Your own style changes go at the very end of this file:
+   it loads last, so anything written here wins. Then run: python tools/build_site.py
+   ========================================================================== */

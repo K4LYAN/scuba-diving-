@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'assets', 'data', 'reviews.json')
+# EDIT HERE [R01] Tripadvisor listing id and the Google search name used to find the place.
 TA_LOCATION_ID = '33033322'
 GOOGLE_QUERY = 'Dive Adda Scuba Diving Center Visakhapatnam'
 MOCK_DIR = None

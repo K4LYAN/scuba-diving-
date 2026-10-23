@@ -27,6 +27,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ORIG = os.path.join(ROOT, 'tools', 'index.original.html')
 PARTIALS = os.path.join(ROOT, 'tools', 'partials')
 
+# ============================================================================
+# EDIT HERE [E01] Website address, phone, WhatsApp, Instagram, Facebook. Change the value inside the quotes.
+#      WhatsApp is the number without + or spaces. Also update WA_NUMBER in assets/js/dive-adda.js [J01].
+# ============================================================================
 DOMAIN = 'https://www.diveaddaindia.com/'   # Vercel serves www; the bare domain 308-redirects here
 PHONE_TXT = '+91 89777 62155'
 PHONE_TEL = '+918977762155'
@@ -180,6 +184,10 @@ def wa_link(text):
 
 
 # ---------------------------------------------------------------- site data
+# ============================================================================
+# EDIT HERE [E02] Locations (Visakhapatnam, Rajahmundry): name, intro text, hero photo and the activities list.
+#      Each activity: ('id', 'Name', 'icon', 'Description', 'link or None'). Photo = assets/img/activities/<id>.jpg
+# ============================================================================
 DESTS = [
     dict(id='visakhapatnam', name='Visakhapatnam', short='Vizag', file='visakhapatnam.html',
          sub='Vizag &middot; Andhra Pradesh', img=B('cover-divers'), hero=B('cover-divers'), depth=12,
@@ -207,6 +215,10 @@ DESTS = [
          ]),
 ]
 
+# ============================================================================
+# EDIT HERE [E03] SSI courses: name, level, short/long text, who it's for, what you learn.
+#      Course image = assets/img/courses/<id>.jpg (same file on homepage card and course page).
+# ============================================================================
 COURSES = [
     dict(id='open-water', file='open-water-diver.html', name='Open Water Diver', full='SSI Open Water Diver', level='Beginner', step='01', depth=18,
          img=B('ssi-pool-training'),
@@ -241,6 +253,9 @@ COURSES = [
 ]
 
 # ---- First Time Scuba (Try Scuba), from the Dive Adda program
+# ============================================================================
+# EDIT HERE [E04] Try Scuba (beginner page): facts, schedule, what's included, requirements, tips, FAQs.
+# ============================================================================
 TRY_FACTS = [('6:30 AM &ndash; 12:30 PM', 'Morning experience'), ('&asymp; 40 min', 'Dive time per person'),
              ('6&ndash;8 m', 'Maximum depth'), ('8 years', 'Minimum age')]
 
@@ -295,6 +310,9 @@ for _d in DESTS:
 EXPERIENCE_OPTIONS += ['Underwater Event', 'Something else']
 
 # ---- SSI specialty programmes
+# ============================================================================
+# EDIT HERE [E05] SSI specialty courses. Image = assets/img/courses/<id>.jpg
+# ============================================================================
 SPECIALTIES = [
     dict(id='deep-diving', name='Deep Diving', icon='eye',
          text='Plan and make deeper dives with the training, gas awareness and safety skills that depth asks for.'),
@@ -308,6 +326,10 @@ SPECIALTIES = [
 
 # ---- Reviews. Paste real quotes here (name, date, rating, text); the section
 # links to the review sites until it has any.
+# ============================================================================
+# EDIT HERE [E06] Review links. Real reviews come from tools/fetch_reviews.py (API keys in GitHub secrets).
+#      Never type reviews in by hand; REVIEW_SOURCES below is only used until real data is fetched.
+# ============================================================================
 TRIPADVISOR_URL = 'https://www.tripadvisor.in/Attraction_Review-g12421929-d33033322-Reviews-Dive_Adda_Scuba_Diving_Center-Visakhapatnam_District_Andhra_Pradesh.html'
 GOOGLE_REVIEWS_URL = 'https://www.google.com/search?q=Dive+Adda+Scuba+Diving+Center+Visakhapatnam+reviews'
 
@@ -364,6 +386,9 @@ def _live_reviews(path=os.path.join(os.path.dirname(os.path.dirname(os.path.absp
 
 
 # ---- Blog
+# ============================================================================
+# EDIT HERE [E07] Blog: external reading links (BLOG_LINKS) and your own posts (POSTS).
+# ============================================================================
 BLOG_LINKS = [
     ('SSI Blog', 'https://www.divessi.com/blog/', 'Training, marine life and travel stories from Scuba Schools International.'),
     ('SSI Education', 'https://www.divessi.com/en/education', 'How the SSI training path works, from your first dive to professional level.'),
@@ -390,6 +415,10 @@ def opt_img(*candidates):
     return ''
 
 
+# ============================================================================
+# EDIT HERE [E08] Activity photos. To change one, replace assets/img/activities/<id>.jpg (same file name),
+#      then run: python tools/optimize_images.py
+# ============================================================================
 ACTIVITY_FALLBACK = {
     'scuba-diving': 'assets/img/brochure/guided-fun-dive.jpg',
     'snorkeling': 'assets/img/brochure/snorkelling.jpg',
@@ -409,6 +438,9 @@ def course_photo(cid, fallback=''):
     return (opt_img('assets/img/courses/%s.jpg' % cid, 'assets/img/courses/%s.webp' % cid,
                     'assets/img/courses/%s.png' % cid) or fallback)
 
+# ============================================================================
+# EDIT HERE [E09] Underwater events (birthdays, proposals, shoots, conservation): name, photo, text.
+# ============================================================================
 EVENTS = [
     dict(id='birthday-parties', name='Birthday Parties', img=B('event-birthday'), icon='gift',
          text='Mark the day underwater. We plan the dive, the group and the moment with you, so the celebration happens beneath the surface.'),
@@ -420,6 +452,9 @@ EVENTS = [
          text='Divers witness the effects of pollution firsthand. Join a conservation dive &mdash; cleaning up waste, protecting reefs and building ocean awareness.'),
 ]
 
+# ============================================================================
+# EDIT HERE [E10] 'What is scuba' info cards on the beginner page.
+# ============================================================================
 SCUBA_CARDS = [
     ('01', 'bolt', 'What is Scuba?',
      'An underwater adventure that lets you explore the marine world using a Self-Contained Underwater Breathing Apparatus.',
@@ -450,6 +485,9 @@ SCUBA_CARDS = [
      'the more awareness we create about keeping our oceans clean and safe for future generations.</p>'),
 ]
 
+# ============================================================================
+# EDIT HERE [E11] Photo gallery: add a line per photo (file in assets/img/brochure/, caption, filter).
+# ============================================================================
 GALLERY = [
     (B('cover-divers'), 'diving', 'Divers over the reef', 'Dive, Discover, Repeat', 'g-wide g-tall'),
     (B('ssi-pool-training'), 'courses', 'SSI training session', 'Skills in confined water', 'g-tall'),
@@ -468,6 +506,9 @@ GALLERY = [
 GALLERY_FILTERS = [('all', 'All'), ('diving', 'Diving'), ('courses', 'Courses'), ('snorkelling', 'Snorkelling'),
                    ('boat', 'Boat Diving'), ('events', 'Underwater Events'), ('destinations', 'Locations')]
 
+# ============================================================================
+# EDIT HERE [E12] Team / instructors shown on the About page.
+# ============================================================================
 TEAM = [
     dict(mono='DA', name='Our Founder', role='Founder, Dive Adda',
          cert='Founded Dive Adda as an SSI affiliated dive centre',
@@ -481,6 +522,9 @@ TEAM = [
          bio='Our team of expert instructors provides professional dive training for all levels &mdash; from beginners taking their first dive to advanced divers and professionals looking to enhance their skills.'),
 ]
 
+# ============================================================================
+# EDIT HERE [E13] FAQ page questions and answers.
+# ============================================================================
 GENERAL_FAQS = [
     ('Is Dive Adda SSI certified?',
      'Yes. Dive Adda is an internationally certified dive centre, proudly affiliated with SSI (Scuba Schools International), which means our training programmes meet the highest global standards.'),
@@ -497,6 +541,9 @@ GENERAL_FAQS = [
 ]
 
 
+# ============================================================================
+# EDIT HERE [E14] Top navigation menu: labels and links.
+# ============================================================================
 NAV = [
     ('home', 'Home', 'index.html', None),
     ('about', 'About Us', 'about.html', None),
@@ -648,6 +695,9 @@ def float_widgets():
 '''
 
 
+# ============================================================================
+# EDIT HERE [E15] Footer: text, links, contact block.
+# ============================================================================
 def footer():
     explore = [('About Us', 'about.html'), ('Beginner Level Scuba', 'beginner-level-scuba.html'), ('SSI Courses', 'courses.html'),
                ('Events', 'events.html'), ('Gallery', 'gallery.html'), ('Blog', 'blog.html'), ('FAQ&rsquo;s', 'faq.html'),
@@ -1195,6 +1245,9 @@ def location_card(d, i):
                d['sub'], d['name'], d['blurb'], chips, d['file'], d['name'], d['name']))
 
 
+# ============================================================================
+# EDIT HERE [E17] Homepage section 01: About Us.
+# ============================================================================
 def about_home_section(num='01'):
     return ('<section id="about" class="mb-32">'
             + sec_head(num, 'About Us', 'About Dive Adda',
@@ -1227,6 +1280,9 @@ def xp_head(num, eyebrow, title, city, place, tone=''):
             '</div>' % (tone, num, eyebrow, title, city, svg('pin', 'w-4 h-4'), place))
 
 
+# ============================================================================
+# EDIT HERE [E18] Homepage section 03: Scuba Diving Vizag (photos, text, the 5 highlight boxes).
+# ============================================================================
 def scuba_vizag_section(num='03'):
     highlights = [('clock', '&asymp; 40 min', 'underwater per person'),
                   ('wave', '6&ndash;8 m', 'maximum depth for first-timers'),
@@ -1260,6 +1316,10 @@ def scuba_vizag_section(num='03'):
             + '</div></div></div></section>')
 
 
+# ============================================================================
+# EDIT HERE [E19] Homepage section 04: Adventure Water Sports. WS_SLIDES = carousel photos + captions,
+#      WS_TILES = the small ride tiles, water_sports_section() = heading, locations and text.
+# ============================================================================
 WS_SLIDES = [
     ('assets/img/activities/godavari-bridge.jpg', 'The Godavari arch bridge at Rajahmundry', 'Pushkar Ghat &middot; Rajahmundry'),
     ('assets/img/activities/river-sunset.jpg', 'Sunset over the Godavari river', 'The Godavari &middot; Rajahmundry'),
@@ -1391,6 +1451,9 @@ def review_row(src):
     return '<div class="rv-row reveal">' + summary + carousel + '</div>'
 
 
+# ============================================================================
+# EDIT HERE [E20] Homepage section 05: Testimonials heading (review cards come from E06).
+# ============================================================================
 def testimonials_section(num='05'):
     head = sec_head(num, 'Testimonials', 'What our guests say',
                     'Here&rsquo;s what guests say about their dives on Google and Tripadvisor.', center=True)
@@ -1413,6 +1476,9 @@ def review_link_row(src):
             'Read our %s reviews %s</a></div></div>' % (logo, src['name'], E(src['url']), src['name'], svg('arrow', 'w-3.5 h-3.5')))
 
 
+# ============================================================================
+# EDIT HERE [E21] Homepage section 06: 'Ready to discover the deep?' booking band.
+# ============================================================================
 def book_section(num='06'):
     return ('<section id="book" class="mb-16"><div class="cta-band glass-deep bio-edge reveal">'
             '<div class="relative grid lg:grid-cols-[1.4fr_1fr] gap-8 items-center">'
@@ -1643,7 +1709,12 @@ def main_open():
 
 
 # ---------------------------------------------------------------- pages
+# ============================================================================
+# EDIT HERE [E16] Homepage hero: badge text, title, tagline, main sentence, buttons, background photo
+#      (look for the EDIT HERE [E16] notes inside the HTML below).
+# ============================================================================
 def page_home():
+    # EDIT HERE [E16c]: homepage background photo = B('cover-divers') -> assets/img/brochure/cover-divers.jpg
     hero = '''    <header class="home-hero relative w-full overflow-hidden">
         ''' + photo(B('cover-divers'), '', 'hero-media absolute inset-0 w-full h-full object-cover z-0 saturate-[.85]', '100vw', lazy=False, extra='id="heroVideo"') + '''
         <div class="absolute inset-0 bg-gradient-to-b from-brand-abyss/90 via-brand-deep/65 to-brand-deep z-[5]"></div>
@@ -1651,12 +1722,14 @@ def page_home():
         <div id="heroFish" class="absolute inset-0 z-[7] overflow-hidden pointer-events-none" aria-hidden="true"></div>
 
         <div class="hero-inner relative z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center reveal active">
+            <!-- EDIT HERE [E16a]: badge text at the top of the homepage -->
             <span class="float-organic inline-flex items-center gap-2.5 chip-cyan rounded-full px-4 py-1.5 font-semibold tracking-[0.22em] uppercase text-[10px] mb-8">
                 <picture><source srcset="assets/img/ssi-logo-icon.webp" type="image/webp"><img src="assets/img/ssi-logo-icon.png" alt="SSI" class="ssi-chip-logo" width="26" height="14" fetchpriority="low"></picture>
                 SSI Certified Scuba Dive Centre &middot; Visakhapatnam
             </span>
             <h1 class="hero-title font-display font-bold text-white leading-[0.95] mb-5 heading-glow tracking-tight">DIVE <span class="text-gradient-bio">ADDA</span></h1>
             <p class="hero-tagline font-bold uppercase text-brand-glow/80 mb-7">Discover &mdash; The Deep</p>
+            <!-- EDIT HERE [E16b]: the main sentence under DIVE ADDA -->
             <p class="hero-lead text-brand-ink/80 mb-9 max-w-2xl font-medium leading-relaxed">Professional Scuba Diving Centre in Vizag with SSI Certified Dive Courses and Adventure Water Sports Operator.</p>
             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <button type="button" data-book data-experience="Try Scuba (first dive)" data-destination="Visakhapatnam" class="btn-bio liquid liquid-strong ripple-host px-8 py-4 rounded-full font-display font-bold text-lg">Book your dive</button>
@@ -2183,6 +2256,9 @@ def page_contact():
                  'contact.html', body, ld, hero_img=B('boat-diving'), use_map=True)
 
 
+# ============================================================================
+# EDIT HERE [E22] Privacy policy, terms and refund policy text + the 'last updated' date.
+# ============================================================================
 LEGAL_UPDATED = '17 September 2026'
 CONTACT_LINE = ('Call or WhatsApp <a href="tel:%s">%s</a>, or message <a href="%s" target="_blank" rel="noopener">@diveaddaindia</a> on Instagram.'
                 % (PHONE_TEL, PHONE_TXT, IG))
@@ -2280,6 +2356,9 @@ _WEBP_BADGES = re.compile(r'<img src="(assets/img/(?:logo-full(?:-light)?-2x|ssi
 def write(name, content):
     # Footer logo and SSI badge: WebP with the PNG as fallback (about a third of the bytes)
     if name.endswith('.html'):
+        # Editing notes in every page: what each section is and where to change it
+        import html_notes
+        content = html_notes.annotate(name, content)
         content = _WEBP_BADGES.sub(lambda m: '<picture><source srcset="%s.webp" type="image/webp"><img src="%s.png"%s></picture>' % (m.group(1), m.group(1), m.group(2)), content)
     path = os.path.join(ROOT, name)
     with open(path, 'w', encoding='utf-8', newline='\n') as f:

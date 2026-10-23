@@ -1,5 +1,37 @@
+/* ##########################################################################
+   dive-adda-pages.js — PAGE FEATURES
+   ==================================
+   Menus, depth meter, carousels, gallery viewer, FAQ, review and
+   water-sports carousels. Numbered blocks 1-13 below.
+
+   HOW TO EDIT
+     1. Ctrl+F "---------- N." to jump to a block; read its  EDIT:  line.
+     2. Most behaviour is switched on by HTML attributes (data-book, data-rv,
+        data-ws ...), so content changes belong in build_site.py, not here.
+     3. Rebuild:  python tools/build_site.py   then check the Console (F12).
+
+   SECTIONS IN THIS FILE (Ctrl+F the name)
+     - 1. Book controls
+     - 2. Desktop dropdowns
+     - 2b. Locations flyout
+     - 3. Mark the current page
+     - 4. Depth meter
+     - 5. Hero destination selector
+     - 6. Carousels
+     - 7. Expanding info cards
+     - 8. Activity switcher
+     - 9. First-dive journey
+     - 10. Gallery filters
+     - 11. Team profile modal
+     - 12. FAQ
+     - 12b. Review carousels
+     - 12c. Water sports photo carousel
+     - 13. Footer year
+   ########################################################################## */
+
 /* ================================================================
    DIVE ADDA — MULTI-PAGE INTERACTIONS
+   EDIT: Small features for the inner pages. Each numbered block below is independent; search "---------- N." to jump.
    Loaded after dive-adda.js, so it can use REDUCE_MOTION, HAS_GSAP,
    IS_MOBILE, rand() and openChat() from the master script.
    ================================================================ */
@@ -9,6 +41,7 @@
     const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* ---------- 1. Book controls: open the assistant with context ---------- */
+    /* EDIT: Any button with data-book opens the booking assistant; data-experience / data-destination pre-fill it. */
     document.addEventListener('click', (e) => {
         const b = e.target.closest ? e.target.closest('[data-book]') : null;
         if (!b) return;
@@ -20,6 +53,7 @@
     });
 
     /* ---------- 2. Desktop dropdowns: hover, click and keyboard ---------- */
+    /* EDIT: Opening/closing the top-menu drop-downs with mouse and keyboard. */
     const items = $$('.nav-item');
     function closeAll(except) { items.forEach((it) => { if (it !== except) { it.classList.remove('open'); const t = $('.nav-link', it); if (t) t.setAttribute('aria-expanded', 'false'); } }); }
     items.forEach((it) => {
@@ -39,6 +73,7 @@
     document.addEventListener('click', (e) => { if (!e.target.closest('.nav-item')) closeAll(); });
 
     /* ---------- 2b. Locations flyout: choose a location, see its activities ---------- */
+    /* EDIT: The Locations menu panel: hover a city to see its activities. */
     $$('.loc-drop').forEach((drop) => {
         const tabs = $$('.loc-tab', drop);
         const show = (tab) => tabs.forEach((t) => {
@@ -60,6 +95,7 @@
     });
 
     /* ---------- 3. Mark the current page in the navigation ---------- */
+    /* EDIT: Highlights the menu item of the page you are on. */
     const page = document.body.getAttribute('data-page');
     if (page) {
         $$('[data-nav="' + page + '"]').forEach((a) => { a.classList.add('is-active'); a.setAttribute('aria-current', 'page'); });
@@ -67,6 +103,7 @@
     }
 
     /* ---------- 4. Depth meter: scroll progress reads as metres ---------- */
+    /* EDIT: Left-edge depth scale: page scroll is shown as metres (0-40 m). */
     const meter = $('#depthMeter');
     if (meter) {
         const fill = $('.dm-fill', meter);
@@ -87,6 +124,7 @@
     }
 
     /* ---------- 5. Hero destination selector ---------- */
+    /* EDIT: Location picker in a hero (where present). */
     $$('[data-dest-select]').forEach((wrap) => {
         const buttons = $$('button[data-dest]', wrap);
         const panel = document.getElementById(wrap.getAttribute('data-dest-select'));
@@ -111,6 +149,7 @@
     });
 
     /* ---------- 6. Carousels ---------- */
+    /* EDIT: Generic card carousels: arrows, swipe, autoplay (data-autoplay). */
     $$('.carousel').forEach((car) => {
         const track = $('.carousel-track', car);
         const slides = $$('.carousel-track > *', car);
@@ -168,11 +207,13 @@
     });
 
     /* ---------- 7. Expanding info cards ---------- */
+    /* EDIT: Open/close of the "What is scuba" cards. */
     $$('.info-card[aria-expanded]').forEach((c) => {
         c.addEventListener('click', () => c.setAttribute('aria-expanded', c.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'));
     });
 
     /* ---------- 8. Activity switcher ---------- */
+    /* EDIT: Tabs that swap activity details. */
     $$('[data-act]').forEach((root) => {
         const tabs = $$('.act-tab', root);
         const slides = $$('.act-slide', root);
@@ -191,6 +232,7 @@
     });
 
     /* ---------- 9. First-dive journey: lights up as you scroll ---------- */
+    /* EDIT: Lights up each step of the beginner timeline while scrolling. */
     $$('.journey').forEach((j) => {
         const steps = $$('.j-step', j);
         const line = $('.journey-line', j);
@@ -210,6 +252,7 @@
     });
 
     /* ---------- 10. Gallery filters + full-screen lightbox ---------- */
+    /* EDIT: Gallery filter buttons and the full-screen viewer (arrows, Esc to close). */
     const lb = $('#lightbox');
     let lbList = [], lbIndex = 0, lbLast = null;
 
@@ -285,6 +328,7 @@
     });
 
     /* ---------- 11. Team profile modal ---------- */
+    /* EDIT: Opens a team member profile pop-up from the data-* attributes on the card. */
     const pm = $('#profileModal');
     if (pm) {
         let last = null;
@@ -318,6 +362,7 @@
     }
 
     /* ---------- 12. FAQ: one answer open at a time within a group ---------- */
+    /* EDIT: Keeps one FAQ answer open at a time in each group. */
     $$('[data-faq-group]').forEach((grp) => {
         const items = $$('details.faq-item', grp);
         items.forEach((d) => d.addEventListener('toggle', () => {
@@ -326,6 +371,7 @@
     });
 
     /* ---------- 12b. Review carousels: arrows, keys, swipe, gentle autoplay ---------- */
+    /* EDIT: Homepage review rows: arrows, keyboard, swipe and slow autoplay (pauses on hover/touch). */
     $$('[data-rv]').forEach((root) => {
         const track = $('.rv-track', root);
         const cards = $$('.rv-card', root);
@@ -384,6 +430,7 @@
     });
 
     /* ---------- 12c. Water sports photo carousel ---------- */
+    /* EDIT: Homepage water-sports photos: arrows, dots, swipe, keyboard. Photos are listed in build_site.py [E19] WS_SLIDES. */
     // Native scroll-snap does the sliding (and swipe on touch); this adds the
     // arrows, the dots and keyboard support, and keeps them in step.
     $$('[data-ws]').forEach((root) => {
@@ -421,5 +468,6 @@
     });
 
     /* ---------- 13. Footer year ---------- */
+    /* EDIT: Writes the current year in the footer copyright. */
     $$('[data-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });
 })();
