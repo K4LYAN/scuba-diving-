@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>frames</title>
+<style>body{margin:0;background:#000;display:flex;gap:20px;align-items:flex-start}iframe{border:0;display:block;background:#fff}</style>
+<script>
+/* Dev-only: one page at several true viewport widths, side by side (headless windows can't go below ~480px).
+   /tools/qa/frames.html?page=index&w=1280,820,390&h=900&theme=dark */
+const q = new URLSearchParams(location.search);
+try { sessionStorage.setItem('da-dived','1'); sessionStorage.setItem('da-modal','1'); localStorage.setItem('db-theme', q.get('theme')==='light'?'light':'dark'); } catch(e){}
+addEventListener('DOMContentLoaded', () => (q.get('w')||'1280,820,390').split(',').forEach((w) => {
+  const f = document.createElement('iframe'); f.width = w; f.height = q.get('h')||900; f.src = '../../' + (q.get('page')||'index') + '.html';
+  document.body.appendChild(f);
+  let n = 0; const t = setInterval(() => { const d = f.contentDocument; if (!d || !d.getElementById('siteRoot')) return;
+    if (!d.getElementById('qa')) { const s = d.createElement('style'); s.id='qa'; s.textContent='*,*::before,*::after{transition:none!important}#diveGate{display:none!important}#siteRoot{opacity:1!important;transform:none!important}'; d.head.appendChild(s); }
+    d.documentElement.classList.remove('gate-open','modal-open'); d.body.classList.remove('gate-open');
+    d.querySelectorAll('.pre-dive').forEach(e=>e.classList.remove('pre-dive')); d.querySelectorAll('.reveal').forEach(e=>e.classList.add('active'));
+    const m = d.getElementById('bookNowModal'); if (m) m.classList.remove('open','in'); if (++n > 24) clearInterval(t); }, 250);
+}));
+</script>

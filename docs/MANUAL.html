@@ -1,0 +1,757 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0">
+<title>Dive Adda Site Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky depth-gauge sidebar (sections read as a descent) + one reading column of cards */
+:root{
+  --bg:#F2F8FA; --surface:#FFFFFF; --surface-2:#E8F2F5; --line:#D3E3E8;
+  --fg:#0B2233; --muted:#4D6878; --accent:#0A7A91; --accent-2:#0E9CB8;
+  --accent-soft:#D9F1F6; --edit:#B4520B; --edit-soft:#FFF0DF; --ok:#1E7A4C; --ok-soft:#E1F4EA;
+  --bad:#B42335; --bad-soft:#FBE5E8; --code-bg:#0D2231; --code-fg:#D6ECF5; --code-dim:#7FA2B5;
+  --display:'Outfit',ui-sans-serif,system-ui,sans-serif; --body:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace; --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#06141F; --surface:#0C1F2D; --surface-2:#112939; --line:#1D3A4D;
+  --fg:#E4F3FA; --muted:#94B3C4; --accent:#3FD0EA; --accent-2:#67E8F9;
+  --accent-soft:#0F3442; --edit:#FFB466; --edit-soft:#3A2712; --ok:#5FD39A; --ok-soft:#0F3424;
+  --bad:#FF8A98; --bad-soft:#3D1820; --code-bg:#030D15; --code-fg:#D6ECF5; --code-dim:#6E91A3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#06141F; --surface:#0C1F2D; --surface-2:#112939; --line:#1D3A4D;
+  --fg:#E4F3FA; --muted:#94B3C4; --accent:#3FD0EA; --accent-2:#67E8F9;
+  --accent-soft:#0F3442; --edit:#FFB466; --edit-soft:#3A2712; --ok:#5FD39A; --ok-soft:#0F3424;
+  --bad:#FF8A98; --bad-soft:#3D1820; --code-bg:#030D15; --code-fg:#D6ECF5; --code-dim:#6E91A3; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:15.5px/1.65 var(--body);padding-block:0 72px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:clamp(16px,4vw,32px)}
+
+/* ---------- top navbar: brand · chapter links · contents button; a depth line shows reading progress */
+.topbar{position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top,0px);
+  background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px;margin:0 auto;padding-inline:clamp(16px,4vw,32px);height:64px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg);flex:none}
+.brand b{font:800 17px/1 var(--display);letter-spacing:.03em;display:block}
+.brand small{display:block;font:600 9.5px/1.5 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.links{display:flex;gap:2px;margin:0 0 0 auto;padding:0;list-style:none;min-width:0;overflow-x:auto;scrollbar-width:none}
+.links::-webkit-scrollbar{display:none}
+.links a{display:block;white-space:nowrap;padding:8px 11px;border-radius:9px;text-decoration:none;color:var(--muted);font:500 13.5px var(--body)}
+.links a:hover{color:var(--fg);background:var(--surface-2)}
+.links a.on{color:var(--accent);background:var(--accent-soft);font-weight:600}
+.depth-now{flex:none;font:700 12px var(--mono);color:var(--accent);background:var(--accent-soft);padding:6px 10px;border-radius:8px;min-width:58px;text-align:center}
+.menu-btn{display:none;flex:none;margin-left:auto;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  font:600 13.5px var(--body);padding:9px 14px;border-radius:10px;cursor:pointer}
+.menu-btn svg{width:16px;height:16px}
+.progress{height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transform-origin:0 50%;transform:scaleX(0)}
+.sheet{display:none}
+@media (max-width:1100px){.links .x{display:none}}
+@media (max-width:860px){
+  .links,.depth-now{display:none}
+  .menu-btn{display:inline-flex}
+  .sheet{display:block;border-top:1px solid var(--line);background:var(--surface);max-height:calc(100vh - 66px);overflow:auto}
+  .sheet[hidden]{display:none}
+  .sheet ol{list-style:none;margin:0 auto;padding:10px clamp(16px,4vw,32px) 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+  .sheet a{display:flex;gap:12px;align-items:baseline;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--fg);border:1px solid var(--line)}
+  .sheet a span{font:600 11px var(--mono);color:var(--accent);min-width:36px}
+  .sheet a.on{background:var(--accent-soft);border-color:transparent}
+}
+
+main{min-width:0;padding-top:clamp(20px,4vw,36px)}
+
+/* ---------- hero: message left, quick-start card right */
+header.hero{background:linear-gradient(155deg,var(--code-bg),#0A3346 62%,#0B4E63);color:#E4F3FA;border-radius:24px;
+  padding:clamp(24px,5vw,48px);position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(20px,4vw,40px);align-items:center}
+header.hero:after{content:"";position:absolute;inset:auto -80px -120px auto;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(103,232,249,.22),transparent 65%);pointer-events:none}
+@media (max-width:820px){header.hero{grid-template-columns:minmax(0,1fr)}}
+.eyebrow{font:600 11px/1.4 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+.hero .eyebrow{color:#67E8F9}
+h1{font:800 clamp(30px,4.6vw,50px)/1.06 var(--display);margin:12px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+.hero p{max-width:56ch;color:#B9D7E4;margin:0;font-size:clamp(15px,1.6vw,17px)}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font:600 12px var(--body);background:rgba(103,232,249,.12);border:1px solid rgba(103,232,249,.3);color:#CFFAFE}
+.quick{position:relative;z-index:1;background:rgba(3,13,21,.55);border:1px solid rgba(103,232,249,.22);border-radius:16px;padding:18px 18px 16px}
+.quick h3{color:#E4F3FA;font-size:15px;margin:0 0 10px}
+.quick ol{margin:0;padding:0;list-style:none;counter-reset:q;display:grid;gap:8px}
+.quick li{counter-increment:q;display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;font-size:13.5px;color:#B9D7E4;align-items:baseline}
+.quick li:before{content:counter(q);font:700 12px var(--display);color:#02131B;background:#67E8F9;border-radius:50%;width:22px;height:22px;display:grid;place-items:center}
+.quick code{background:rgba(103,232,249,.12);color:#CFFAFE}
+.quick b{color:#E4F3FA}
+
+/* ---------- chapters */
+section.chapter{margin-top:clamp(48px,7vw,72px);scroll-margin-top:84px}
+.ch-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin-bottom:14px}
+.depth{font:700 12.5px var(--mono);color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:6px 10px;white-space:nowrap}
+h2{font:700 clamp(23px,3.2vw,32px)/1.15 var(--display);margin:0;text-wrap:balance}
+.lead{color:var(--muted);max-width:70ch;margin:0 0 22px;font-size:clamp(15px,1.5vw,16.5px)}
+h3{font:700 19px/1.3 var(--display);margin:0}
+h4{font:600 13px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;min-width:0}
+.stack{display:grid;gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:700px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+
+/* marker card */
+.mk{display:grid;gap:12px}
+.mk-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.code-tag{font:700 13px var(--mono);color:var(--edit);background:var(--edit-soft);border:1px solid color-mix(in srgb,var(--edit) 35%,transparent);padding:3px 9px;border-radius:7px}
+.file{font:500 12.5px var(--mono);color:var(--muted);background:var(--surface-2);padding:3px 9px;border-radius:7px;overflow-wrap:anywhere}
+.where{font-size:13px;color:var(--muted)}
+.where b{color:var(--fg);font-weight:600}
+
+/* code */
+pre{background:var(--code-bg);color:var(--code-fg);font:13px/1.65 var(--mono);padding:16px 18px;border-radius:12px;overflow-x:auto;margin:0;position:relative}
+pre .c{color:var(--code-dim)}
+pre mark{background:rgba(255,180,102,.18);color:#FFC98A;border-radius:4px;padding:0 3px;outline:1px dashed rgba(255,180,102,.55)}
+pre .k{color:#7DD3FC}
+code{font:500 .9em var(--mono);background:var(--surface-2);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+.cmd{display:flex;align-items:stretch;border-radius:12px;overflow:hidden;background:var(--code-bg)}
+.cmd pre{flex:1;border-radius:0}
+.cmd button{border:0;background:#123447;color:#CFFAFE;font:600 12px var(--body);padding:0 16px;cursor:pointer;min-width:74px}
+.cmd button:hover{background:#18485f}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:14px;height:14px;border-radius:4px;background:rgba(255,180,102,.3);outline:1px dashed var(--edit)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);padding:10px 14px}
+td{padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{white-space:nowrap}
+
+/* callouts */
+.note{border-radius:12px;padding:14px 16px;display:flex;gap:12px;font-size:14.5px}
+.note b.ic{font:800 13px var(--mono);flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center}
+.note.warn{background:var(--bad-soft)} .note.warn b.ic{background:var(--bad);color:var(--surface)}
+.note.tip{background:var(--accent-soft)} .note.tip b.ic{background:var(--accent);color:var(--surface)}
+.note.good{background:var(--ok-soft)} .note.good b.ic{background:var(--ok);color:var(--surface)}
+
+/* pipeline */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:f}
+@media (max-width:760px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;position:relative}
+.flow div:before{counter-increment:f;content:counter(f);font:800 22px var(--display);color:var(--accent)}
+.flow b{display:block;font:700 15px var(--display);margin:2px 0 4px}
+.flow p{margin:0;font-size:13px;color:var(--muted)}
+
+/* build diagram */
+.build{display:grid;grid-template-columns:minmax(0,1.1fr) auto minmax(0,1fr);gap:14px;align-items:center}
+@media (max-width:760px){.build{grid-template-columns:minmax(0,1fr)}.arrow{transform:rotate(90deg);justify-self:center}}
+.src li,.out li{list-style:none;padding:8px 12px;border-radius:9px;background:var(--surface-2);margin:6px 0;font:500 13px var(--mono);overflow-wrap:anywhere}
+.src,.out{margin:0;padding:0}
+.out li{background:var(--accent-soft)}
+.arrow{font:700 13px var(--mono);color:var(--accent);text-align:center}
+.arrow i{display:block;font-style:normal;font-size:28px;line-height:1}
+
+/* steps */
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;gap:10px}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:start}
+ol.steps>li:before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--surface);font:700 13px var(--display);display:grid;place-items:center}
+ol.steps>li>div{min-width:0}
+.ok-line{color:var(--ok);font-weight:600;font-size:14px}
+
+/* do / don't */
+.do,.dont{border-radius:12px;padding:16px 18px}
+.do{background:var(--ok-soft)} .dont{background:var(--bad-soft)}
+.do h3{color:var(--ok)} .dont h3{color:var(--bad)}
+.do ul,.dont ul{margin:8px 0 0;padding-left:18px}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 18px}
+details+details{margin-top:10px}
+summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary:after{content:"+";font:700 18px var(--mono);color:var(--accent)}
+details[open] summary:after{content:"−"}
+details>div{padding-bottom:16px}
+
+.filter{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:15px var(--body);margin-bottom:12px}
+.folder{display:grid;gap:6px}
+.folder .path{font:700 14px var(--mono);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font:500 12px var(--mono);background:var(--surface-2);padding:3px 8px;border-radius:6px}
+footer.end{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+
+/* ---------- text placement + small screens */
+.cmd pre{min-width:0}
+@media (max-width:760px){.arrow{transform:none;display:flex;gap:10px;align-items:center;justify-content:center}.arrow i{transform:rotate(90deg)}.arrow br{display:none}}
+.card h3{margin-bottom:2px}
+.card p{margin:6px 0 0}
+.mk>pre,.mk>.grid2,.mk>.note,.mk>.tbl{margin-top:2px}
+.flow{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){
+  body{font-size:15px}
+  .card{padding:18px 16px}
+  pre{font-size:12px;padding:14px}
+  .cmd{flex-direction:column}
+  .cmd button{padding:10px;min-height:40px}
+  td,th{padding:9px 11px}
+  td:first-child{white-space:normal}
+  .ch-head{grid-template-columns:minmax(0,1fr);gap:8px}
+  .depth{justify-self:start}
+  .note{padding:12px 14px}
+}
+@media (max-width:420px){.flow{grid-template-columns:minmax(0,1fr)}.brand small{display:none}}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top" aria-label="Dive Adda site manual, back to top">
+      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-opacity=".22" stroke-width="3"/><path d="M20 3a17 17 0 0 1 17 17" fill="none" stroke="#0E9CB8" stroke-width="3" stroke-linecap="round"/><text x="20" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" font-family="monospace">40</text></svg>
+      <span><b>DIVE ADDA</b><small>Site manual</small></span>
+    </a>
+    <nav aria-label="Chapters" style="display:contents">
+      <ul class="links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#find">Find</a></li>
+        <li class="x"><a href="#rules">Rules</a></li>
+        <li><a href="#sections">Sections</a></li>
+        <li><a href="#images">Images</a></li>
+        <li><a href="#recipes">Recipes</a></li>
+        <li><a href="#publish">Publish</a></li>
+        <li class="x"><a href="#reviews">Reviews</a></li>
+        <li class="x"><a href="#domain">Domain</a></li>
+        <li><a href="#trouble">Help</a></li>
+      </ul>
+    </nav>
+    <span class="depth-now" id="depthNow" aria-hidden="true">0 m</span>
+    <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="sheet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Contents</button>
+  </div>
+  <div class="sheet" id="sheet" hidden>
+    <ol>
+      <li><a href="#how"><span>0 m</span>How the site works</a></li>
+      <li><a href="#find"><span>4 m</span>Find anything</a></li>
+      <li><a href="#rules"><span>8 m</span>Editing rules</a></li>
+      <li><a href="#sections"><span>12 m</span>Every section</a></li>
+      <li><a href="#images"><span>18 m</span>Images</a></li>
+      <li><a href="#recipes"><span>22 m</span>Recipes</a></li>
+      <li><a href="#publish"><span>26 m</span>Publish to GitHub</a></li>
+      <li><a href="#reviews"><span>30 m</span>Reviews setup</a></li>
+      <li><a href="#domain"><span>33 m</span>Domain &amp; hosting</a></li>
+      <li><a href="#trouble"><span>36 m</span>Troubleshooting</a></li>
+      <li><a href="#never"><span>40 m</span>Do &amp; never</a></li>
+    </ol>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="wrap" id="top">
+<main>
+<header class="hero">
+  <div style="position:relative;z-index:1;min-width:0">
+    <div class="eyebrow">diveaddaindia.com · editing manual</div>
+    <h1>Change anything on the Dive Adda website</h1>
+    <p>Every editable part of the site has a numbered code like <b>[E03]</b>. Find the code, change the highlighted value, rebuild and publish. Each one is shown below with the real code from your project.</p>
+    <div class="meta"><span class="pill">20 pages</span><span class="pill">30 edit markers</span><span class="pill">Hosted on Vercel</span><span class="pill">K4LYAN/scuba-diving-</span></div>
+  </div>
+  <div class="quick">
+    <h3>Every change, in 5 steps</h3>
+    <ol>
+      <li><span><b>Get latest</b> · <code>git pull origin main</code></span></li>
+      <li><span><b>Find</b> the <code>[E..]</code> code and change the value</span></li>
+      <li><span><b>Build</b> · <code>python tools/build_site.py</code></span></li>
+      <li><span><b>Preview</b> · <code>python tools/serve.py</code></span></li>
+      <li><span><b>Publish</b> · one command, live in 1–2 min</span></li>
+    </ol>
+  </div>
+</header>
+
+<!-- ============================ HOW -->
+<section class="chapter" id="how">
+  <div class="ch-head"><span class="depth">0 m</span><h2>How the site works</h2></div>
+  <p class="lead">The 20 web pages are <b>generated</b>. You edit a few source files; one command rebuilds every page from them, so the menu, footer and contact details stay identical everywhere.</p>
+  <div class="card build">
+    <ul class="src">
+      <li>tools/build_site.py — text &amp; data</li>
+      <li>assets/css/*.css — look</li>
+      <li>assets/js/*.js — behaviour</li>
+      <li>assets/img/… — photos</li>
+    </ul>
+    <div class="arrow"><i>→</i>python tools/<br>build_site.py</div>
+    <ul class="out">
+      <li>20 × .html pages</li>
+      <li>site.min.css · *.min.js</li>
+      <li>sitemap.xml · robots.txt · llms.txt</li>
+    </ul>
+  </div>
+  <div class="note warn" style="margin-top:14px"><b class="ic">!</b><div><b>Never edit a <code>.html</code> page directly.</b> The next build overwrites it and your change disappears. Change the source file instead, then rebuild.</div></div>
+
+  <h4>The 5-step routine for every change</h4>
+  <div class="flow">
+    <div><b>Get latest</b><p><code>git pull origin main</code></p></div>
+    <div><b>Edit</b><p>Find the <code>[E..]</code> code, change the value</p></div>
+    <div><b>Build</b><p><code>python tools/build_site.py</code> → <i>Done.</i></p></div>
+    <div><b>Preview</b><p><code>python tools/serve.py</code> → 127.0.0.1:8123</p></div>
+    <div><b>Publish</b><p>One command → live in 1–2 min</p></div>
+  </div>
+</section>
+
+<!-- ============================ FIND -->
+<section class="chapter" id="find">
+  <div class="ch-head"><span class="depth">4 m</span><h2>Find anything in seconds</h2></div>
+  <p class="lead">Open the project in VS Code. Press <b>Ctrl + Shift + F</b> (Mac <b>⌘ + Shift + F</b>) and search the code, for example <code>[E19]</code>. Every file also explains itself:</p>
+  <div class="grid3">
+    <div class="card"><h3>Python</h3><p class="where">Banners above each block:</p><pre><span class="c"># ======================</span>
+<span class="c"># EDIT HERE [E03] SSI courses…</span>
+<span class="c"># ======================</span></pre></div>
+    <div class="card"><h3>CSS &amp; JS</h3><p class="where">File header + a note per section:</p><pre><span class="c">/* QUICK-CALL RAIL
+   EDIT: The call / WhatsApp
+   buttons on the right… */</span></pre></div>
+    <div class="card"><h3>HTML pages</h3><p class="where">View Page Source → search:</p><pre><span class="c">&lt;!-- SECTION: Adventure
+  Water Sports (#water-sports)
+  HOW TO EDIT: search [E19] --&gt;</span></pre></div>
+  </div>
+
+  <h4>Marker index — type to filter</h4>
+  <input class="filter" id="q" type="search" placeholder="Filter: phone, photo, FAQ, carousel, colour…" aria-label="Filter markers">
+  <div class="tbl"><table id="idx"><thead><tr><th>Code</th><th>What you can change</th><th>File</th><th>Appears on</th></tr></thead><tbody>
+    <tr><td><a href="#e01">E01</a></td><td>Website address, phone, WhatsApp, Instagram, Facebook</td><td>tools/build_site.py</td><td>Every page</td></tr>
+    <tr><td><a href="#e01">J01</a></td><td>WhatsApp number in the booking form</td><td>assets/js/dive-adda.js</td><td>Booking pop-up</td></tr>
+    <tr><td><a href="#e02">E02</a></td><td>Locations and their activities</td><td>tools/build_site.py</td><td>visakhapatnam, rajahmundry, menus</td></tr>
+    <tr><td><a href="#e03">E03</a></td><td>SSI courses (text + image)</td><td>tools/build_site.py</td><td>Home, courses, course pages</td></tr>
+    <tr><td><a href="#e04">E04</a></td><td>Try Scuba facts, schedule, inclusions, requirements, FAQs</td><td>tools/build_site.py</td><td>beginner-level-scuba, blog post</td></tr>
+    <tr><td><a href="#e05">E05</a></td><td>SSI specialty courses</td><td>tools/build_site.py</td><td>courses#specialties</td></tr>
+    <tr><td><a href="#e06">E06</a></td><td>Google / Tripadvisor review links</td><td>tools/build_site.py</td><td>Home testimonials</td></tr>
+    <tr><td><a href="#e06">R01</a></td><td>Tripadvisor ID, Google place search name</td><td>tools/fetch_reviews.py</td><td>Home testimonials</td></tr>
+    <tr><td><a href="#e07">E07</a></td><td>Blog posts and reading links</td><td>tools/build_site.py</td><td>blog, post page</td></tr>
+    <tr><td><a href="#images">E08</a></td><td>Activity photos (jet ski, ATV, kayak…)</td><td>assets/img/activities/</td><td>Location pages, home tiles</td></tr>
+    <tr><td><a href="#e09">E09</a></td><td>Underwater events</td><td>tools/build_site.py</td><td>events</td></tr>
+    <tr><td><a href="#e09">E10</a></td><td>"What is scuba" info cards</td><td>tools/build_site.py</td><td>beginner-level-scuba</td></tr>
+    <tr><td><a href="#e11">E11</a></td><td>Photo gallery</td><td>tools/build_site.py</td><td>gallery</td></tr>
+    <tr><td><a href="#e09">E12</a></td><td>Team / instructors</td><td>tools/build_site.py</td><td>about</td></tr>
+    <tr><td><a href="#e09">E13</a></td><td>FAQ questions and answers</td><td>tools/build_site.py</td><td>faq</td></tr>
+    <tr><td><a href="#e14">E14</a></td><td>Top navigation menu</td><td>tools/build_site.py</td><td>Every page</td></tr>
+    <tr><td><a href="#e14">E15</a></td><td>Footer</td><td>tools/build_site.py</td><td>Every page</td></tr>
+    <tr><td><a href="#e16">E16</a></td><td>Homepage hero: badge, main sentence, background photo</td><td>tools/build_site.py</td><td>Home</td></tr>
+    <tr><td><a href="#e17">E17–E21</a></td><td>Homepage sections 01, 03, 04, 05, 06</td><td>tools/build_site.py</td><td>Home</td></tr>
+    <tr><td><a href="#e22">E22</a></td><td>Privacy, terms, refund policy + date</td><td>tools/build_site.py</td><td>Legal pages</td></tr>
+    <tr><td><a href="#e22">E23</a></td><td>llms.txt (summary for AI assistants)</td><td>tools/seo_files.py</td><td>/llms.txt</td></tr>
+    <tr><td><a href="#s01">S01</a></td><td>Brand colours</td><td>assets/css/dive-adda.css</td><td>Every page</td></tr>
+    <tr><td><a href="#s01">S02</a></td><td>Your own style overrides</td><td>assets/css/dive-adda-responsive.css</td><td>Every page</td></tr>
+  </tbody></table></div>
+</section>
+
+<!-- ============================ RULES -->
+<section class="chapter" id="rules">
+  <div class="ch-head"><span class="depth">8 m</span><h2>Editing rules</h2></div>
+  <p class="lead">The content is written in Python. Text sits inside quotes; items are separated by commas. Change only what is between the quotes.</p>
+  <div class="legend" style="margin-bottom:10px"><span><i class="sw"></i> highlighted = the part you change</span></div>
+  <pre>name=<mark>'Open Water Diver'</mark>,    <span class="c"># ✓ change the words inside the quotes</span>
+name='Open Water Diver'     <span class="c"># ✗ comma deleted       → build fails</span>
+name='Open Water Diver,     <span class="c"># ✗ closing quote gone  → build fails</span>
+text='Here's our team'      <span class="c"># ✗ plain ' ends the text early</span>
+text='Here&amp;rsquo;s our team' <span class="c"># ✓ use &amp;rsquo; for apostrophes</span></pre>
+  <h4>Special characters</h4>
+  <div class="tbl"><table><thead><tr><th>You want</th><th>Write</th><th>You want</th><th>Write</th></tr></thead><tbody>
+    <tr><td>&amp;</td><td><code>&amp;amp;</code></td><td>– (range, 6–8 m)</td><td><code>&amp;ndash;</code></td></tr>
+    <tr><td>’ apostrophe</td><td><code>&amp;rsquo;</code></td><td>— (dash)</td><td><code>&amp;mdash;</code></td></tr>
+    <tr><td>· middle dot</td><td><code>&amp;middot;</code></td><td>≈</td><td><code>&amp;asymp;</code></td></tr>
+  </tbody></table></div>
+  <div class="note tip" style="margin-top:14px"><b class="ic">i</b><div>After every change run <code>python tools/build_site.py</code>. <b>"Done."</b> means your edit is valid. An error message names the line number — check the quotes and commas on that line.</div></div>
+</section>
+
+<!-- ============================ SECTIONS -->
+<section class="chapter" id="sections">
+  <div class="ch-head"><span class="depth">12 m</span><h2>Every section, with its code</h2></div>
+  <p class="lead">Real code from your project. Orange highlights are the values you edit; grey comments explain them.</p>
+  <div class="stack">
+
+  <div class="card mk" id="e01">
+    <div class="mk-top"><span class="code-tag">E01 + J01</span><h3>Contact details &amp; social links</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E01]</b></div>
+<pre>DOMAIN    = <mark>'https://www.diveaddaindia.com/'</mark>  <span class="c"># keep the final /</span>
+PHONE_TXT = <mark>'+91 89777 62155'</mark>                 <span class="c"># as people read it</span>
+PHONE_TEL = <mark>'+918977762155'</mark>                   <span class="c"># + and digits only (call links)</span>
+WA        = <mark>'918977762155'</mark>                    <span class="c"># WhatsApp: no + or spaces</span>
+IG        = <mark>'https://www.instagram.com/diveaddaindia/'</mark>
+FB        = <mark>'https://www.facebook.com/diveaddaindia/'</mark></pre>
+    <div class="where">Also <span class="file">assets/js/dive-adda.js</span> · search <b>[J01]</b> — must match <code>WA</code>:</div>
+<pre><span class="k">const</span> WA_NUMBER = <mark>'918977762155'</mark>;</pre>
+  </div>
+
+  <div class="card mk" id="e02">
+    <div class="mk-top"><span class="code-tag">E02</span><h3>Locations &amp; activities</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E02]</b> · pages <b>visakhapatnam.html</b>, <b>rajahmundry.html</b></div>
+<pre>dict(id='visakhapatnam', name=<mark>'Visakhapatnam'</mark>, short=<mark>'Vizag'</mark>,
+     sub=<mark>'Vizag &amp;middot; Andhra Pradesh'</mark>,           <span class="c"># line under the city name</span>
+     img=B(<mark>'cover-divers'</mark>), hero=B(<mark>'cover-divers'</mark>),  <span class="c"># photos</span>
+     blurb=<mark>'Home of our SSI certified scuba centre…'</mark>, <span class="c"># one-line summary</span>
+     long=<mark>'Visakhapatnam (Vizag) is the coastal home…'</mark>, <span class="c"># page intro</span>
+     acts=[
+       <span class="c">#  id          Name          icon     Description            link or None</span>
+       (<mark>'jet-ski'</mark>, <mark>'Jet Ski'</mark>, <mark>'bolt'</mark>, <mark>'A fast, thrilling ride…'</mark>, <mark>None</mark>),
+     ]),</pre>
+    <div class="grid2">
+      <div class="note tip"><b class="ic">+</b><div><b>Add an activity:</b> copy one line inside <code>acts=[…]</code>, change all five values, add the photo <code>assets/img/activities/&lt;id&gt;.jpg</code>.</div></div>
+      <div class="note tip"><b class="ic">i</b><div><b>Icons:</b> <code>arrow boat bolt camera cap chat check clock eye gift globe heart people phone pin plus shield spark wave</code></div></div>
+    </div>
+  </div>
+
+  <div class="card mk" id="e03">
+    <div class="mk-top"><span class="code-tag">E03</span><h3>SSI courses</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E03]</b> · homepage card, courses page, the course's own page</div>
+<pre>dict(id='open-water',                  <span class="c"># image: assets/img/courses/open-water.jpg</span>
+     file='open-water-diver.html',
+     name=<mark>'Open Water Diver'</mark>, full=<mark>'SSI Open Water Diver'</mark>,
+     level=<mark>'Beginner'</mark>, step=<mark>'01'</mark>,               <span class="c"># card label · order in pathway</span>
+     short=<mark>'The entry-level SSI certification…'</mark>,     <span class="c"># card text</span>
+     long=<mark>'Open Water Diver is where most divers begin…'</mark>, <span class="c"># "About the course"</span>
+     who=<mark>'Anyone who wants a scuba certification…'</mark>,     <span class="c"># "Who it's for"</span>
+     learn=[<mark>'Essential diving skills'</mark>, <mark>'How your equipment works'</mark>, …]),</pre>
+    <div class="note good"><b class="ic">✓</b><div><b>Add a course:</b> copy a whole <code>dict(…),</code> block, give it a new <code>id</code> and <code>file</code>, add <code>assets/img/courses/&lt;id&gt;.jpg</code>. Its page, menu entry and sitemap entry are created automatically.</div></div>
+  </div>
+
+  <div class="card mk" id="e04">
+    <div class="mk-top"><span class="code-tag">E04</span><h3>Try Scuba (beginner page)</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E04]</b> · also reused in the blog post and llms.txt</div>
+<pre>TRY_FACTS = [(<mark>'6:30 AM &amp;ndash; 12:30 PM'</mark>, <mark>'Morning experience'</mark>), …]  <span class="c"># (value, label)</span>
+TRY_STEPS = [(<mark>'6:30 AM &amp;ndash; 6:45 AM'</mark>, <mark>'Report at Centre'</mark>, <mark>'Report at the…'</mark>), …]
+TRY_INCLUDED     = [<mark>'Boat'</mark>, <mark>'Scuba diving equipment'</mark>, …]
+TRY_REQUIREMENTS = [<mark>'Minimum age: 8 years'</mark>, …]
+TRY_KNOW = [('camera', <mark>'Bring Your Essentials'</mark>, <mark>'Please bring a cap…'</mark>), …]
+TRY_FAQS = [(<mark>'What is Try Scuba?'</mark>, <mark>'Try Scuba is an introduction…'</mark>), …]</pre>
+  </div>
+
+  <div class="card mk" id="e05">
+    <div class="mk-top"><span class="code-tag">E05</span><h3>SSI specialty courses</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E05]</b> · image <code>assets/img/courses/&lt;id&gt;.jpg</code></div>
+<pre>dict(id='deep-diving', name=<mark>'Deep Diving'</mark>, icon='eye',
+     text=<mark>'Plan and make deeper dives with the training…'</mark>),</pre>
+  </div>
+
+  <div class="card mk" id="e06">
+    <div class="mk-top"><span class="code-tag">E06 + R01</span><h3>Reviews</h3></div>
+    <div class="where">Real reviews are fetched daily from Google and Tripadvisor. You only set the links and IDs.</div>
+<pre><span class="c"># tools/build_site.py  [E06]</span>
+TRIPADVISOR_URL    = <mark>'https://www.tripadvisor.in/Attraction_Review-…'</mark>
+GOOGLE_REVIEWS_URL = <mark>'https://www.google.com/search?q=Dive+Adda+…'</mark>
+<span class="c"># tools/fetch_reviews.py  [R01]</span>
+TA_LOCATION_ID = <mark>'33033322'</mark>        <span class="c"># the d-number in the Tripadvisor URL</span>
+GOOGLE_QUERY   = <mark>'Dive Adda Scuba Diving Center Visakhapatnam'</mark></pre>
+    <div class="note warn"><b class="ic">!</b><div>Never type reviews, ratings or counts by hand. It breaks Google and Tripadvisor rules. Setup: <a href="#reviews">Reviews setup</a>.</div></div>
+  </div>
+
+  <div class="card mk" id="e07">
+    <div class="mk-top"><span class="code-tag">E07</span><h3>Blog</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E07]</b></div>
+<pre>POSTS = [dict(title=<mark>'What to expect on your first scuba dive in Vizag'</mark>,
+     date=<mark>'2026-09-21'</mark>, date_label=<mark>'21 September 2026'</mark>, read=<mark>'4 min read'</mark>,
+     tag=<mark>'Beginner'</mark>, img=B(<mark>'guided-fun-dive'</mark>),
+     excerpt=<mark>'Never breathed underwater before?…'</mark>,   <span class="c"># card + Google summary</span>
+     intro=<mark>'If you have never breathed underwater…'</mark>)]</pre>
+    <div class="note tip"><b class="ic">i</b><div>The post's body is in <code>page_post()</code>. A <b>second post with its own body</b> needs a small code change — ask a developer or Claude.</div></div>
+  </div>
+
+  <div class="card mk" id="e09">
+    <div class="mk-top"><span class="code-tag">E09 · E10 · E12 · E13</span><h3>Events, info cards, team, FAQs</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search each code</div>
+<pre><span class="c"># [E09] events</span>
+dict(id='birthday-parties', name=<mark>'Birthday Parties'</mark>, img=B(<mark>'event-birthday'</mark>), icon=<mark>'gift'</mark>,
+     text=<mark>'Mark the day underwater…'</mark>),
+<span class="c"># [E10] info cards: (number, icon, title, text)</span>
+('01', <mark>'bolt'</mark>, <mark>'What is Scuba?'</mark>, <mark>'An underwater adventure…'</mark>),
+<span class="c"># [E12] team</span>
+dict(mono=<mark>'DA'</mark>, name=<mark>'Our Founder'</mark>, role=<mark>'Founder, Dive Adda'</mark>, cert=<mark>'…'</mark>, exp=<mark>'…'</mark>, bio=<mark>'…'</mark>),
+<span class="c"># [E13] FAQ: (question, answer)</span>
+(<mark>'Is Dive Adda SSI certified?'</mark>, <mark>'Yes. Dive Adda is an internationally certified…'</mark>),</pre>
+  </div>
+
+  <div class="card mk" id="e11">
+    <div class="mk-top"><span class="code-tag">E11</span><h3>Photo gallery</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E11]</b></div>
+<pre><span class="c">#  photo               filter    title                   caption                  size</span>
+(B(<mark>'cover-divers'</mark>), <mark>'diving'</mark>, <mark>'Divers over the reef'</mark>, <mark>'Dive, Discover, Repeat'</mark>, <mark>'g-wide g-tall'</mark>),</pre>
+    <div class="tbl"><table><tbody>
+      <tr><td><b>filter</b></td><td><code>diving</code> <code>courses</code> <code>snorkelling</code> <code>boat</code> <code>events</code> <code>destinations</code></td></tr>
+      <tr><td><b>size</b></td><td><code>''</code> normal · <code>'g-wide'</code> 2 columns · <code>'g-tall'</code> 2 rows · <code>'g-wide g-tall'</code> large</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <div class="card mk" id="e14">
+    <div class="mk-top"><span class="code-tag">E14 · E15</span><h3>Menu &amp; footer</h3></div>
+<pre><span class="c"># [E14] NAV: (id, label, link, drop-down or None)</span>
+('about', <mark>'About Us'</mark>, <mark>'about.html'</mark>, None),
+('more', <mark>'More'</mark>, None, [(<mark>'Blog'</mark>, <mark>'blog.html'</mark>), (<mark>'Gallery'</mark>, <mark>'gallery.html'</mark>), …]),
+<span class="c"># [E15] def footer(): ordinary HTML — edit the words, keep the tags</span>
+&lt;li&gt;<mark>www.diveaddaindia.com</mark>&lt;/li&gt;</pre>
+    <div class="where">The Courses drop-down fills itself from <b>[E03]</b>.</div>
+  </div>
+
+  <div class="card mk" id="e16">
+    <div class="mk-top"><span class="code-tag">E16</span><h3>Homepage hero</h3></div>
+    <div class="where"><span class="file">tools/build_site.py</span> · search <b>[E16a]</b> badge · <b>[E16b]</b> sentence · <b>[E16c]</b> photo</div>
+<pre><span class="c">&lt;!-- EDIT HERE [E16a] --&gt;</span>   <mark>SSI Certified Scuba Dive Centre &amp;middot; Visakhapatnam</mark>
+&lt;h1&gt;<mark>DIVE</mark> &lt;span…&gt;<mark>ADDA</mark>&lt;/span&gt;&lt;/h1&gt;
+&lt;p class="hero-tagline"&gt;<mark>Discover &amp;mdash; The Deep</mark>&lt;/p&gt;
+<span class="c">&lt;!-- EDIT HERE [E16b] --&gt;</span>
+&lt;p class="hero-lead"&gt;<mark>Professional Scuba Diving Centre in Vizag with…</mark>&lt;/p&gt;
+<span class="c"># [E16c] background:</span> B(<mark>'cover-divers'</mark>) <span class="c">= assets/img/brochure/cover-divers.jpg</span></pre>
+    <div class="note tip"><b class="ic">G</b><div><b>Google title &amp; description</b> of the homepage: search <code>return shell('home'</code>. Each page has its own <code>return shell(…)</code> with the tab title and Google snippet.</div></div>
+  </div>
+
+  <div class="card mk" id="e17">
+    <div class="mk-top"><span class="code-tag">E17 – E21</span><h3>Homepage sections</h3></div>
+    <div class="tbl"><table><thead><tr><th>Code</th><th>Section</th><th>What to change</th></tr></thead><tbody>
+      <tr><td>E17</td><td>01 About Us</td><td>Paragraphs inside the <code>&lt;p&gt;</code> tags</td></tr>
+      <tr><td>E18</td><td>03 Scuba Diving · Vizag</td><td><code>highlights = [('icon','Big text','small text'), …]</code> = the 5 boxes; photos <code>B('…')</code></td></tr>
+      <tr><td>E19</td><td>04 Adventure Water Sports</td><td><code>WS_SLIDES</code> carousel · <code>WS_TILES</code> ride tiles · heading, 📍 locations, text</td></tr>
+      <tr><td>E20</td><td>05 Testimonials</td><td>Heading and sentence (cards come from real reviews)</td></tr>
+      <tr><td>E21</td><td>06 Booking band</td><td>Heading, sentence, button labels</td></tr>
+    </tbody></table></div>
+<pre><span class="c"># [E19] add a carousel photo — dots and arrows adjust automatically</span>
+WS_SLIDES = [
+  (<mark>'assets/img/activities/godavari-bridge.jpg'</mark>, <mark>'The Godavari arch bridge'</mark>, <mark>'Pushkar Ghat &amp;middot; Rajahmundry'</mark>),
+  <span class="c">#   photo file                                    alt text (blind visitors)   caption on photo</span>
+]</pre>
+  </div>
+
+  <div class="card mk" id="e22">
+    <div class="mk-top"><span class="code-tag">E22 · E23</span><h3>Legal pages &amp; llms.txt</h3></div>
+<pre><span class="c"># [E22] tools/build_site.py</span>
+LEGAL_UPDATED = <mark>'17 September 2026'</mark>      <span class="c"># change whenever a policy changes</span>
+sections=[(<mark>'Who we are'</mark>, <mark>'&lt;p&gt;Dive Adda operates this website…&lt;/p&gt;'</mark>), …]
+<span class="c"># [E23] tools/seo_files.py — the summary AI assistants read at /llms.txt</span>
+'&gt; <mark>Dive Adda is an SSI certified scuba diving centre in Visakhapatnam…</mark>'</pre>
+  </div>
+
+  <div class="card mk" id="s01">
+    <div class="mk-top"><span class="code-tag">S01 · S02</span><h3>Colours &amp; styles</h3></div>
+<pre><span class="c">/* assets/css/dive-adda.css  [S01] */</span>
+:root {
+  --ink:     <mark>#E8F6FF</mark>;   <span class="c">/* main text (dark theme) */</span>
+  --ink-dim: <mark>#9FBCD0</mark>;   <span class="c">/* secondary text */</span>
+}
+<span class="c">/* assets/css/dive-adda-responsive.css  [S02] — add at the very END */</span>
+<mark>.hero-lead { font-size: 1.3rem; }</mark></pre>
+    <div class="where">Light-theme colours: search <code>data-theme="light"</code>. Always check both themes (🌙/☀️ switch) and a phone width.</div>
+  </div>
+  </div>
+</section>
+
+<!-- ============================ IMAGES -->
+<section class="chapter" id="images">
+  <div class="ch-head"><span class="depth">18 m</span><h2>Images</h2></div>
+  <p class="lead">Photos live in four folders. For activities and courses the <b>file name is the link</b>: replace the file with the same name and every page updates.</p>
+  <div class="grid2">
+    <div class="card folder"><span class="path">assets/img/brochure/</span><span class="where">General photos · used in code as <code>B('name')</code></span>
+      <div class="chips"><span>boat-diving</span><span>confined-diving</span><span>cover-divers</span><span>dive-centre-storefront</span><span>event-birthday</span><span>event-conservation</span><span>event-prewedding</span><span>event-proposal</span><span>guided-fun-dive</span><span>outbound-trip</span><span>shore-diving</span><span>snorkelling</span><span>ssi-pool-training</span></div></div>
+    <div class="card folder"><span class="path">assets/img/activities/</span><span class="where">One photo per activity · name = activity id</span>
+      <div class="chips"><span>jet-ski</span><span>jet-ski-ride</span><span>leisure-boat</span><span>atv-rides</span><span>speed-boat-ride</span><span>kayaking</span><span>dragon-ride</span><span>disco-ride</span><span>bumper-ride</span><span>godavari-bridge</span><span>river-sunset</span></div></div>
+    <div class="card folder"><span class="path">assets/img/courses/</span><span class="where">SSI course art · name = course id · best 1280 × 813</span>
+      <div class="chips"><span>open-water</span><span>advanced-adventurer</span><span>react-right</span><span>diver-stress-rescue</span><span>dive-master</span><span>deep-diving</span><span>enriched-air-nitrox</span><span>perfect-buoyancy</span><span>night-limited-visibility</span></div></div>
+    <div class="card folder"><span class="path">assets/img/</span><span class="where">Logos and badges · transparent PNG</span>
+      <div class="chips"><span>logo-mark(-light).png</span><span>logo-full(-light).png</span><span>ssi-dive-center.png</span><span>ssi-logo-icon.png</span></div></div>
+  </div>
+
+  <h4>Photo requirements</h4>
+  <div class="tbl"><table><tbody>
+    <tr><td><b>Format</b></td><td>JPG for photos · PNG only for logos with transparency</td></tr>
+    <tr><td><b>Width</b></td><td>1600 px for large/hero photos · 1280 px for cards · never under 1000 px</td></tr>
+    <tr><td><b>File size</b></td><td>under 500 KB before optimising</td></tr>
+    <tr><td><b>Name</b></td><td><code>jet-ski.jpg</code> ✓ &nbsp; <code>Jet Ski (1).JPG</code> ✗ — lower case, hyphens, no spaces</td></tr>
+    <tr><td><b>Content</b></td><td>Your own photos or ones you have rights to · <b>no other company's name, phone number or watermark</b></td></tr>
+  </tbody></table></div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>A · Replace (easiest)</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Copy the new photo into the same folder.</div></li>
+      <li><div>Rename it to <b>exactly</b> the old name, e.g. <code>kayaking.jpg</code>, and replace.</div></li>
+      <li><div>Run optimise + build (below).</div></li></ol></div>
+    <div class="card"><h3>B · Use a new photo</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Add <code>my-photo.jpg</code> to <code>assets/img/brochure/</code>.</div></li>
+      <li><div>Change the code: <code>B('cover-divers')</code> → <code>B('my-photo')</code>, and its description text.</div></li>
+      <li><div>Run optimise + build (below).</div></li></ol></div>
+  </div>
+  <h4>Always run after any photo change</h4>
+  <div class="stack">
+    <div class="cmd"><pre>python tools/optimize_images.py</pre><button type="button" data-copy>Copy</button></div>
+    <div class="cmd"><pre>python tools/build_site.py</pre><button type="button" data-copy>Copy</button></div>
+  </div>
+  <div class="note tip" style="margin-top:12px"><b class="ic">i</b><div>The optimiser makes small WebP copies (480–1600 px) so phones download less — part of the 90+ Lighthouse score. Browsers may show the old photo for up to a day; press <b>Ctrl + F5</b> to see the new one.</div></div>
+</section>
+
+<!-- ============================ RECIPES -->
+<section class="chapter" id="recipes">
+  <div class="ch-head"><span class="depth">22 m</span><h2>Recipes</h2></div>
+  <p class="lead">Each recipe ends with the same three steps: <b>build → preview → publish</b>.</p>
+  <div class="grid2">
+    <div class="card"><h3>Change phone / WhatsApp</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E01]</code>; set <code>PHONE_TXT</code>, <code>PHONE_TEL</code>, <code>WA</code>.</div></li>
+      <li><div>Search <code>[J01]</code>; set <code>WA_NUMBER</code> to the same as <code>WA</code>.</div></li>
+      <li><div>Build → preview → publish.</div><div class="ok-line">✓ Tap 📞 and WhatsApp on the live site.</div></li></ol></div>
+    <div class="card"><h3>Edit the homepage headline</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E16b]</code> (sentence) or <code>[E16a]</code> (badge).</div></li>
+      <li><div>Change only the words between <code>&gt;</code> and <code>&lt;</code>.</div></li>
+      <li><div>Build → preview → publish.</div></li></ol></div>
+    <div class="card"><h3>Add a FAQ</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E13]</code>.</div></li>
+      <li><div>Before the closing <code>]</code> add:<pre style="margin-top:8px">(<mark>'Can I dive with glasses?'</mark>,
+ <mark>'Yes. Tell us when you book.'</mark>),</pre></div></li>
+      <li><div>Build → preview <code>faq.html</code> → publish.</div></li></ol></div>
+    <div class="card"><h3>Add an activity</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E02]</code>, find <code>acts=[</code> under the city.</div></li>
+      <li><div>Add <code>('parasailing', 'Parasailing', 'spark', 'Fly above the beach.', None),</code></div></li>
+      <li><div>Add <code>assets/img/activities/parasailing.jpg</code>, optimise, build, publish.</div></li></ol></div>
+    <div class="card"><h3>Add a gallery photo</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Copy <code>night-dive.jpg</code> into <code>assets/img/brochure/</code>.</div></li>
+      <li><div>Search <code>[E11]</code>; add <code>(B('night-dive'), 'diving', 'Night dive', 'Torches on the reef', ''),</code></div></li>
+      <li><div>Optimise → build → publish.</div></li></ol></div>
+    <div class="card"><h3>Add a water-sports carousel photo</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Copy the photo into <code>assets/img/activities/</code>.</div></li>
+      <li><div>Search <code>[E19]</code>; add a line to <code>WS_SLIDES</code> (file, alt text, caption).</div></li>
+      <li><div>Optimise → build → publish.</div><div class="ok-line">✓ An extra dot appears under the carousel.</div></li></ol></div>
+    <div class="card"><h3>Add a new SSI course</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E03]</code>; copy a full <code>dict(…),</code> block after the last course.</div></li>
+      <li><div>Change <code>id</code>, <code>file</code>, names, level, step, texts.</div></li>
+      <li><div>Add <code>assets/img/courses/&lt;id&gt;.jpg</code>, optimise, build.</div><div class="ok-line">✓ New page, menu entry and sitemap appear.</div></li></ol></div>
+    <div class="card"><h3>Update a policy</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Search <code>[E22]</code>; edit the text in <code>sections=[…]</code>.</div></li>
+      <li><div>Set <code>LEGAL_UPDATED</code> to today.</div></li>
+      <li><div>Build → preview → publish.</div></li></ol></div>
+  </div>
+</section>
+
+<!-- ============================ PUBLISH -->
+<section class="chapter" id="publish">
+  <div class="ch-head"><span class="depth">26 m</span><h2>Publish to GitHub</h2></div>
+  <p class="lead">Run in <b>Git Bash</b> inside <code>D:\kc\scuba</code> (right-click the folder → <i>Open Git Bash here</i>). Vercel deploys every push automatically.</p>
+  <h4>One-time setup on a new computer</h4>
+  <div class="tbl"><table><thead><tr><th>Install</th><th>From</th><th>Check</th></tr></thead><tbody>
+    <tr><td>Git (with Git Bash)</td><td>git-scm.com</td><td><code>git --version</code></td></tr>
+    <tr><td>Python 3.11+ (tick "Add to PATH")</td><td>python.org</td><td><code>python --version</code></td></tr>
+    <tr><td>Pillow</td><td><code>pip install pillow</code></td><td>—</td></tr>
+    <tr><td>Node.js LTS</td><td>nodejs.org</td><td><code>node --version</code></td></tr>
+    <tr><td>VS Code</td><td>code.visualstudio.com</td><td>—</td></tr>
+  </tbody></table></div>
+  <div class="stack" style="margin-top:12px">
+    <div class="cmd"><pre>git clone https://github.com/K4LYAN/scuba-diving- D:/kc/scuba</pre><button type="button" data-copy>Copy</button></div>
+  </div>
+
+  <h4>The publish command</h4>
+  <div class="cmd"><pre>git add -A &amp;&amp; git commit -m "Describe your change"; git pull --no-rebase --no-edit -X theirs origin main &amp;&amp; python tools/build_site.py &amp;&amp; git add -A &amp;&amp; (git diff --cached --quiet || git commit -m "Rebuild pages") &amp;&amp; git push -u origin main</pre><button type="button" data-copy>Copy</button></div>
+  <div class="tbl" style="margin-top:12px"><table><thead><tr><th>Part</th><th>What it does</th></tr></thead><tbody>
+    <tr><td><code>git add -A</code></td><td>Stages every change (files in <code>.gitignore</code> are skipped)</td></tr>
+    <tr><td><code>git commit -m "…"</code></td><td>Saves a snapshot with your message — replace the words in quotes</td></tr>
+    <tr><td><code>git pull … -X theirs</code></td><td>Brings in GitHub's changes (often the daily review bot). Clashes in generated pages resolve automatically</td></tr>
+    <tr><td><code>python tools/build_site.py</code></td><td>Rebuilds every page with your change <b>and</b> the latest reviews</td></tr>
+    <tr><td><code>git diff --cached --quiet || …</code></td><td>Commits the rebuild only if something changed</td></tr>
+    <tr><td><code>git push -u origin main</code></td><td>Uploads to GitHub → Vercel deploys in 1–2 minutes</td></tr>
+  </tbody></table></div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Before you push</h3><ul style="margin:10px 0 0;padding-left:18px">
+      <li>Build ended with <b>Done.</b></li><li>Previewed at 127.0.0.1:8123</li><li>Checked phone width, light <b>and</b> dark</li>
+      <li>Ran <code>optimize_images.py</code> after photo changes</li><li>No API keys or personal files (<code>git status</code>)</li></ul></div>
+    <div class="card"><h3>After you push</h3><ol class="steps" style="margin-top:12px">
+      <li><div>Git Bash ends with <code>… main -&gt; main</code>.</div></li>
+      <li><div>Vercel → Deployments → newest = <b>Ready</b>.</div></li>
+      <li><div>Open www.diveaddaindia.com → <b>Ctrl + F5</b>.</div></li></ol></div>
+  </div>
+</section>
+
+<!-- ============================ REVIEWS -->
+<section class="chapter" id="reviews">
+  <div class="ch-head"><span class="depth">30 m</span><h2>Reviews setup (one time)</h2></div>
+  <div class="card"><ol class="steps">
+    <li><div><b>Google:</b> console.cloud.google.com → APIs &amp; Services → Library → enable <b>Places API (New)</b> only. Then Credentials → Create API key, restricted to Places API (New). Billing must be on; a daily fetch stays in the free tier.</div></li>
+    <li><div><b>Tripadvisor:</b> sign up for the Tripadvisor Content API and copy your key.</div></li>
+    <li><div><b>GitHub:</b> repo → Settings → Secrets and variables → Actions → New repository secret: <code>GOOGLE_PLACES_API_KEY</code>, <code>TRIPADVISOR_API_KEY</code>, optional <code>GOOGLE_PLACE_ID</code>.</div></li>
+    <li><div><b>Run:</b> Actions → Refresh reviews → Run workflow. Then <code>git pull origin main</code> on your computer.</div><div class="ok-line">✓ A commit "Refresh Google and Tripadvisor reviews" appears; cards link to each original review.</div></li>
+  </ol></div>
+  <div class="note warn" style="margin-top:12px"><b class="ic">!</b><div>Keys go <b>only</b> into GitHub secrets — never into code or chat.</div></div>
+</section>
+
+<!-- ============================ DOMAIN -->
+<section class="chapter" id="domain">
+  <div class="ch-head"><span class="depth">33 m</span><h2>Domain &amp; hosting</h2></div>
+  <p class="lead">Site hosted on <b>Vercel</b>; domain at <b>Namecheap</b>. Namecheap → Domain List → Manage → <b>Advanced DNS</b> must contain exactly two host records:</p>
+  <div class="tbl"><table><thead><tr><th>Type</th><th>Host</th><th>Value</th></tr></thead><tbody>
+    <tr><td>A Record</td><td><code>@</code></td><td><code>216.198.79.1</code></td></tr>
+    <tr><td>CNAME Record</td><td><code>www</code></td><td>value shown in Vercel (now <code>d3d5f314928bd12d.vercel-dns-017.com.</code>)</td></tr>
+  </tbody></table></div>
+  <div class="note warn" style="margin-top:12px"><b class="ic">!</b><div>No <b>URL Redirect Record</b> and no other <code>@</code> A record — those cause Safari's "This Connection Is Not Private". Vercel → Settings → Domains must show <b>Valid Configuration</b> for both domains.</div></div>
+</section>
+
+<!-- ============================ TROUBLE -->
+<section class="chapter" id="trouble">
+  <div class="ch-head"><span class="depth">36 m</span><h2>Troubleshooting</h2></div>
+  <details><summary>Build prints <code>SyntaxError … line 312</code></summary><div>Open that line in <code>tools/build_site.py</code>. A quote or comma is missing, or a plain <code>'</code> is inside the text — use <code>&amp;rsquo;</code>.</div></details>
+  <details><summary>My change isn't on the live site</summary><div>Did you build <b>and</b> push? Check Vercel → Deployments shows <b>Ready</b>, then press Ctrl + F5 (Mac ⌘ + Shift + R).</div></details>
+  <details><summary><code>nothing to commit, working tree clean</code></summary><div>Everything is already saved. Run <code>git push -u origin main</code>.</div></details>
+  <details><summary><code>Your local changes … would be overwritten by merge</code></summary><div>You pulled before committing. Use the full publish command — it commits first.</div></details>
+  <details><summary><code>rejected (non-fast-forward)</code></summary><div>GitHub has newer commits. Run the full publish command again; it pulls first.</div></details>
+  <details><summary><code>exceeds GitHub's file size limit of 100 MB</code></summary><div>A video or zip was included. Keep raw media in <code>static post/</code> (ignored). The commit has to be redone without the file — ask for help.</div></details>
+  <details><summary><code>CONFLICT … in index.html</code></summary><div>Run <code>python tools/build_site.py</code>, then <code>git add -A</code>, <code>git commit -m "Merge and rebuild"</code>, <code>git push</code>.</div></details>
+  <details><summary>A screen full of <code>~</code> lines opened</summary><div>Git opened its editor (Vim). Type <code>:wq</code> and press Enter.</div></details>
+  <details><summary><code>LF will be replaced by CRLF</code></summary><div>A harmless Windows line-ending notice. Ignore it.</div></details>
+  <details><summary><code>npx not found</code> / <code>No module named PIL</code></summary><div>Install Node.js LTS, or run <code>pip install pillow</code>, then reopen Git Bash.</div></details>
+</section>
+
+<!-- ============================ NEVER -->
+<section class="chapter" id="never">
+  <div class="ch-head"><span class="depth">40 m</span><h2>Do &amp; never</h2></div>
+  <div class="grid2">
+    <div class="do"><h3>Do</h3><ul>
+      <li>Edit <code>tools/build_site.py</code>, the CSS/JS sources and images</li>
+      <li>Rebuild after every change</li>
+      <li>Record photo sources in <code>CREDITS.txt</code></li>
+      <li>Check pagespeed.web.dev after big changes — aim for 90+</li></ul></div>
+    <div class="dont"><h3>Never</h3><ul>
+      <li>Edit generated files: <code>*.html</code>, <code>*.min.css/js</code>, <code>tailwind.css</code>, <code>manifest.json</code>, <code>sitemap.xml</code>, <code>robots.txt</code>, <code>llms.txt</code>, <code>reviews.json</code></li>
+      <li>Commit large media, API keys or personal documents</li>
+      <li>Invent reviews, ratings, prices or certifications</li></ul></div>
+  </div>
+  <footer class="end">Dive Adda · Discover — The Deep · Full text versions: <code>docs/EDITING-GUIDE.md</code> and <code>docs/STEP-BY-STEP.md</code> in the repository.</footer>
+</section>
+</main>
+</div>
+
+<script>
+// Copy buttons
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var text = b.previousElementSibling.textContent;
+    var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () { select(b.previousElementSibling); });
+    else select(b.previousElementSibling);
+  });
+});
+function select(el) { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+// Marker filter
+var q = document.getElementById('q');
+q.addEventListener('input', function () {
+  var v = q.value.toLowerCase();
+  document.querySelectorAll('#idx tbody tr').forEach(function (tr) { tr.hidden = v && tr.textContent.toLowerCase().indexOf(v) < 0; });
+});
+// Navbar: highlight the current chapter, show reading depth (0-40 m) and progress
+var links = document.querySelectorAll('.links a, .sheet a');
+var bar = document.getElementById('progress'), depthNow = document.getElementById('depthNow');
+if ('IntersectionObserver' in window) {
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); }); });
+  }, { rootMargin: '-35% 0px -55% 0px' });
+  document.querySelectorAll('section.chapter').forEach(function (s) { io.observe(s); });
+}
+function onScroll() {
+  var max = document.documentElement.scrollHeight - innerHeight;
+  var p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+  bar.style.transform = 'scaleX(' + p + ')';
+  depthNow.textContent = Math.round(p * 40) + ' m';
+}
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+// Phones: Contents menu
+var btn = document.getElementById('menuBtn'), sheet = document.getElementById('sheet');
+function setMenu(open) { sheet.hidden = !open; btn.setAttribute('aria-expanded', String(open)); }
+btn.addEventListener('click', function () { setMenu(sheet.hidden); });
+sheet.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+</script>
+</body></html>

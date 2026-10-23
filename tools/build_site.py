@@ -2386,6 +2386,8 @@ def build_bundles():
                            input=text, cwd=ROOT, capture_output=True, text=True, encoding='utf-8')
         if r.returncode:
             raise SystemExit('esbuild failed for %s:\n%s' % (out, r.stderr))
+        if r.stderr.strip():   # e.g. a stray */ that silently drops CSS rules
+            print('  !! warnings in %s source:\n%s' % (out, r.stderr.strip()))
         with open(os.path.join(ROOT, out), 'w', encoding='utf-8', newline='\n') as f:
             f.write(r.stdout)
         print('  %-30s %7.1f KB' % (out, len(r.stdout.encode()) / 1024.0))

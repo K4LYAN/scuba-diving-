@@ -39,7 +39,8 @@
    ================================================================ */
 
 /* ---------- Layout tokens ----------
-/* EDIT: Page side padding and section spacing per screen width. */
+   EDIT: --gutter = space at the left/right of every page; --nav-pad = gap around
+   the floating navbar; --pill-h = navbar height. Change these to move everything.
    The navbar height is built from explicit parts, so every offset that must
    clear it (hero padding, anchor landing) is exact instead of guessed.     */
 :root {
